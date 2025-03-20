@@ -1,18 +1,13 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAudioCapture } from '@/hooks/useAudioCapture';
 import { processSpeechFromBlob } from '@/utils/speechProcessing';
+import { useToast } from '@/hooks/use-toast';
 
 // Defining clear interfaces for the component props
 interface AudioRecorderProps {
   onSpeechResult: (text: string) => void;
   onProcessingStateChange: (isProcessing: boolean) => void;
-}
-
-interface AudioRecorderState {
-  isRecording: boolean;
-  startRecording: () => Promise<void>;
-  stopRecording: () => Promise<void>;
 }
 
 /**
@@ -21,7 +16,10 @@ interface AudioRecorderState {
 const useAudioRecorder = ({ 
   onSpeechResult, 
   onProcessingStateChange 
-}: AudioRecorderProps): AudioRecorderState => {
+}: AudioRecorderProps) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+  
   const {
     isRecording,
     startRecording: captureStart,
@@ -40,11 +38,25 @@ const useAudioRecorder = ({
     
     // If we have valid audio data, process it
     if (audioBlob) {
+      setIsProcessing(true);
       onProcessingStateChange(true);
-      await processSpeechFromBlob(
-        audioBlob, 
-        { onSpeechResult, onProcessingStateChange }
-      );
+      
+      try {
+        await processSpeechFromBlob(
+          audioBlob, 
+          { onSpeechResult, onProcessingStateChange }
+        );
+      } catch (error) {
+        console.error("Error processing speech:", error);
+        toast({
+          title: "Processing Error",
+          description: "An error occurred while processing your speech.",
+          variant: "destructive"
+        });
+        onProcessingStateChange(false);
+      } finally {
+        setIsProcessing(false);
+      }
     } else {
       console.log("No audio to process");
       onProcessingStateChange(false);
@@ -56,6 +68,7 @@ const useAudioRecorder = ({
 
   return {
     isRecording,
+    isProcessing,
     startRecording: captureStart,
     stopRecording
   };

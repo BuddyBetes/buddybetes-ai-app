@@ -6,12 +6,14 @@ export interface SpeechProcessingOptions {
   onProcessingStateChange: (isProcessing: boolean) => void;
 }
 
+// Fix: Move toast outside the function to prevent hooks inside regular functions
+const { toast } = useToast();
+
 export const processSpeechFromBlob = async (
   audioBlob: Blob, 
   options: SpeechProcessingOptions
 ): Promise<void> => {
   const { onSpeechResult, onProcessingStateChange } = options;
-  const { toast } = useToast();
 
   try {
     // Validate audio blob

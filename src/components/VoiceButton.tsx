@@ -7,6 +7,7 @@ import VoiceSubtitles from './voice/VoiceSubtitles';
 import VoiceInitializing from './voice/VoiceInitializing';
 import VoiceStatusHeading from './voice/VoiceStatusHeading';
 import VoiceButtonFooter from './voice/VoiceButtonFooter';
+import { useToast } from '@/hooks/use-toast';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -31,6 +32,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const { toast } = useToast();
   
   // Add loading state that resolves after a short delay
   useEffect(() => {
@@ -55,6 +57,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       }
     },
     onProcessingStateChange: (isProcessing) => {
+      console.log("Processing state changed:", isProcessing);
       if (!isProcessing && status === 'processing') {
         console.log("Processing complete, ready for speaking state");
       }
@@ -112,23 +115,53 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   };
 
   const handleStartSession = () => {
-    startRecording();
-    setStatus('listening');
-    setErrorMsg(null);
-    setPlaybackCompleted(false);
-    onStartSession && onStartSession();
+    try {
+      startRecording().catch(error => {
+        console.error("Error starting recording:", error);
+        toast({
+          title: "Recording Error",
+          description: "Could not start recording. Please check microphone permissions.",
+          variant: "destructive"
+        });
+        setStatus('idle');
+        return;
+      });
+      
+      setStatus('listening');
+      setErrorMsg(null);
+      setPlaybackCompleted(false);
+      onStartSession && onStartSession();
+    } catch (error) {
+      console.error("Error in handleStartSession:", error);
+      setStatus('idle');
+    }
   };
 
   const handleEndSession = () => {
-    stopRecording();
-    setStatus('processing');
-    onEndSession && onEndSession();
+    try {
+      stopRecording();
+      setStatus('processing');
+      onEndSession && onEndSession();
+    } catch (error) {
+      console.error("Error in handleEndSession:", error);
+      setStatus('idle');
+      toast({
+        title: "Error",
+        description: "An error occurred while processing your voice. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleStopButton = () => {
-    stopRecording();
-    setStatus('processing');
-    onEndSession && onEndSession();
+    try {
+      stopRecording();
+      setStatus('processing');
+      onEndSession && onEndSession();
+    } catch (error) {
+      console.error("Error in handleStopButton:", error);
+      setStatus('idle');
+    }
   };
 
   if (isInitializing) {

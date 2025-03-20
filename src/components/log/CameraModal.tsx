@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import CameraCapture from '@/components/camera/CameraCapture';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
   const { addLog } = useLogContext();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [processingImage, setProcessingImage] = useState(false);
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleCapture = (imageDataUrl: string) => {
     setCapturedImage(imageDataUrl);
@@ -33,12 +34,22 @@ const CameraModal: React.FC<CameraModalProps> = ({
       });
       
       // Simulate food recognition (in a real app, this would call an API)
-      setTimeout(() => {
+      processingTimeoutRef.current = setTimeout(() => {
         setProcessingImage(false);
         
         toast({
           title: "Food recognized",
           description: "Detected: Apple (15g carbs). Adding to your log entry.",
+        });
+        
+        // Add food data to logs
+        addLog({
+          timestamp: new Date(),
+          foodItem: {
+            name: "Apple",
+            carbs: 15,
+            calories: 95
+          }
         });
         
         // Close modal and reset state
@@ -52,7 +63,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
       });
       
       // Simulate OCR for glucose reading (in a real app, this would call an API)
-      setTimeout(() => {
+      processingTimeoutRef.current = setTimeout(() => {
         setProcessingImage(false);
         
         // Detected glucose value
@@ -78,9 +89,23 @@ const CameraModal: React.FC<CameraModalProps> = ({
   };
 
   const handleCloseCamera = () => {
+    if (processingTimeoutRef.current) {
+      clearTimeout(processingTimeoutRef.current);
+      processingTimeoutRef.current = null;
+    }
     setCapturedImage(null);
+    setProcessingImage(false);
     onOpenChange(false);
   };
+
+  // Clean up timeouts when component unmounts
+  React.useEffect(() => {
+    return () => {
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
