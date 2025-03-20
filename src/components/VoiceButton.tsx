@@ -1,10 +1,10 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Mic, X, Loader } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import VoiceCircle from './voice/VoiceCircle';
+import SessionModeButtons from './voice/SessionModeButtons';
+import VoiceControlButton from './voice/VoiceControlButton';
 import AudioRecorder from './voice/AudioRecorder';
-import PulseAnimation from './voice/PulseAnimation';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -33,7 +33,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       if (text.trim().length > 0) {
         onSpeechResult && onSpeechResult(text);
       } else {
-        // Handle empty text
         console.log("Empty text received from speech recognition");
         setStatus('idle');
       }
@@ -41,8 +40,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     onProcessingStateChange: (isProcessing) => {
       if (!isProcessing && status === 'processing') {
         console.log("Processing complete, ready for speaking state");
-        // Don't transition to idle here - we need to wait for the assistant response
-        // The transition will be handled by the isPlayingResponse effect
       }
     }
   });
@@ -56,7 +53,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       setStatus('speaking');
     } else if (status === 'speaking') {
       console.log("Response finished playing, setting status to idle after delay");
-      // Reset to idle after response is done playing
       const timer = setTimeout(() => {
         console.log("Timeout executed, setting status to idle");
         setStatus('idle');
@@ -105,92 +101,37 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     onEndSession && onEndSession();
   };
 
-  const renderButtonContent = () => {
-    switch (status) {
-      case 'listening':
-        return <X size={24} className="text-gray-800" />;
-      case 'processing':
-        return <Loader size={24} className="text-gray-800 animate-spin" />;
-      case 'speaking':
-        return <Mic size={24} className="text-gray-800" />;
-      default:
-        return <span className="text-gray-800 font-medium">begin session</span>;
+  const getStatusHeading = () => {
+    switch(status) {
+      case 'idle': return "still up? same!";
+      case 'listening': return "I'm listening...";
+      case 'processing': return "Processing...";
+      case 'speaking': return "Speaking...";
     }
-  };
-
-  // Render content for the main circle based on the current status
-  const renderCircleContent = () => {
-    if (status === 'processing') {
-      return <Loader size={48} className="text-white animate-spin" />;
-    } else if (status === 'speaking') {
-      return <Mic size={48} className="text-white" />;
-    }
-    return null;
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h1 className="text-3xl font-medium mb-8 text-gray-800">
-        {status === 'idle' ? "still up? same!" : 
-         status === 'listening' ? "I'm listening..." :
-         status === 'processing' ? "Processing..." :
-         "Speaking..."}
+        {getStatusHeading()}
       </h1>
       
-      <div className="relative mb-16">
-        <motion.div 
-          className="w-48 h-48 rounded-full bg-[#35cab4] flex items-center justify-center relative"
-          animate={{
-            scale: status === 'speaking' ? [1, 1.05, 1] : 1
-          }}
-          transition={{ 
-            duration: 2, 
-            repeat: status === 'speaking' ? Infinity : 0,
-            repeatType: "loop" 
-          }}
-        >
-          <PulseAnimation isActive={status === 'listening'} />
-          {renderCircleContent()}
-        </motion.div>
-        
-        {status === 'listening' && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="absolute -top-2 -right-2 bg-white rounded-full p-2 shadow-md z-10"
-            onClick={handleStopButton}
-          >
-            <X size={18} className="text-gray-600" />
-          </motion.button>
-        )}
-      </div>
+      <VoiceCircle 
+        status={status} 
+        onStopButtonClick={handleStopButton} 
+      />
       
       {errorMsg && (
         <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
       )}
       
-      <div className="flex space-x-4 mb-6">
-        <Button 
-          variant="outline" 
-          className={`rounded-full px-8 py-2 ${status === 'idle' ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-white border-gray-200 text-gray-400'}`}
-        >
-          classic
-        </Button>
-        <Button 
-          variant="outline" 
-          className="rounded-full px-8 py-2 bg-white border-gray-200 text-gray-400"
-        >
-          guided
-        </Button>
-      </div>
+      <SessionModeButtons status={status} />
       
-      <Button 
+      <VoiceControlButton 
+        status={status}
         onClick={handleToggle}
         disabled={status === 'processing' || status === 'speaking'}
-        className={`bg-[#35cab4] hover:bg-[#2ba999] text-white rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' || status === 'speaking' ? 'opacity-80' : ''}`}
-      >
-        {renderButtonContent()}
-      </Button>
+      />
       
       <Button
         variant="ghost" 
