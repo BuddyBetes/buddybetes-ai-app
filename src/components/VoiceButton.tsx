@@ -14,7 +14,7 @@ interface VoiceButtonProps {
   onStartSession?: () => void;
   onEndSession?: () => void;
   onTextMode?: () => void;
-  onSpeechResult?: (text: string, isTaglish?: boolean) => void;
+  onSpeechResult?: (text: string) => void;
   isPlayingResponse: boolean;
   isLoading?: boolean;
 }
@@ -28,7 +28,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   isLoading = false
 }) => {
   const [isInitializing, setIsInitializing] = useState(true);
-  const [isTaglishEnabled, setIsTaglishEnabled] = useState(false);
   const { toast } = useToast();
   
   // Initialize state and status handling
@@ -44,11 +43,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   } = useVoiceButtonState({
     onStartSession,
     onEndSession,
-    onSpeechResult: (text: string) => {
-      if (onSpeechResult) {
-        onSpeechResult(text, isTaglishEnabled);
-      }
-    },
+    onSpeechResult,
     isPlayingResponse
   });
 
@@ -60,15 +55,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle language toggle
-  const handleToggleLanguage = (enabled: boolean) => {
-    setIsTaglishEnabled(enabled);
-    toast({
-      title: enabled ? "Taglish Mode Enabled" : "English Mode Enabled",
-      description: enabled ? "You can now speak in Taglish (Tagalog-English)" : "Using English only",
-    });
-  };
-
   if (isInitializing) {
     return <VoiceInitializing />;
   }
@@ -78,11 +64,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       <VoiceStatusHeading status={status} />
       
       <VoiceProcessor
-        onSpeechResult={(text) => {
-          if (onSpeechResult) {
-            onSpeechResult(text, isTaglishEnabled);
-          }
-        }}
+        onSpeechResult={onSpeechResult || (() => {})}
         onProcessingStateChange={(isProcessing) => {
           if (!isProcessing && status === 'processing') {
             console.log("Processing complete, ready for speaking state");
@@ -93,7 +75,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         setLastUserMessage={setLastUserMessage}
         onStartSession={onStartSession}
         onEndSession={onEndSession}
-        language={isTaglishEnabled ? "tl" : "en"}
       >
         {({ isRecording, handleStartSession, handleEndSession, handleStopButton }) => (
           <>
@@ -133,8 +114,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
               }}
               onTextMode={onTextMode || (() => {})}
               playbackCompleted={playbackCompleted}
-              isTaglishEnabled={isTaglishEnabled}
-              onToggleLanguage={handleToggleLanguage}
             />
           </>
         )}

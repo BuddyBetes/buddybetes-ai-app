@@ -6,14 +6,13 @@ import { convertSpeechToText } from '@/services/speechServices';
 export interface SpeechProcessingOptions {
   onSpeechResult: (text: string) => void;
   onProcessingStateChange: (isProcessing: boolean) => void;
-  language?: string;
 }
 
 export const processSpeechFromBlob = async (
   audioBlob: Blob, 
   options: SpeechProcessingOptions
 ): Promise<void> => {
-  const { onSpeechResult, onProcessingStateChange, language = "en" } = options;
+  const { onSpeechResult, onProcessingStateChange } = options;
 
   try {
     // Validate audio blob
@@ -30,7 +29,6 @@ export const processSpeechFromBlob = async (
 
     console.log("Processing audio blob of size:", audioBlob.size, "bytes");
     console.log("Audio blob type:", audioBlob.type);
-    console.log("Language setting:", language);
     
     // Enhanced logging for audio format
     const originalMimeType = audioBlob.type;
@@ -80,21 +78,20 @@ export const processSpeechFromBlob = async (
       
       console.log("✅ Valid base64 data, sending to speech-to-text service");
       
-      // Add explicit information about the mime type and language
+      // Add explicit information about the mime type
       const payload = { 
         audio: base64Audio,
-        language: language,
+        language: 'en',
         mimeType: originalMimeType
       };
       
       console.log("Sending to speech-to-text function with payload:", {
         audioLength: payload.audio.length,
-        language: payload.language,
         mimeType: payload.mimeType
       });
       
       // Process speech using the API service
-      const result = await convertSpeechToText(base64Audio, originalMimeType, language);
+      const result = await convertSpeechToText(base64Audio, payload.mimeType);
       
       if (result && result.text) {
         onSpeechResult(result.text);

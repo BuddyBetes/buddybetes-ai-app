@@ -1,20 +1,12 @@
-
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useLogContext } from '@/context/LogContext';
+import { useEffect } from 'react';
+import { useUIState } from './useUIState';
 import { useMessageHandling } from './useMessageHandling';
 import { useSpeechSynthesis } from './useSpeechSynthesis';
-import { useUIState } from './useUIState';
-
-// Time groups for message display
-export const TIME_GROUPS = {
-  recent: 1000 * 60 * 60, // Last hour
-  today: 1000 * 60 * 60 * 24, // Last 24 hours
-  week: 1000 * 60 * 60 * 24 * 7, // Last week
-  earlier: Infinity // Anything before
-};
+import { useGlucoseLogging } from './useGlucoseLogging';
+import { Message } from '@/types';
+import { TIME_GROUPS } from './constants';
 
 export const useAssistant = () => {
-  // UI State Management
   const {
     mode,
     showWelcome,
@@ -28,11 +20,9 @@ export const useAssistant = () => {
     scrollToBottom,
     setShowScrollButton
   } = useUIState();
+
+  const { isPlayingResponse, playResponseAudio } = useSpeechSynthesis();
   
-  // Audio playback handling
-  const { playResponseAudio, isPlayingResponse } = useSpeechSynthesis();
-  
-  // Message handling
   const {
     messages,
     input,
@@ -40,53 +30,65 @@ export const useAssistant = () => {
     handleUserMessage,
     handleInputChange,
     handleSend,
-    handleSpeechResult: baseHandleSpeechResult,
+    handleSpeechResult: originalHandleSpeechResult,
     setMessages
   } = useMessageHandling(playResponseAudio, mode);
   
-  // Handle Taglish mode in speech results
-  const handleSpeechResult = async (text: string, isTaglish?: boolean) => {
-    console.log(`Processing speech result${isTaglish ? ' (Taglish mode)' : ''}:`, text);
+  const {
+    logCreated,
+    askForTime,
+    processGlucoseLogIntent,
+    processViewLogsNavigation,
+    handleLogCreated
+  } = useGlucoseLogging(setMessages, playResponseAudio, mode);
+  
+  // Custom speech result handler that first checks for glucose logging intents
+  const handleSpeechResult = async (text: string) => {
+    // First check if this is a glucose logging intent
+    const isGlucoseLog = await processGlucoseLogIntent(text);
     
-    // If Taglish is enabled, we add a special instruction to the AI
-    if (isTaglish) {
-      // For Taglish, we add a custom instruction to the message
-      const taglishPrompt = text + "\n\n(Please respond in Taglish - mix of Tagalog and English)";
-      await baseHandleSpeechResult(taglishPrompt);
-    } else {
-      await baseHandleSpeechResult(text);
+    // If it's not a glucose log, handle it with the regular flow
+    if (!isGlucoseLog) {
+      await originalHandleSpeechResult(text);
     }
   };
-  
-  // Perform suggestion selection
-  const handleSuggestionSelect = async (suggestion: string) => {
-    await handleUserMessage(suggestion);
-  };
-  
-  // Auto-scroll to bottom on new messages
+
+  // Handle log creation follow-up
   useEffect(() => {
-    if (messages.length > 0 && mode === 'text') {
-      scrollToBottom();
+    handleLogCreated();
+  }, [logCreated]);
+  
+  // Initialize with welcome message
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          text: "Hi! I'm BuddyBetes. How can I help?",
+          type: 'assistant',
+          timestamp: Date.now(),
+          isNew: true
+        }
+      ]);
     }
-  }, [messages, mode, scrollToBottom]);
-  
-  // Handle scroll detection for showing the scroll-to-bottom button
+  }, [messages.length, setMessages]);
+
+  // Scroll to bottom when messages change
   useEffect(() => {
-    const handleScroll = () => {
-      if (mode !== 'text') return;
-      
-      const scrollPosition = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const fullHeight = document.documentElement.scrollHeight;
-      
-      const isScrolledUp = scrollPosition + windowHeight < fullHeight - 100;
-      setShowScrollButton(isScrolledUp);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [mode, setShowScrollButton]);
+    scrollToBottom();
+  }, [messages]);
   
+  const handleSuggestionSelect = (suggestion: string) => {
+    handleInputChange(suggestion);
+  };
+
+  // Process message with possible navigation logic
+  const processMessage = (text: string) => {
+    const shouldNavigate = processViewLogsNavigation(text);
+    if (!shouldNavigate) {
+      return handleUserMessage(text);
+    }
+  };
+
   return {
     mode,
     messages,
@@ -94,8 +96,8 @@ export const useAssistant = () => {
     isLoading,
     showWelcome,
     showScrollButton,
-    messagesEndRef,
     isPlayingResponse,
+    messagesEndRef,
     handleStartSession,
     handleEndSession,
     handleTextMode,
@@ -103,9 +105,13 @@ export const useAssistant = () => {
     handleInputChange,
     handleSuggestionSelect,
     handleDismissWelcome,
-    handleSend,
+    handleSend: () => processMessage(input),
     handleSpeechResult,
     scrollToBottom,
-    setShowScrollButton
+    setShowScrollButton,
+    logCreated,
+    askForTime
   };
 };
+
+export { TIME_GROUPS } from './constants';

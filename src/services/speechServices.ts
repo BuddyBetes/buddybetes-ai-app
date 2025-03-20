@@ -7,14 +7,9 @@ import { blobToBase64 } from './speech/speechUtils';
  * Converts spoken audio to text using Supabase Edge Function with browser fallback
  * @param base64Audio - Base64 encoded audio data
  * @param mimeType - Optional MIME type of the audio data
- * @param language - Optional language code (default: "en")
  * @returns Promise with transcription result
  */
-export async function convertSpeechToText(
-  base64Audio: string, 
-  mimeType?: string, 
-  language: string = "en"
-): Promise<{ text: string } | null> {
+export async function convertSpeechToText(base64Audio: string, mimeType?: string): Promise<{ text: string } | null> {
   if (!base64Audio || base64Audio.length < 100) {
     console.error("Invalid base64 audio data");
     throw new Error("Invalid audio data provided");
@@ -22,7 +17,6 @@ export async function convertSpeechToText(
   
   console.log("Processing speech-to-text conversion...");
   console.log("Base64 audio length:", base64Audio.length);
-  console.log("Language:", language);
   
   if (mimeType) {
     console.log("Audio MIME type:", mimeType);
@@ -30,10 +24,7 @@ export async function convertSpeechToText(
   
   try {
     // Try Supabase Edge Function first with enhanced payload
-    const payload: any = { 
-      audio: base64Audio, 
-      language: language 
-    };
+    const payload: any = { audio: base64Audio, language: "en" };
     
     // Include MIME type if available
     if (mimeType) {
@@ -47,7 +38,7 @@ export async function convertSpeechToText(
     
     // Try browser-based speech recognition as fallback
     try {
-      const browserResult = await browserSpeechToText(undefined, language);
+      const browserResult = await browserSpeechToText();
       if (browserResult && browserResult.text) {
         console.log("Browser speech recognition succeeded:", browserResult.text);
         return browserResult;
@@ -65,13 +56,9 @@ export async function convertSpeechToText(
  * Sends audio file directly to speech-to-text function using FormData
  * with browser fallback
  * @param audioFile - Audio file to convert
- * @param language - Optional language code (default: "en")
  * @returns Promise with transcription result
  */
-export async function convertAudioFileToText(
-  audioFile: File, 
-  language: string = "en"
-): Promise<{ text: string } | null> {
+export async function convertAudioFileToText(audioFile: File): Promise<{ text: string } | null> {
   if (!audioFile || audioFile.size === 0) {
     console.error("Invalid audio file");
     throw new Error("Invalid audio file provided");
@@ -79,18 +66,17 @@ export async function convertAudioFileToText(
   
   console.log("Processing audio file to text conversion...");
   console.log("Audio file size:", audioFile.size, "type:", audioFile.type);
-  console.log("Language:", language);
   
   try {
     // Try Supabase Edge Function first
-    return await supabaseAudioFileToText(audioFile, language);
+    return await supabaseAudioFileToText(audioFile);
   } catch (supabaseError) {
     console.error("Supabase audio file to text error:", supabaseError);
     console.log("Trying browser-based speech recognition as fallback...");
     
     // Try browser-based fallback
     try {
-      const browserResult = await browserSpeechToText(audioFile, language);
+      const browserResult = await browserSpeechToText(audioFile);
       if (browserResult && browserResult.text) {
         console.log("Browser speech recognition succeeded:", browserResult.text);
         return browserResult;

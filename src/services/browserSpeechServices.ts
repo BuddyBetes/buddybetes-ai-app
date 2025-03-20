@@ -1,205 +1,126 @@
-// Keep browser recognition fallback mechanism
-// This is a fallback service in case the OpenAI API is not available
 
 /**
- * Performs browser-based speech recognition
- * @param audioFile - Optional audio file to transcribe
- * @param language - Optional language code (default: "en-US")
- * @returns Promise with transcription result
+ * Browser-based speech services using Web Speech API
+ * Used as fallback when Supabase Edge Functions fail
  */
-export const browserSpeechToText = async (
-  audioFile?: File, 
-  language: string = "en"
-): Promise<{ text: string } | null> => {
-  console.log("Using browser-based speech recognition as fallback");
-  
-  // Map simple language codes to SpeechRecognition language codes
-  const languageMap: Record<string, string> = {
-    'en': 'en-US',
-    'tl': 'fil-PH',  // Tagalog
-    'es': 'es-ES',
-    'fr': 'fr-FR',
-    'de': 'de-DE',
-    'it': 'it-IT',
-    'ja': 'ja-JP',
-    'ko': 'ko-KR',
-    'pt': 'pt-BR',
-    'ru': 'ru-RU',
-    'zh': 'zh-CN',
-  };
-  
-  // Get the appropriate language code for speech recognition
-  const recognitionLanguage = languageMap[language] || 'en-US';
-  console.log("Using recognition language:", recognitionLanguage);
-  
+
+// Speech recognition service using browser's Web Speech API
+export const browserSpeechToText = async (audioBlob?: Blob): Promise<{ text: string } | null> => {
   return new Promise((resolve, reject) => {
-    // Check if browser supports SpeechRecognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      console.error("Browser does not support speech recognition");
-      reject(new Error("Browser does not support speech recognition"));
-      return;
-    }
-    
-    const recognition = new SpeechRecognition();
-    
-    // Configure the recognition
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = recognitionLanguage;
-    recognition.maxAlternatives = 1;
-    
-    // Store results
-    let transcript = '';
-    
-    // Handle speech recognition results
-    recognition.onresult = (event) => {
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          const result = event.results[i][0].transcript;
-          console.log("Browser speech recognition interim result:", result);
-          transcript += result + ' ';
+    try {
+      // Check if Speech Recognition is supported
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        console.log("Speech recognition not supported in this browser");
+        reject(new Error("Speech recognition not supported in this browser"));
+        return;
+      }
+
+      // Create speech recognition instance
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionAPI();
+      
+      // Configure recognition
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      // If we already have audio blob, we can't use it directly with the Web Speech API
+      // We'll just start recognition from the mic as fallback
+      if (audioBlob) {
+        console.log("Browser Speech API cannot process pre-recorded audio. Starting live recognition instead.");
+      }
+      
+      // Handle results
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("Browser speech recognition result:", transcript);
+        resolve({ text: transcript });
+      };
+      
+      recognition.onerror = (event) => {
+        console.error("Browser speech recognition error:", event.error);
+        reject(new Error(`Speech recognition error: ${event.error}`));
+      };
+      
+      recognition.onend = () => {
+        // If no result event was triggered before end
+        if (!recognition.result) {
+          console.log("No speech detected");
+          resolve({ text: "" });
         }
-      }
-    };
-    
-    // Handle speech recognition end
-    recognition.onend = () => {
-      console.log("Browser speech recognition completed");
-      if (transcript.trim()) {
-        resolve({ text: transcript.trim() });
-      } else {
-        console.warn("No speech detected in browser recognition");
-        reject(new Error("No speech detected"));
-      }
-    };
-    
-    // Handle errors
-    recognition.onerror = (event) => {
-      console.error("Browser speech recognition error:", event.error);
-      reject(new Error(`Browser speech recognition error: ${event.error}`));
-    };
-    
-    // If we have an audio file, we need to play it
-    if (audioFile) {
-      console.log("Playing audio file for recognition");
-      const audio = new Audio(URL.createObjectURL(audioFile));
-      audio.onended = () => {
-        console.log("Audio playback completed, stopping recognition");
-        recognition.stop();
       };
-      audio.onerror = (e) => {
-        console.error("Error playing audio file:", e);
-        reject(new Error("Error playing audio file"));
-      };
-      audio.play().then(() => {
-        console.log("Starting recognition during audio playback");
-        recognition.start();
-      }).catch(e => {
-        console.error("Could not start audio playback:", e);
-        reject(new Error("Could not start audio playback"));
-      });
-    } else {
-      // If no audio file, just start recognition (uses microphone)
-      console.log("Starting browser speech recognition with microphone");
+      
+      // Start recognition
       recognition.start();
       
-      // Auto-stop after a few seconds of silence
+      // Safety timeout
       setTimeout(() => {
-        recognition.stop();
-      }, 5000);
+        if (recognition) {
+          console.log("Speech recognition timeout");
+          recognition.stop();
+          resolve({ text: "" });
+        }
+      }, 10000);
+      
+    } catch (error) {
+      console.error("Error initializing browser speech recognition:", error);
+      reject(error);
     }
   });
 };
 
-/**
- * Performs browser-based text-to-speech using Web Speech API
- * @param text - Text to convert to speech
- * @param language - Optional language code (default: "en-US")
- * @returns Promise that resolves when speech is complete or rejects on error
- */
-export const browserTextToSpeech = async (
-  text: string,
-  language: string = "en-US"
-): Promise<boolean> => {
-  console.log("Using browser-based text-to-speech as fallback");
-  
-  return new Promise((resolve, reject) => {
-    // Check if browser supports speech synthesis
-    if (!window.speechSynthesis) {
-      console.error("Browser does not support speech synthesis");
-      reject(new Error("Browser does not support speech synthesis"));
-      return;
-    }
-    
-    // Map simple language codes to SpeechSynthesis language codes
-    const languageMap: Record<string, string> = {
-      'en': 'en-US',
-      'tl': 'fil-PH',  // Tagalog
-      'es': 'es-ES',
-      'fr': 'fr-FR',
-      'de': 'de-DE',
-      'it': 'it-IT',
-      'ja': 'ja-JP',
-      'ko': 'ko-KR',
-      'pt': 'pt-BR',
-      'ru': 'ru-RU',
-      'zh': 'zh-CN',
-    };
-    
-    // Get the appropriate language code for speech synthesis
-    const synthesisLanguage = languageMap[language] || 'en-US';
-    
+// Text-to-speech using browser's SpeechSynthesis API
+export const browserTextToSpeech = async (text: string): Promise<boolean> => {
+  return new Promise((resolve) => {
     try {
+      // Check if Speech Synthesis is supported
+      if (!('speechSynthesis' in window)) {
+        console.log("Speech synthesis not supported in this browser");
+        resolve(false);
+        return;
+      }
+      
       // Create speech synthesis utterance
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = synthesisLanguage;
+      
+      // Configure voice
+      utterance.lang = 'en-US';
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       
-      // Set up event handlers
+      // Try to use a more natural voice if available
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        // Look for a good female voice as default
+        const preferredVoice = voices.find(voice => 
+          voice.name.includes('Female') || 
+          voice.name.includes('Samantha') || 
+          voice.name.includes('Google') ||
+          voice.lang === 'en-US'
+        );
+        
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+      }
+      
+      // Handle events
       utterance.onend = () => {
-        console.log("Browser text-to-speech completed");
+        console.log("Browser speech synthesis completed");
         resolve(true);
       };
       
       utterance.onerror = (event) => {
-        console.error("Browser speech synthesis error:", event);
-        reject(new Error("Browser speech synthesis error"));
+        console.error("Browser speech synthesis error:", event.error);
+        resolve(false);
       };
       
-      // Get available voices
-      let voices = window.speechSynthesis.getVoices();
-      
-      // If voices are not loaded yet, wait for them
-      if (voices.length === 0) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          voices = window.speechSynthesis.getVoices();
-          
-          // Try to find a voice for the specified language
-          const voice = voices.find(v => v.lang.startsWith(synthesisLanguage.split('-')[0]));
-          if (voice) {
-            utterance.voice = voice;
-          }
-          
-          // Speak the text
-          window.speechSynthesis.speak(utterance);
-        };
-      } else {
-        // Try to find a voice for the specified language
-        const voice = voices.find(v => v.lang.startsWith(synthesisLanguage.split('-')[0]));
-        if (voice) {
-          utterance.voice = voice;
-        }
-        
-        // Speak the text
-        window.speechSynthesis.speak(utterance);
-      }
+      // Start speaking
+      window.speechSynthesis.speak(utterance);
     } catch (error) {
-      console.error("Text-to-speech setup error:", error);
-      reject(error);
+      console.error("Error in browser text-to-speech:", error);
+      resolve(false);
     }
   });
 };

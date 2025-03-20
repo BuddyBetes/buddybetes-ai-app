@@ -50,19 +50,14 @@ export async function supabaseSpeechToText(payload: {
 /**
  * Sends audio file directly to Supabase speech-to-text function using FormData
  * @param audioFile - Audio file to convert
- * @param language - Language code (default: "en")
  * @returns Promise with transcription result
  */
-export async function supabaseAudioFileToText(
-  audioFile: File, 
-  language: string = "en"
-): Promise<{ text: string } | null> {
+export async function supabaseAudioFileToText(audioFile: File): Promise<{ text: string } | null> {
   console.log("Sending audio file to Supabase speech-to-text function...");
   console.log("Audio file details:", {
     name: audioFile.name,
     type: audioFile.type,
-    size: audioFile.size,
-    language: language
+    size: audioFile.size
   });
   
   // Validate audio file before sending
@@ -81,7 +76,7 @@ export async function supabaseAudioFileToText(
   // Create form data
   const formData = new FormData();
   formData.append('file', audioFile);
-  formData.append('language', language);
+  formData.append('language', 'en');
   
   // Get the Supabase URL and key
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
