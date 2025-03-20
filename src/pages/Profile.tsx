@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import AppHeader from '@/components/AppHeader';
 
 const Profile = () => {
   const menuItems = [
@@ -35,8 +36,8 @@ const Profile = () => {
   };
 
   return (
-    <Layout title="Profile">
-      <div className="space-y-6">
+    <Layout>
+      <div className="space-y-6 pb-24">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

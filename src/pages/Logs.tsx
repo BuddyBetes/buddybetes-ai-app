@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { useLogContext, GlucoseLog } from '../context/LogContext';
 import { motion } from 'framer-motion';
 import { ChevronRight, Dot } from 'lucide-react';
+import AppHeader from '@/components/AppHeader';
 
 const Logs = () => {
   const { logs } = useLogContext();
@@ -60,8 +61,8 @@ const Logs = () => {
   });
 
   return (
-    <Layout title="Glucose Logs">
-      <div className="space-y-6">
+    <Layout>
+      <div className="space-y-6 pb-24">
         {Object.entries(groupedLogs).map(([dateStr, logsForDate], dateIndex) => (
           <motion.div 
             key={dateStr}

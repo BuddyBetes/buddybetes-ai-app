@@ -9,6 +9,7 @@ import { useAssistant, TIME_GROUPS } from '../hooks/assistant/useAssistant';
 import { useIsMobile } from '@/hooks/use-mobile';
 import VoiceSubtitles from '@/components/voice/VoiceSubtitles';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import AppHeader from '@/components/AppHeader';
 
 const Assistant = () => {
   const {
@@ -84,6 +85,7 @@ const Assistant = () => {
 
   return (
     <Layout>
+      <AppHeader />
       <div className={`mx-auto h-full flex flex-col ${isMobile ? 'w-full' : 'max-w-3xl'}`}>
         <AnimatePresence mode="wait">
           {mode === 'voice' ? (

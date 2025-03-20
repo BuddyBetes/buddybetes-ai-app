@@ -59,7 +59,7 @@ serve(async (req) => {
 
     // Prepare system prompt with context about being a glucose assistant
     const systemPrompt = `
-      You are Glucose Buddy, an AI assistant specifically designed to help people manage diabetes and track glucose levels.
+      You are BuddyBetes, an AI assistant specifically designed to help people manage diabetes and track glucose levels.
       Your primary functions are:
       - Providing insights about glucose readings and patterns
       - Offering dietary advice to maintain stable blood sugar
