@@ -1,6 +1,5 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { blobToBase64, convertSpeechToText } from '@/services/speechServices';
 
 export interface SpeechProcessingOptions {
   onSpeechResult: (text: string) => void;
@@ -12,14 +11,14 @@ export const processSpeechFromBlob = async (
   options: SpeechProcessingOptions
 ): Promise<void> => {
   const { onSpeechResult, onProcessingStateChange } = options;
-  const toast = useToast();
+  const { toast } = useToast();
 
   try {
     // Validate audio blob
     if (!audioBlob || audioBlob.size < 100) {
       console.log("Audio blob too small, likely no speech detected");
       onProcessingStateChange(false);
-      toast.toast({
+      toast({
         title: "No Speech Detected",
         description: "We couldn't detect any speech. Please try again and speak clearly.",
         variant: "destructive"
@@ -38,7 +37,7 @@ export const processSpeechFromBlob = async (
       if (result && result.text) {
         onSpeechResult(result.text);
       } else {
-        toast.toast({
+        toast({
           title: "Empty Transcription",
           description: "We couldn't transcribe your speech. Please try again and speak clearly.",
           variant: "destructive"
@@ -47,7 +46,7 @@ export const processSpeechFromBlob = async (
       }
     } catch (apiError) {
       console.error("Speech-to-text API error:", apiError);
-      toast.toast({
+      toast({
         title: "Transcription Error",
         description: "Error processing your speech. Please try again.",
         variant: "destructive"
@@ -56,7 +55,7 @@ export const processSpeechFromBlob = async (
     }
   } catch (error) {
     console.error("Error processing audio:", error);
-    toast.toast({
+    toast({
       title: "Processing Error",
       description: "Error processing your audio. Please try again.",
       variant: "destructive"
@@ -64,3 +63,6 @@ export const processSpeechFromBlob = async (
     onProcessingStateChange(false);
   }
 };
+
+// Helper functions imported from speechServices
+import { blobToBase64, convertSpeechToText } from '@/services/speechServices';

@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, X, ZapIcon } from 'lucide-react';
+import { Camera, X, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
@@ -8,18 +8,23 @@ interface CameraCaptureProps {
   mode: 'food' | 'meter';
   onCapture: (imageDataUrl: string) => void;
   onClose: () => void;
+  isProcessing?: boolean;
+  capturedImage?: string | null;
 }
 
 const CameraCapture: React.FC<CameraCaptureProps> = ({ 
   mode, 
   onCapture, 
-  onClose 
+  onClose,
+  isProcessing = false,
+  capturedImage = null
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [flashEffect, setFlashEffect] = useState(false);
 
   // Initialize camera
   useEffect(() => {
@@ -48,7 +53,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       }
     };
 
-    initCamera();
+    if (!capturedImage) {
+      initCamera();
+    }
 
     // Cleanup function
     return () => {
@@ -56,10 +63,19 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [capturedImage]);
 
   const captureImage = () => {
     if (!videoRef.current || !canvasRef.current) return;
+    
+    // Play shutter sound
+    const audio = new Audio('/message-sent.mp3');
+    audio.volume = 0.2;
+    audio.play().catch(e => console.log('Audio play error:', e));
+    
+    // Add flash effect
+    setFlashEffect(true);
+    setTimeout(() => setFlashEffect(false), 150);
     
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -110,6 +126,40 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     }
   };
 
+  // Render captured image
+  if (capturedImage) {
+    return (
+      <div className="flex flex-col h-full bg-black">
+        <div className="relative flex-1 flex items-center justify-center overflow-hidden">
+          <img 
+            src={capturedImage} 
+            alt="Captured" 
+            className="w-full h-full object-contain"
+          />
+          
+          {isProcessing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="text-white text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Processing image...</p>
+              </div>
+            </div>
+          )}
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 z-10 text-white bg-black/30 hover:bg-black/50"
+            onClick={onClose}
+            disabled={isProcessing}
+          >
+            <X />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-black">
       {/* Camera view */}
@@ -134,6 +184,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             />
             {renderOverlay()}
             <canvas ref={canvasRef} className="hidden" />
+            
+            {/* Flash effect */}
+            {flashEffect && (
+              <div className="absolute inset-0 bg-white animate-flash"></div>
+            )}
           </>
         )}
         
