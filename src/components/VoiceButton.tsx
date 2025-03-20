@@ -1,9 +1,12 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, X, Volume2, VolumeX } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from 'react';
+import PulseAnimation from './voice/PulseAnimation';
+import StatusButton from './voice/StatusButton';
+import CancelButton from './voice/CancelButton';
+import LanguageToggle from './voice/LanguageToggle';
+import ActionButtons from './voice/ActionButtons';
+import AudioRecorder from './voice/AudioRecorder';
+import AudioPlayer from './voice/AudioPlayer';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -18,249 +21,68 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   onTextMode,
   onSpeechResult
 }) => {
-  const [isListening, setIsListening] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
   const [isPulsing, setIsPulsing] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const { toast } = useToast();
+  
+  // Initialize the audio recorder
+  const { isRecording, startRecording, stopRecording } = AudioRecorder({
+    onSpeechResult: (text) => {
+      onSpeechResult && onSpeechResult(text);
+    },
+    onProcessingStateChange: (isProcessing) => {
+      setStatus(isProcessing ? 'processing' : 'idle');
+    }
+  });
 
-  // Initialize media recorder
-  useEffect(() => {
-    let mounted = true;
-    
-    const initializeRecorder = async () => {
-      try {
-        console.log("Initializing voice recorder...");
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream);
-        
-        recorder.onstart = () => {
-          console.log("Voice recording started");
-          if (mounted) setAudioChunks([]);
-        };
-        
-        recorder.ondataavailable = (e) => {
-          console.log("Voice data chunk received");
-          if (mounted) setAudioChunks(chunks => [...chunks, e.data]);
-        };
-        
-        recorder.onstop = async () => {
-          console.log("Voice recording stopped");
-          if (!mounted) return;
-          
-          if (audioChunks.length > 0) {
-            setIsProcessing(true);
-            console.log("Processing audio...");
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            await processAudio(audioBlob);
-          }
-        };
-        
-        if (mounted) setMediaRecorder(recorder);
-        console.log("Voice recorder initialized successfully");
-      } catch (err) {
-        console.error('Error accessing microphone:', err);
-        toast({
-          title: "Microphone Error",
-          description: "Please make sure your microphone is connected and permissions are granted.",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    initializeRecorder();
-    
-    return () => {
-      mounted = false;
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
-    };
-  }, []);
+  // Initialize the audio player
+  const { audioRef, playResponseAudio } = AudioPlayer({
+    onPlaybackStateChange: (isPlaying) => {
+      setStatus(isPlaying ? 'speaking' : 'idle');
+    }
+  });
 
   const handleToggle = () => {
-    if (isListening) {
-      stopListening();
+    if (status === 'listening') {
+      handleEndSession();
     } else {
-      startListening();
+      handleStartSession();
     }
   };
 
-  const startListening = () => {
-    if (mediaRecorder && mediaRecorder.state === 'inactive') {
-      mediaRecorder.start();
-      setIsListening(true);
-      setIsPulsing(true);
-      onStartSession && onStartSession();
-      console.log("Started listening for voice input");
-    }
+  const handleStartSession = () => {
+    startRecording();
+    setStatus('listening');
+    setIsPulsing(true);
+    onStartSession && onStartSession();
+    console.log("Started listening for voice input");
   };
 
-  const stopListening = () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-      setIsListening(false);
-      setIsPulsing(false);
-      onEndSession && onEndSession();
-      console.log("Stopped listening for voice input");
-    }
+  const handleEndSession = () => {
+    stopRecording();
+    setStatus('idle');
+    setIsPulsing(false);
+    onEndSession && onEndSession();
+    console.log("Stopped listening for voice input");
   };
 
-  const processAudio = async (audioBlob: Blob) => {
-    try {
-      console.log("Converting audio blob to base64...");
-      // Convert blob to base64
-      const reader = new FileReader();
-      return new Promise((resolve, reject) => {
-        reader.onloadend = async () => {
-          try {
-            const base64Audio = (reader.result as string).split(',')[1];
-            console.log("Audio converted to base64, sending to speech-to-text function...");
-            
-            // Send to speech-to-text function
-            const { data, error } = await supabase.functions.invoke('speech-to-text', {
-              body: { audio: base64Audio }
-            });
-            
-            if (error) {
-              console.error("Speech-to-text error:", error);
-              throw new Error(error.message);
-            }
-            
-            if (data.text) {
-              console.log("Transcription received:", data.text);
-              // Call the callback with the transcribed text
-              onSpeechResult && onSpeechResult(data.text);
-              
-              // Show transcription toast
-              toast({
-                title: "Transcription",
-                description: data.text,
-              });
-
-              // Wait for AI response and then convert it to speech
-              console.log("Waiting for AI response...");
-              setIsProcessing(false);
-              setIsSpeaking(true);
-            } else {
-              console.log("No transcription received from speech-to-text function");
-              setIsProcessing(false);
-              toast({
-                title: "No Speech Detected",
-                description: "We couldn't detect any speech in your recording.",
-                variant: "destructive"
-              });
-            }
-            
-            resolve(true);
-          } catch (error) {
-            console.error("Processing error:", error);
-            setIsProcessing(false);
-            toast({
-              title: "Processing Error",
-              description: error instanceof Error ? error.message : "Failed to process audio",
-              variant: "destructive"
-            });
-            reject(error);
-          }
-        };
-        
-        reader.onerror = (error) => {
-          console.error("File reader error:", error);
-          setIsProcessing(false);
-          reject(error);
-        };
-        
-        reader.readAsDataURL(audioBlob);
-      });
-    } catch (error) {
-      setIsProcessing(false);
-      console.error("Audio processing error:", error);
-      toast({
-        title: "Processing Error",
-        description: "Failed to process audio",
-        variant: "destructive"
-      });
+  const handleCancel = () => {
+    console.log("Cancelling current voice operation");
+    setStatus('idle');
+    setIsPulsing(false);
+    stopRecording();
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
+    onEndSession && onEndSession();
   };
 
-  // Play the AI's response as audio
-  const playResponseAudio = async (text: string) => {
-    try {
-      console.log("Converting AI response to speech:", text.substring(0, 50) + "...");
-      setIsSpeaking(true);
-      
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text: text }
-      });
-      
-      if (error) {
-        console.error("Text-to-speech error:", error);
-        throw new Error(error.message);
-      }
-      
-      if (data.audioContent) {
-        console.log("Text-to-speech response received, playing audio...");
-        // Create audio from base64
-        const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
-        
-        if (audioRef.current) {
-          audioRef.current.src = audioSrc;
-          audioRef.current.onended = () => {
-            console.log("Audio playback finished");
-            setIsSpeaking(false);
-          };
-          audioRef.current.onerror = (e) => {
-            console.error("Audio playback error:", e);
-            setIsSpeaking(false);
-            toast({
-              title: "Audio Playback Error",
-              description: "Failed to play audio response",
-              variant: "destructive"
-            });
-          };
-          
-          try {
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(error => {
-                console.error("Audio play error:", error);
-                setIsSpeaking(false);
-                toast({
-                  title: "Audio Playback Error",
-                  description: "Browser blocked autoplay. Click to try again.",
-                  variant: "destructive"
-                });
-              });
-            }
-          } catch (error) {
-            console.error("Play method error:", error);
-            setIsSpeaking(false);
-          }
-        } else {
-          console.error("Audio reference is null");
-          setIsSpeaking(false);
-        }
-      } else {
-        console.log("No audio content received from text-to-speech function");
-        setIsSpeaking(false);
-        toast({
-          title: "Text-to-Speech Error",
-          description: "Failed to generate audio from text",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("TTS error:", error);
-      setIsSpeaking(false);
-      toast({
-        title: "Audio Playback Error",
-        description: error instanceof Error ? error.message : "Failed to play audio response",
-        variant: "destructive"
-      });
+  // Get the background color class based on current status
+  const getBackgroundColorClass = () => {
+    switch (status) {
+      case 'listening': return 'bg-red-500/10';
+      case 'processing': return 'bg-yellow-500/10';
+      case 'speaking': return 'bg-green-500/10';
+      default: return 'bg-buddy-500/10';
     }
   };
 
@@ -268,123 +90,27 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     <div className="flex flex-col items-center">
       <audio ref={audioRef} className="hidden" />
       
-      <motion.div
-        className={`relative w-32 h-32 rounded-full flex items-center justify-center mb-8 ${
-          isListening ? 'bg-red-500/10' : 
-          isProcessing ? 'bg-yellow-500/10' : 
-          isSpeaking ? 'bg-green-500/10' : 'bg-buddy-500/10'
-        }`}
-      >
-        {isPulsing && (
-          <AnimatePresence>
-            {[...Array(3)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ scale: 0.5, opacity: 0.7 }}
-                animate={{ scale: 1.5, opacity: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 2,
-                  delay: i * 0.6,
-                  ease: "easeOut"
-                }}
-                className="absolute w-full h-full rounded-full bg-buddy-500/20"
-              />
-            ))}
-          </AnimatePresence>
-        )}
+      <div className={`relative w-32 h-32 rounded-full flex items-center justify-center mb-8 ${getBackgroundColorClass()}`}>
+        <PulseAnimation isActive={isPulsing} />
         
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className={`w-24 h-24 rounded-full shadow-lg flex items-center justify-center z-10 ${
-            isListening ? 'bg-red-500' : 
-            isProcessing ? 'bg-yellow-500' :
-            isSpeaking ? 'bg-green-500' : 'bg-buddy-500'
-          }`}
+        <StatusButton 
+          status={status}
           onClick={handleToggle}
-          disabled={isProcessing || isSpeaking}
-        >
-          {isListening ? (
-            <MicOff size={40} className="text-white" />
-          ) : isProcessing ? (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <svg className="w-10 h-10 text-white" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            </motion.div>
-          ) : isSpeaking ? (
-            <Volume2 size={40} className="text-white" />
-          ) : (
-            <Mic size={40} className="text-white" />
-          )}
-        </motion.button>
+        />
         
-        {(isListening || isProcessing || isSpeaking) && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md"
-            onClick={() => {
-              console.log("Cancelling current voice operation");
-              setIsListening(false);
-              setIsPulsing(false);
-              setIsProcessing(false);
-              setIsSpeaking(false);
-              if (audioRef.current) {
-                audioRef.current.pause();
-              }
-              if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-              }
-              onEndSession && onEndSession();
-            }}
-          >
-            <X size={16} className="text-gray-600" />
-          </motion.button>
+        {(status !== 'idle') && (
+          <CancelButton onClick={handleCancel} />
         )}
-      </motion.div>
+      </div>
       
       <div className="flex flex-col items-center space-y-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">Tagalog</span>
-          <div className="relative inline-block w-12 h-6 rounded-full bg-gray-200">
-            <div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white"></div>
-          </div>
-          <span className="text-sm font-medium text-gray-500">Off</span>
-        </div>
+        <LanguageToggle />
         
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className={`w-full rounded-full py-4 px-8 font-medium text-white shadow-md ${
-            isListening ? 'bg-red-500' : 
-            isProcessing ? 'bg-yellow-500' : 
-            isSpeaking ? 'bg-green-500' : 'bg-buddy-500'
-          }`}
-          onClick={handleToggle}
-          disabled={isProcessing || isSpeaking}
-        >
-          {isListening ? 'End Session' : 
-           isProcessing ? 'Processing...' : 
-           isSpeaking ? 'Speaking...' : 'Start Session'}
-        </motion.button>
-        
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full rounded-full py-3 px-8 font-medium text-gray-700 border border-gray-300 flex items-center justify-center space-x-2"
-          onClick={onTextMode}
-        >
-          <span className="text-xl">💬</span>
-          <span>Text Mode</span>
-        </motion.button>
+        <ActionButtons 
+          status={status}
+          onStartEndSession={handleToggle}
+          onTextMode={onTextMode || (() => {})}
+        />
       </div>
     </div>
   );
