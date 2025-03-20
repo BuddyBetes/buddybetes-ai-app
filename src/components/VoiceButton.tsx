@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, X, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   });
 
   // Effect to handle state changes based on external isPlayingResponse prop
-  React.useEffect(() => {
+  useEffect(() => {
     console.log("isPlayingResponse changed:", isPlayingResponse, "current status:", status);
     
     if (isPlayingResponse) {
@@ -66,14 +66,14 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   }, [isPlayingResponse, status]);
 
   // Reset error message when status changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (status !== 'idle') {
       setErrorMsg(null);
     }
   }, [status]);
 
   // Debugging effect to monitor status changes
-  React.useEffect(() => {
+  useEffect(() => {
     console.log("Voice button status changed to:", status);
   }, [status]);
 

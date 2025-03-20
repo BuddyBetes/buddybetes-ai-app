@@ -37,11 +37,13 @@ export const useUIState = () => {
   const handleTextMode = () => {
     console.log("Switching to text mode");
     setMode('text');
+    // Messages are preserved since they're stored in useMessageHandling
   };
   
   const handleVoiceMode = () => {
     console.log("Switching to voice mode");
     setMode('voice');
+    // Messages are preserved since they're stored in useMessageHandling
   };
   
   return {
