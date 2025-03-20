@@ -27,7 +27,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       >
         {type === 'assistant' && (
           <div className="w-8 h-8 rounded-full bg-[#FFD872] mr-2 flex-shrink-0 self-end flex items-center justify-center">
-            <span className="text-xs font-bold">GB</span>
+            <span className="text-xs font-bold">BB</span>
           </div>
         )}
         
