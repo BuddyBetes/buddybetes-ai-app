@@ -5,7 +5,8 @@ import {
   Home, 
   ClipboardList, 
   Mic, 
-  UserCircle 
+  UserCircle,
+  Plus
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -39,7 +40,6 @@ const Navigation: React.FC = () => {
     };
   }, []);
   
-  // Removed the "+" button from the mobile navigation
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Logs', path: '/logs', icon: ClipboardList },
@@ -53,6 +53,14 @@ const Navigation: React.FC = () => {
     }
     navigate(path);
   };
+
+  const handleAddClick = () => {
+    if (currentPath === '/dashboard' || currentPath === '/logs') {
+      navigate('/add-log');
+    }
+  };
+
+  const shouldShowAddButton = currentPath === '/dashboard' || currentPath === '/logs';
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex z-50 px-2">
@@ -75,6 +83,15 @@ const Navigation: React.FC = () => {
           </div>
         );
       })}
+
+      {shouldShowAddButton && (
+        <button 
+          className="fixed bottom-16 right-4 z-50 w-12 h-12 rounded-full bg-buddy-500 flex items-center justify-center shadow-lg"
+          onClick={handleAddClick}
+        >
+          <Plus size={24} className="text-white" />
+        </button>
+      )}
     </nav>
   );
 };
