@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
@@ -37,7 +36,8 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 pb-24">
+      <AppHeader />
+      <div className="space-y-6 pb-28">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

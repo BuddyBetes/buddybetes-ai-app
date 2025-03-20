@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, Calendar, Clock, ArrowUpRight } from 'lucide-react';
+import { Activity, Calendar, Clock, ArrowUpRight } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 
 const Dashboard = () => {
@@ -29,7 +29,8 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 pb-24">
+      <AppHeader />
+      <div className="space-y-6 pb-28">
         <motion.div 
           className="grid grid-cols-2 gap-4"
           initial="hidden"
@@ -72,9 +73,9 @@ const Dashboard = () => {
           <motion.div 
             custom={1}
             variants={cardVariants}
-            className="p-4 rounded-xl bg-gradient-to-br from-buddy-100 to-buddy-50 shadow-md flex flex-col items-start"
+            className="p-4 rounded-xl bg-white shadow-md flex flex-col items-start"
           >
-            <div className="p-2 rounded-lg bg-white bg-opacity-70 mb-2">
+            <div className="p-2 rounded-lg bg-gray-100 mb-2">
               <Activity size={18} className="text-buddy-600" />
             </div>
             <h3 className="text-sm font-medium text-gray-600">Average</h3>
@@ -87,9 +88,9 @@ const Dashboard = () => {
           <motion.div 
             custom={2}
             variants={cardVariants}
-            className="p-4 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 shadow-md flex flex-col items-start"
+            className="p-4 rounded-xl bg-white shadow-md flex flex-col items-start"
           >
-            <div className="p-2 rounded-lg bg-white bg-opacity-70 mb-2">
+            <div className="p-2 rounded-lg bg-gray-100 mb-2">
               <Calendar size={18} className="text-blue-600" />
             </div>
             <h3 className="text-sm font-medium text-gray-600">Logs Today</h3>
@@ -120,9 +121,9 @@ const Dashboard = () => {
         >
           <h3 className="text-lg font-semibold mb-4 text-gray-800">AI Insights</h3>
           <div className="space-y-4">
-            <div className="flex space-x-3 bg-buddy-50 p-3 rounded-lg">
+            <div className="flex space-x-3 bg-gray-50 p-3 rounded-lg">
               <div className="pt-1">
-                <TrendingUp className="h-5 w-5 text-buddy-600" />
+                <Activity className="h-5 w-5 text-buddy-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-700">
@@ -130,9 +131,9 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-            <div className="flex space-x-3 bg-blue-50 p-3 rounded-lg">
+            <div className="flex space-x-3 bg-gray-50 p-3 rounded-lg">
               <div className="pt-1">
-                <TrendingDown className="h-5 w-5 text-blue-600" />
+                <Activity className="h-5 w-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-700">

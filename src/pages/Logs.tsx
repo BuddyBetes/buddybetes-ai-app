@@ -62,7 +62,8 @@ const Logs = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 pb-24">
+      <AppHeader />
+      <div className="space-y-6 pb-28">
         {Object.entries(groupedLogs).map(([dateStr, logsForDate], dateIndex) => (
           <motion.div 
             key={dateStr}
