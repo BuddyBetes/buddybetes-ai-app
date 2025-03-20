@@ -1,0 +1,132 @@
+
+import React, { useRef, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowDown } from 'lucide-react';
+import { Message } from '@/types';
+import MessageBubble from '../MessageBubble';
+import TypingIndicator from '../TypingIndicator';
+import WelcomeMessage from '../WelcomeMessage';
+
+interface MessageListProps {
+  messages: Message[];
+  isLoading: boolean;
+  showWelcome: boolean;
+  showScrollButton: boolean;
+  timeGroups: Record<string, string>;
+  onDismissWelcome: () => void;
+  onScrollToBottom: () => void;
+}
+
+const MessageList: React.FC<MessageListProps> = ({
+  messages,
+  isLoading,
+  showWelcome,
+  showScrollButton,
+  timeGroups,
+  onDismissWelcome,
+  onScrollToBottom,
+}) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Group messages by time
+  const groupedMessages = () => {
+    const grouped: Record<string, Message[]> = {
+      [timeGroups.NOW]: [],
+      [timeGroups.TODAY]: [],
+      [timeGroups.YESTERDAY]: [],
+      [timeGroups.OLDER]: []
+    };
+    
+    const now = new Date();
+    const today = new Date(now).setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    messages.forEach(message => {
+      const messageDate = new Date(message.timestamp);
+      
+      if (now.getTime() - messageDate.getTime() < 5 * 60 * 1000) {
+        grouped[timeGroups.NOW].push(message);
+      } else if (messageDate.getTime() >= today) {
+        grouped[timeGroups.TODAY].push(message);
+      } else if (messageDate.getTime() >= yesterday.getTime()) {
+        grouped[timeGroups.YESTERDAY].push(message);
+      } else {
+        grouped[timeGroups.OLDER].push(message);
+      }
+    });
+    
+    return grouped;
+  };
+  
+  // Add scroll event listener
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    
+    const handleScroll = () => {
+      if (!container) return;
+      
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const atBottom = scrollHeight - scrollTop - clientHeight < 100;
+    };
+    
+    container?.addEventListener('scroll', handleScroll);
+    return () => container?.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  return (
+    <div 
+      ref={messagesContainerRef}
+      className="flex-1 overflow-y-auto mb-4 space-y-6 pb-2 relative"
+    >
+      <AnimatePresence>
+        {showWelcome && (
+          <WelcomeMessage onDismiss={onDismissWelcome} />
+        )}
+      </AnimatePresence>
+      
+      {Object.entries(groupedMessages()).map(([timeGroup, groupMessages]) => (
+        groupMessages.length > 0 && (
+          <div key={timeGroup} className="space-y-4">
+            <div className="flex justify-center">
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                {timeGroup}
+              </span>
+            </div>
+            
+            {groupMessages.map((message, index) => (
+              <MessageBubble
+                key={`${timeGroup}-${index}`}
+                text={message.text}
+                type={message.type}
+                nutritionalInfo={message.nutritionalInfo}
+                isNew={message.isNew}
+              />
+            ))}
+          </div>
+        )
+      ))}
+      
+      {isLoading && <TypingIndicator />}
+      
+      <div ref={messagesEndRef} />
+      
+      <AnimatePresence>
+        {showScrollButton && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-2 right-2 p-2 bg-buddy-500 text-white rounded-full shadow-md"
+            onClick={onScrollToBottom}
+          >
+            <ArrowDown size={16} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default MessageList;
