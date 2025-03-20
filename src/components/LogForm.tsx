@@ -1,0 +1,146 @@
+
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useLogContext } from '../context/LogContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
+
+const LogForm: React.FC = () => {
+  const { addLog } = useLogContext();
+  const { toast } = useToast();
+  const [glucoseLevel, setGlucoseLevel] = useState('');
+  const [food, setFood] = useState('');
+  const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
+  const [notes, setNotes] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!glucoseLevel || isNaN(Number(glucoseLevel))) {
+      toast({
+        title: "Invalid glucose level",
+        description: "Please enter a valid number for glucose level",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const newLog = {
+      timestamp: new Date(),
+      glucoseLevel: Number(glucoseLevel),
+      food: food.trim() || undefined,
+      mealContext,
+      notes: notes.trim() || undefined,
+    };
+    
+    addLog(newLog);
+    
+    // Reset form
+    setGlucoseLevel('');
+    setFood('');
+    setMealContext('before');
+    setNotes('');
+    
+    toast({
+      title: "Log added successfully",
+      description: `Glucose level: ${glucoseLevel} added to your logs`,
+    });
+  };
+
+  const inputVariants = {
+    focus: { scale: 1.02, boxShadow: "0 4px 12px rgba(94, 207, 185, 0.2)" },
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
+      <div className="space-y-2">
+        <Label htmlFor="glucoseLevel" className="text-base">
+          Glucose Level (mg/dL)
+        </Label>
+        <motion.div whileFocus="focus" variants={inputVariants}>
+          <Input
+            id="glucoseLevel"
+            type="number"
+            value={glucoseLevel}
+            onChange={(e) => setGlucoseLevel(e.target.value)}
+            placeholder="Enter your glucose reading"
+            className="h-12 text-lg"
+            required
+          />
+        </motion.div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="mealContext" className="text-base">
+          When was this reading taken?
+        </Label>
+        <RadioGroup 
+          value={mealContext} 
+          onValueChange={(value) => setMealContext(value as 'before' | 'after' | 'fasting')}
+          className="flex space-x-4"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="before" id="before" />
+            <Label htmlFor="before">Before meal</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="after" id="after" />
+            <Label htmlFor="after">After meal</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="fasting" id="fasting" />
+            <Label htmlFor="fasting">Fasting</Label>
+          </div>
+        </RadioGroup>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="food" className="text-base">
+          Food (optional)
+        </Label>
+        <motion.div whileFocus="focus" variants={inputVariants}>
+          <Input
+            id="food"
+            value={food}
+            onChange={(e) => setFood(e.target.value)}
+            placeholder="What did you eat?"
+            className="h-12"
+          />
+        </motion.div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="notes" className="text-base">
+          Notes (optional)
+        </Label>
+        <motion.div whileFocus="focus" variants={inputVariants}>
+          <Textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add any additional notes"
+            className="min-h-24"
+          />
+        </motion.div>
+      </div>
+      
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Button 
+          type="submit" 
+          className="w-full h-12 text-lg bg-buddy-500 hover:bg-buddy-600"
+        >
+          Save Log
+        </Button>
+      </motion.div>
+    </form>
+  );
+};
+
+export default LogForm;
