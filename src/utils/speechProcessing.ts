@@ -1,6 +1,7 @@
 
 import { toast } from '@/hooks/use-toast';
-import { blobToBase64, convertSpeechToText } from '@/services/speechServices';
+import { blobToBase64 } from '@/services/speech/speechUtils';
+import { convertSpeechToText } from '@/services/speechServices';
 
 export interface SpeechProcessingOptions {
   onSpeechResult: (text: string) => void;
