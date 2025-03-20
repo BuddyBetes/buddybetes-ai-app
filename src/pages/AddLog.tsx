@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import LogForm from '../components/LogForm';
@@ -10,12 +9,18 @@ import { useLogContext } from '@/context/LogContext';
 import { processSpeechFromBlob } from '@/utils/speechProcessing';
 import { useAudioCapture } from '@/hooks/useAudioCapture';
 import { extractGlucoseInfo } from '@/utils/voiceParser';
+import { useNavigate } from 'react-router-dom';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import CameraCapture from '@/components/camera/CameraCapture';
 
 const AddLog = () => {
   const { toast } = useToast();
   const { addLog } = useLogContext();
+  const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [scanMode, setScanMode] = useState<'food' | 'meter'>('food');
   
   const {
     isRecording: micRecording,
@@ -26,61 +31,47 @@ const AddLog = () => {
   } = useAudioCapture();
 
   const handleScanFood = () => {
-    toast({
-      title: "Opening camera",
-      description: "Starting food scanning process. Please allow camera access.",
-    });
-    
-    // Check if the device has a camera
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast({
-        title: "Camera not available",
-        description: "Your device doesn't support camera access or permission was denied.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // In a real app, you would open the camera here
-    // For now, we'll just simulate the process
-    setTimeout(() => {
-      toast({
-        title: "Food recognized",
-        description: "Detected: Apple (15g carbs). Adding to your log entry.",
-      });
-      
-      // Here you would update the form with the detected food
-      // For now this is just a demonstration
-    }, 2000);
+    setScanMode('food');
+    setShowCamera(true);
   };
 
   const handleScanMeter = () => {
-    toast({
-      title: "Opening camera",
-      description: "Please align your glucose meter display in the frame.",
-    });
-    
-    // Check if the device has a camera
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setScanMode('meter');
+    setShowCamera(true);
+  };
+
+  const handleCapture = (imageDataUrl: string) => {
+    if (scanMode === 'food') {
       toast({
-        title: "Camera not available",
-        description: "Your device doesn't support camera access or permission was denied.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // In a real app, you would open the camera here and do OCR
-    // For now, we'll just simulate the process
-    setTimeout(() => {
-      toast({
-        title: "Reading detected",
-        description: "Glucose reading: 118 mg/dL. Adding to your log entry.",
+        title: "Food scan complete",
+        description: "Processing food image...",
       });
       
-      // Here you would update the form with the detected glucose reading
-      // For now this is just a demonstration
-    }, 2000);
+      setTimeout(() => {
+        toast({
+          title: "Food recognized",
+          description: "Detected: Apple (15g carbs). Adding to your log entry.",
+        });
+        setShowCamera(false);
+      }, 1500);
+    } else {
+      toast({
+        title: "Meter scan complete",
+        description: "Processing glucose reading...",
+      });
+      
+      setTimeout(() => {
+        toast({
+          title: "Reading detected",
+          description: "Glucose reading: 118 mg/dL. Adding to your log entry.",
+        });
+        setShowCamera(false);
+      }, 1500);
+    }
+  };
+
+  const handleCloseCamera = () => {
+    setShowCamera(false);
   };
 
   const stopRecording = async () => {
@@ -116,7 +107,6 @@ const AddLog = () => {
           onSpeechResult: (text) => {
             console.log("Speech recognized:", text);
             
-            // Extract glucose information from the text
             const glucoseInfo = extractGlucoseInfo(text);
             
             if (glucoseInfo && glucoseInfo.glucoseLevel) {
@@ -125,7 +115,6 @@ const AddLog = () => {
                 description: `Glucose level: ${glucoseInfo.glucoseLevel} mg/dL. Adding to your log.`,
               });
               
-              // Create the log entry
               const newLog = {
                 timestamp: new Date(),
                 glucoseLevel: glucoseInfo.glucoseLevel,
@@ -134,7 +123,6 @@ const AddLog = () => {
                 notes: glucoseInfo.notes || `Voice log: "${text}"`,
               };
               
-              // Add the log
               addLog(newLog);
               
               resolve();
@@ -155,27 +143,8 @@ const AddLog = () => {
     });
   };
 
-  const handleVoiceLog = async () => {
-    if (isRecording) {
-      await stopRecording();
-    } else {
-      setIsRecording(true);
-      try {
-        await startRecording();
-        toast({
-          title: "Recording started",
-          description: "Speak your glucose reading, e.g., 'My glucose is 120'",
-        });
-      } catch (error) {
-        console.error("Failed to start recording:", error);
-        setIsRecording(false);
-        toast({
-          title: "Microphone access failed",
-          description: "Could not access your microphone. Please check permissions.",
-          variant: "destructive",
-        });
-      }
-    }
+  const handleVoiceLog = () => {
+    navigate('/assistant');
   };
 
   return (
@@ -215,15 +184,13 @@ const AddLog = () => {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`flex flex-col items-center ${isRecording ? 'animate-pulse' : ''}`}
+            className="flex flex-col items-center"
             onClick={handleVoiceLog}
           >
-            <div className={`w-12 h-12 rounded-full ${isRecording ? 'bg-red-100' : 'bg-buddy-100'} flex items-center justify-center mb-1`}>
-              <Mic size={20} className={`${isRecording ? 'text-red-600' : 'text-buddy-600'}`} />
+            <div className="w-12 h-12 rounded-full bg-buddy-100 flex items-center justify-center mb-1">
+              <Mic size={20} className="text-buddy-600" />
             </div>
-            <span className="text-xs font-medium text-gray-600">
-              {isRecording ? 'Stop Recording' : 'Voice Log'}
-            </span>
+            <span className="text-xs font-medium text-gray-600">Voice Log</span>
           </motion.button>
         </motion.div>
         
@@ -235,6 +202,16 @@ const AddLog = () => {
           <LogForm />
         </motion.div>
       </div>
+
+      <Sheet open={showCamera} onOpenChange={setShowCamera}>
+        <SheetContent side="bottom" className="h-[100dvh] p-0">
+          <CameraCapture 
+            mode={scanMode} 
+            onCapture={handleCapture} 
+            onClose={handleCloseCamera} 
+          />
+        </SheetContent>
+      </Sheet>
     </Layout>
   );
 };

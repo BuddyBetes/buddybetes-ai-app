@@ -10,6 +10,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import VoiceSubtitles from '@/components/voice/VoiceSubtitles';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import AppHeader from '@/components/AppHeader';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const Assistant = () => {
   const {
@@ -34,9 +37,19 @@ const Assistant = () => {
     isPlayingResponse
   } = useAssistant();
 
+  const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
+  const [fromAddLog, setFromAddLog] = useState(false);
+
+  // Check if we came from the add-log page
+  useEffect(() => {
+    if (location.state && location.state.from === 'add-log') {
+      setFromAddLog(true);
+    }
+  }, [location]);
 
   // Create a custom event for message updates
   React.useEffect(() => {
@@ -83,10 +96,27 @@ const Assistant = () => {
     }
   }, [mode, messages]);
 
+  const handleBackToLog = () => {
+    navigate('/add-log');
+  };
+
   return (
     <Layout>
       <AppHeader />
       <div className={`mx-auto h-full flex flex-col ${isMobile ? 'w-full' : 'max-w-3xl'}`}>
+        {/* Back Button (when coming from Add Log) */}
+        {fromAddLog && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-16 left-4 z-20 flex items-center gap-1 text-gray-600"
+            onClick={handleBackToLog}
+          >
+            <ArrowLeft size={16} />
+            <span>Back to Log</span>
+          </Button>
+        )}
+
         <AnimatePresence mode="wait">
           {mode === 'voice' ? (
             <motion.div
