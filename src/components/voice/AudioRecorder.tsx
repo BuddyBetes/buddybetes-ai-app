@@ -36,7 +36,8 @@ const useAudioRecorder = ({
     const audioBlob = getAudioBlob();
     
     // If we have valid audio data, process it
-    if (audioBlob) {
+    if (audioBlob && audioBlob.size > 0) {
+      console.log("Audio blob received, size:", audioBlob.size, "type:", audioBlob.type);
       setIsProcessing(true);
       onProcessingStateChange(true);
       
@@ -57,7 +58,12 @@ const useAudioRecorder = ({
         setIsProcessing(false);
       }
     } else {
-      console.log("No audio to process");
+      console.log("No audio to process or audio recording too short");
+      toast({
+        title: "No Speech Detected",
+        description: "We couldn't detect any speech. Please try again and speak clearly.",
+        variant: "destructive"
+      });
       onProcessingStateChange(false);
     }
     

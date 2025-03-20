@@ -1,5 +1,6 @@
 
 import { toast } from '@/hooks/use-toast';
+import { blobToBase64, convertSpeechToText } from '@/services/speechServices';
 
 export interface SpeechProcessingOptions {
   onSpeechResult: (text: string) => void;
@@ -25,11 +26,25 @@ export const processSpeechFromBlob = async (
       return;
     }
 
-    // Convert blob to base64
-    const base64Audio = await blobToBase64(audioBlob);
-    console.log("Audio converted to base64, length:", base64Audio.length);
+    console.log("Processing audio blob of size:", audioBlob.size, "bytes");
+    console.log("Audio blob type:", audioBlob.type);
     
     try {
+      // Convert blob to base64
+      const base64Audio = await blobToBase64(audioBlob);
+      console.log("Audio converted to base64, length:", base64Audio.length);
+      
+      if (!base64Audio || base64Audio.length < 100) {
+        console.error("Base64 conversion failed or resulted in invalid data");
+        toast({
+          title: "Processing Error",
+          description: "Failed to process audio. Please try again.",
+          variant: "destructive"
+        });
+        onProcessingStateChange(false);
+        return;
+      }
+      
       // Process speech using the API service
       const result = await convertSpeechToText(base64Audio);
       
@@ -62,6 +77,3 @@ export const processSpeechFromBlob = async (
     onProcessingStateChange(false);
   }
 };
-
-// Helper functions imported from speechServices
-import { blobToBase64, convertSpeechToText } from '@/services/speechServices';
