@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
@@ -12,6 +11,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import AppHeader from '@/components/AppHeader';
@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [healthData, setHealthData] = useState({
     gender: 'Female',
@@ -37,10 +38,10 @@ const Profile = () => {
   ]);
 
   const menuItems = [
-    { icon: Settings, label: 'Settings', color: 'bg-gray-100' },
+    { icon: Settings, label: 'Settings', color: 'bg-gray-100', path: '/settings' },
     { icon: Bell, label: 'Notifications', color: 'bg-blue-100' },
-    { icon: Lock, label: 'Privacy', color: 'bg-purple-100' },
-    { icon: HelpCircle, label: 'Help', color: 'bg-green-100' },
+    { icon: Lock, label: 'Privacy', color: 'bg-purple-100', path: '/privacy' },
+    { icon: HelpCircle, label: 'Help', color: 'bg-green-100', path: '/help' },
     { icon: LogOut, label: 'Logout', color: 'bg-red-100' },
   ];
   
@@ -76,6 +77,12 @@ const Profile = () => {
 
   const deleteNotification = (id: number) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
+  const handleMenuItemClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+    }
   };
 
   return (
@@ -296,6 +303,7 @@ const Profile = () => {
               custom={index}
               variants={itemVariants}
               className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+              onClick={() => handleMenuItemClick(item.path)}
             >
               {item.label === 'Notifications' ? (
                 <Sheet>

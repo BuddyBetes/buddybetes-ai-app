@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Bell, User } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 const AppHeader = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const isAssistant = location.pathname === '/assistant';
   
@@ -25,6 +26,10 @@ const AppHeader = () => {
       title: "Notifications cleared",
       description: "All notifications have been marked as read",
     });
+  };
+
+  const navigateToProfile = () => {
+    navigate('/profile');
   };
 
   return (
@@ -78,7 +83,10 @@ const AppHeader = () => {
             )}
           </SheetContent>
         </Sheet>
-        <button className="p-2 rounded-full hover:bg-gray-100">
+        <button 
+          className="p-2 rounded-full hover:bg-gray-100"
+          onClick={navigateToProfile}
+        >
           <User size={20} className="text-gray-700" />
         </button>
       </div>

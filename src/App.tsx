@@ -14,6 +14,9 @@ import AddLog from "./pages/AddLog";
 import Assistant from "./pages/Assistant";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/settings/Settings";
+import Privacy from "./pages/settings/Privacy";
+import Help from "./pages/settings/Help";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,9 @@ const App = () => (
             <Route path="/add-log" element={<AddLog />} />
             <Route path="/assistant" element={<Assistant />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/help" element={<Help />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
