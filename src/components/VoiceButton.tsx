@@ -33,7 +33,13 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     onProcessingStateChange: (isProcessing) => {
       if (!isProcessing && status === 'processing') {
         console.log("Processing complete, ready for speaking state");
-        // Don't automatically transition to speaking - this will be controlled by isPlayingResponse
+        // Allow transition to idle if we aren't going to play a response
+        if (!isPlayingResponse) {
+          console.log("No response to play, returning to idle state");
+          setTimeout(() => {
+            setStatus('idle');
+          }, 500);
+        }
       }
     }
   });
@@ -55,6 +61,11 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isPlayingResponse, status]);
+
+  // Debugging effect to monitor status changes
+  React.useEffect(() => {
+    console.log("Voice button status changed to:", status);
+  }, [status]);
 
   const handleToggle = () => {
     if (status === 'listening') {

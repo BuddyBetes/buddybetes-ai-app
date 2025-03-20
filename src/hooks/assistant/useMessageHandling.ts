@@ -95,6 +95,7 @@ export const useMessageHandling = (
         if (currentMode === 'voice' && playResponseAudio) {
           console.log("In voice mode, playing TTS response:", data.response.substring(0, 50) + "...");
           try {
+            // Ensure isLoading remains true while audio is playing
             await playResponseAudio(data.response);
           } catch (playbackError) {
             console.error("Error playing response audio:", playbackError);
