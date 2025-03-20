@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -25,7 +26,7 @@ const Assistant = () => {
     handleSend,
     handleSpeechResult,
     scrollToBottom,
-    setShowScrollButtonState,
+    setShowScrollButton,
     isPlayingResponse
   } = useAssistant();
 
