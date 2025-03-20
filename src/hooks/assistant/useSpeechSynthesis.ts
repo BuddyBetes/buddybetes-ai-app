@@ -93,9 +93,9 @@ export const useSpeechSynthesis = () => {
           throw new Error("No audio content received");
         }
       } catch (edgeFunctionError) {
-        // If Edge Function fails, fall back to browser TTS
         console.log("Edge function failed, falling back to browser TTS:", edgeFunctionError);
         
+        // Try the WebSpeech API for TTS
         const browserTtsResult = await browserTextToSpeech(truncatedText);
         if (!browserTtsResult) {
           console.error("Browser TTS also failed");
