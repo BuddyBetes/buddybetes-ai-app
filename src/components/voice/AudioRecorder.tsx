@@ -47,8 +47,12 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
           if (audioChunks.length > 0) {
             setIsProcessing(true);
             console.log("Processing audio...");
+            console.log(`Audio chunks: ${audioChunks.length}, total size: ${audioChunks.reduce((acc, chunk) => acc + chunk.size, 0)} bytes`);
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            console.log(`Created audio blob, size: ${audioBlob.size} bytes`);
             await processAudio(audioBlob);
+          } else {
+            console.log("❌ No audio chunks received, skipping processing");
           }
         };
         
@@ -100,6 +104,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
           try {
             const base64Audio = (reader.result as string).split(',')[1];
             console.log("Audio converted to base64, sending to speech-to-text function...");
+            console.log(`Base64 audio length: ${base64Audio.length} characters`);
             
             // Send to speech-to-text function
             console.log("📤 SENDING AUDIO to speech-to-text function");

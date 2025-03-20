@@ -47,13 +47,16 @@ serve(async (req) => {
     const { audio } = await req.json();
     
     if (!audio) {
+      console.error("🚫 No audio data received in request");
       throw new Error('No audio data provided');
     }
 
-    console.log("Received audio data, processing...");
+    console.log("🎤 Received audio data, processing...");
+    console.log("📊 Audio data length:", audio.length);
     
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
+    console.log("✅ Audio data processed successfully, size:", binaryAudio.length);
     
     // Prepare form data
     const formData = new FormData();
@@ -62,7 +65,7 @@ serve(async (req) => {
     formData.append('model', 'whisper-1');
     formData.append('language', 'en');
 
-    console.log("Sending to OpenAI Whisper API...");
+    console.log("🚀 Sending to OpenAI Whisper API...");
     
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
@@ -75,19 +78,19 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("OpenAI API error:", errorText);
+      console.error("⛔ OpenAI API error:", errorText);
       throw new Error(`OpenAI API error: ${errorText}`);
     }
 
     const result = await response.json();
-    console.log("Transcription successful:", result.text);
+    console.log("✅ Transcription successful:", result.text);
 
     return new Response(
       JSON.stringify({ text: result.text }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error("Error in speech-to-text function:", error);
+    console.error("❌ Error in speech-to-text function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
