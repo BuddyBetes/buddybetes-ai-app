@@ -13,9 +13,24 @@ export const useAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isPlayingResponse, setIsPlayingResponse] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { getRecentLogs } = useLogContext();
   const { toast } = useToast();
+  
+  // Initialize audio element for TTS
+  useEffect(() => {
+    audioRef.current = new Audio();
+    audioRef.current.onended = () => setIsPlayingResponse(false);
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
   
   // Check if this is the first visit
   useEffect(() => {
@@ -80,8 +95,15 @@ export const useAssistant = () => {
     setShowWelcome(false);
   };
   
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSpeechResult = async (text: string) => {
+    if (!text.trim()) return;
+    
+    // Process the speech result as a user message
+    await handleUserMessage(text);
+  };
+  
+  const handleUserMessage = async (message: string) => {
+    if (!message.trim() || isLoading) return;
     
     // Add sound feedback
     const audio = new Audio('/message-sent.mp3');
@@ -90,7 +112,7 @@ export const useAssistant = () => {
     
     // Add user message
     const newMessage: Message = { 
-      text: input, 
+      text: message, 
       type: 'user',
       timestamp: Date.now(),
       isNew: true
@@ -98,18 +120,18 @@ export const useAssistant = () => {
     
     setMessages(prev => [...prev, newMessage]);
     setIsLoading(true);
-
+    
     try {
       // Get recent glucose logs to provide context
       const recentLogs = getRecentLogs(5);
       
       // Automatically detect food queries
-      const foodQuery = detectFoodQuery(input);
+      const foodQuery = detectFoodQuery(message);
       
       // Call our Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
         body: { 
-          message: input,
+          message: message,
           glucoseHistory: recentLogs,
           foodQuery: foodQuery
         }
@@ -130,16 +152,23 @@ export const useAssistant = () => {
         }]);
       } else {
         // Add AI response to messages
-        setMessages(prev => [...prev, { 
+        const assistantMessage: Message = { 
           text: data.response, 
           type: 'assistant',
           nutritionalInfo: data.nutritionalInfo || undefined,
           timestamp: Date.now(),
           isNew: true
-        }]);
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // If in voice mode, play the response using TTS
+        if (mode === 'voice') {
+          playResponseAudio(data.response);
+        }
       }
     } catch (err) {
-      console.error('Error in handleSend:', err);
+      console.error('Error in handleUserMessage:', err);
       setMessages(prev => [...prev, { 
         text: "I'm sorry, I encountered an error. Please try again.", 
         type: 'assistant',
@@ -151,6 +180,42 @@ export const useAssistant = () => {
       setInput('');
     }
   };
+  
+  const handleSend = () => {
+    handleUserMessage(input);
+  };
+  
+  const playResponseAudio = async (text: string) => {
+    try {
+      setIsPlayingResponse(true);
+      
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text: text }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (data.audioContent && audioRef.current) {
+        // Create audio from base64
+        const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+        audioRef.current.src = audioSrc;
+        
+        await audioRef.current.play();
+      } else {
+        setIsPlayingResponse(false);
+      }
+    } catch (error) {
+      console.error("TTS error:", error);
+      setIsPlayingResponse(false);
+      toast({
+        title: "Audio Playback Error",
+        description: "Failed to play audio response",
+        variant: "destructive"
+      });
+    }
+  };
 
   return {
     mode,
@@ -159,6 +224,7 @@ export const useAssistant = () => {
     isLoading,
     showWelcome,
     showScrollButton,
+    isPlayingResponse,
     messagesEndRef,
     handleStartSession,
     handleEndSession,
@@ -168,6 +234,7 @@ export const useAssistant = () => {
     handleSuggestionSelect,
     handleDismissWelcome,
     handleSend,
+    handleSpeechResult,
     scrollToBottom,
     setShowScrollButtonState
   };

@@ -24,8 +24,10 @@ const Assistant = () => {
     handleSuggestionSelect,
     handleDismissWelcome,
     handleSend,
+    handleSpeechResult,
     scrollToBottom,
-    setShowScrollButtonState
+    setShowScrollButtonState,
+    isPlayingResponse
   } = useAssistant();
 
   return (
@@ -43,6 +45,7 @@ const Assistant = () => {
               onStartSession={handleStartSession}
               onEndSession={handleEndSession}
               onTextMode={handleTextMode}
+              onSpeechResult={handleSpeechResult}
             />
           </motion.div>
         ) : (
@@ -65,7 +68,7 @@ const Assistant = () => {
             
             <MessageInput 
               input={input}
-              isLoading={isLoading}
+              isLoading={isLoading || isPlayingResponse}
               onInputChange={handleInputChange}
               onSend={handleSend}
               onSuggestionSelect={handleSuggestionSelect}
