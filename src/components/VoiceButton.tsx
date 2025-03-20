@@ -60,6 +60,14 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
 
   const handleEndSession = () => {
     stopRecording();
+    setStatus('processing');
+    onEndSession && onEndSession();
+  };
+
+  // Add a dedicated function for the X button
+  const handleStopButton = () => {
+    stopRecording();
+    setStatus('processing');
     onEndSession && onEndSession();
   };
 
@@ -89,7 +97,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       
       <div className="relative mb-16">
         <motion.div 
-          className="w-48 h-48 rounded-full bg-[#FFD872] flex items-center justify-center relative"
+          className="w-48 h-48 rounded-full bg-[#35cab4] flex items-center justify-center relative"
           animate={{
             scale: status === 'speaking' ? [1, 1.05, 1] : 1
           }}
@@ -107,7 +115,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="absolute -top-2 -right-2 bg-white rounded-full p-2 shadow-md z-10"
-            onClick={handleEndSession}
+            onClick={handleStopButton}
           >
             <X size={18} className="text-gray-600" />
           </motion.button>
@@ -132,7 +140,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       <Button 
         onClick={handleToggle}
         disabled={status === 'processing'}
-        className={`bg-[#FFD872] hover:bg-[#E5C267] text-gray-800 rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' ? 'opacity-80' : ''}`}
+        className={`bg-[#35cab4] hover:bg-[#2ba999] text-white rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' ? 'opacity-80' : ''}`}
       >
         {renderButtonContent()}
       </Button>

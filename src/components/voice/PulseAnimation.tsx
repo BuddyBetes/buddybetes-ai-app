@@ -23,7 +23,7 @@ const PulseAnimation = ({ isActive }: PulseAnimationProps) => {
             delay: i * 0.4,
             ease: "easeOut"
           }}
-          className="absolute w-full h-full rounded-full bg-[#FFD872]/30"
+          className="absolute w-full h-full rounded-full bg-[#35cab4]/30"
         />
       ))}
     </AnimatePresence>
