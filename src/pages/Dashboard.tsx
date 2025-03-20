@@ -46,7 +46,7 @@ const Dashboard = () => {
           <motion.div 
             custom={0}
             variants={cardVariants}
-            className="col-span-2 p-6 rounded-xl bg-white shadow-md"
+            className="col-span-2 p-6 rounded-xl bg-white shadow-sm"
           >
             <div className="flex justify-between items-start mb-2">
               <div>
@@ -73,7 +73,7 @@ const Dashboard = () => {
           <motion.div 
             custom={1}
             variants={cardVariants}
-            className="p-4 rounded-xl bg-white shadow-md flex flex-col items-start"
+            className="p-4 rounded-xl bg-white shadow-sm flex flex-col items-start"
           >
             <div className="p-2 rounded-lg bg-gray-100 mb-2">
               <Activity size={18} className="text-buddy-600" />
@@ -88,7 +88,7 @@ const Dashboard = () => {
           <motion.div 
             custom={2}
             variants={cardVariants}
-            className="p-4 rounded-xl bg-white shadow-md flex flex-col items-start"
+            className="p-4 rounded-xl bg-white shadow-sm flex flex-col items-start"
           >
             <div className="p-2 rounded-lg bg-gray-100 mb-2">
               <Calendar size={18} className="text-blue-600" />
@@ -102,7 +102,7 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white p-4 rounded-xl shadow-md"
+          className="bg-white p-4 rounded-xl shadow-sm"
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold text-gray-800">Glucose Trend</h3>
@@ -117,7 +117,7 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="p-5 rounded-xl bg-white shadow-md"
+          className="p-5 rounded-xl bg-white shadow-sm"
         >
           <h3 className="text-lg font-semibold mb-4 text-gray-800">AI Insights</h3>
           <div className="space-y-4">

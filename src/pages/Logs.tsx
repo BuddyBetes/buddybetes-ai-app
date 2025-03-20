@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from '../components/Layout';
 import { useLogContext, GlucoseLog } from '../context/LogContext';
@@ -63,7 +62,7 @@ const Logs = () => {
   return (
     <Layout>
       <AppHeader />
-      <div className="space-y-6 pb-28">
+      <div className="space-y-6 pb-28 pt-4">
         {Object.entries(groupedLogs).map(([dateStr, logsForDate], dateIndex) => (
           <motion.div 
             key={dateStr}
