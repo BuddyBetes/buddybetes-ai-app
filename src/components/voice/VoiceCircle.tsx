@@ -17,8 +17,28 @@ const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick, on
     if (status === 'processing') {
       return <Loader size={48} className="text-white animate-spin" />;
     } else if (status === 'speaking') {
-      return <Mic size={48} className="text-white" />;
-    } else if (status === 'idle') {
+      return (
+        <div className="flex justify-center items-center">
+          <div className="flex items-end space-x-1 h-12">
+            {[1, 2, 3, 4, 5].map((bar) => (
+              <motion.div
+                key={bar}
+                className="w-2 bg-white/70"
+                animate={{
+                  height: [15, 25, 15, 35, 15, 20, 15],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  delay: bar * 0.1,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    } else if (status === 'idle' || status === 'listening') {
       return <Mic size={48} className="text-white" />;
     }
     return null;

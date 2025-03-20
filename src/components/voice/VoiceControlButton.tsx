@@ -27,7 +27,7 @@ const VoiceControlButton: React.FC<VoiceControlButtonProps> = ({
       default:
         return (
           <span className="text-white font-medium">
-            {playbackCompleted ? "continue session" : "begin session"}
+            {playbackCompleted ? "Continue session" : "Begin session"}
           </span>
         );
     }

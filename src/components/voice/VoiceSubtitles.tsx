@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface VoiceSubtitlesProps {
   userMessage: string | null;
@@ -14,27 +13,18 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
   assistantMessage,
   isLoading = false
 }) => {
-  // Function to get the first sentence of a message
-  const getFirstSentence = (message: string): string => {
-    if (!message) return '';
-    
-    // Split by common sentence delimiters and get the first part
-    const sentences = message.split(/(?<=[.!?])\s+/);
-    return sentences[0] || message;
-  };
-
   return (
-    <div className="w-full max-w-md mx-auto text-center mb-8 mt-4">
+    <div className="w-full max-w-md mx-auto flex flex-col items-center space-y-4 mb-8 mt-4">
       <AnimatePresence>
-        {userMessage && !assistantMessage && !isLoading && (
+        {userMessage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="inline-block bg-gray-100 text-gray-800 px-4 py-2 rounded-full"
+            className="w-full bg-gray-100 text-gray-800 px-6 py-4 rounded-lg text-center"
           >
-            {getFirstSentence(userMessage)}
+            {userMessage}
           </motion.div>
         )}
       </AnimatePresence>
@@ -81,9 +71,9 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="inline-block bg-[#35cab4] text-white px-4 py-2 rounded-full"
+            className="w-full bg-[#f0f9f7] text-gray-800 px-6 py-4 rounded-lg text-center"
           >
-            {getFirstSentence(assistantMessage)}
+            {assistantMessage}
           </motion.div>
         )}
       </AnimatePresence>
