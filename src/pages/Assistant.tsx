@@ -1,33 +1,87 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import Layout from '../components/Layout';
-import VoiceButton from '../components/VoiceButton';
-import { MessageSquare, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { MessageSquare, Search, MessageCircle, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import Layout from '../components/Layout';
+import VoiceButton from '../components/VoiceButton';
+import SuggestionChips from '../components/SuggestionChips';
+import WelcomeMessage from '../components/WelcomeMessage';
+import TypingIndicator from '../components/TypingIndicator';
+import MessageBubble from '../components/MessageBubble';
+import { Message } from '@/types';
 
-interface NutritionalInfo {
-  name: string;
-  calories: string;
-  carbs: string;
-  details: string;
-}
+const TIME_GROUPS = {
+  NOW: 'Just now',
+  TODAY: 'Today',
+  YESTERDAY: 'Yesterday',
+  OLDER: 'Older'
+};
 
 const Assistant = () => {
-  const [mode, setMode] = useState<'voice' | 'text'>('voice');
-  const [messages, setMessages] = useState<Array<{text: string, type: 'user' | 'assistant', nutritionalInfo?: NutritionalInfo}>>([]);
+  const [mode, setMode] = useState<'voice' | 'text'>('text');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [foodQuery, setFoodQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showFoodSearch, setShowFoodSearch] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { getRecentLogs } = useLogContext();
   const { toast } = useToast();
+  
+  // Check if this is the first visit
+  useEffect(() => {
+    const hasVisitedBefore = localStorage.getItem('assistantVisited');
+    if (hasVisitedBefore) {
+      setShowWelcome(false);
+    } else {
+      localStorage.setItem('assistantVisited', 'true');
+    }
+    
+    // Add initial system message
+    if (messages.length === 0) {
+      setMessages([
+        {
+          text: "Hello! I'm your Glucose Buddy Assistant. How can I help you today?",
+          type: 'assistant',
+          timestamp: Date.now(),
+          isNew: true
+        }
+      ]);
+    }
+  }, []);
+  
+  // Automatically detect food queries from the input
+  const detectFoodQuery = (input: string): string | null => {
+    const foodKeywords = [
+      'food', 'eat', 'eating', 'meal', 'snack', 'breakfast', 'lunch', 'dinner',
+      'fruit', 'vegetable', 'carbs', 'protein', 'fat', 'diet', 'nutrition',
+      'apple', 'banana', 'rice', 'pasta', 'bread', 'meat', 'chicken', 'beef',
+      'pork', 'fish', 'dairy', 'cheese', 'yogurt', 'milk'
+    ];
+    
+    const words = input.toLowerCase().split(/\s+/);
+    
+    for (const word of words) {
+      if (foodKeywords.includes(word)) {
+        // Extract potential food items
+        const foodRegex = /(?:can I eat|about|is|are|have|eating|food|nutrition info on|carbs in|calories in|about)\s+([a-zA-Z\s]+)(?:\?|$)/i;
+        const match = input.match(foodRegex);
+        if (match && match[1]) {
+          return match[1].trim();
+        }
+        return null;
+      }
+    }
+    
+    return null;
+  };
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,13 +91,29 @@ const Assistant = () => {
     scrollToBottom();
   }, [messages]);
   
+  // Add scroll event listener
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    
+    const handleScroll = () => {
+      if (!container) return;
+      
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const atBottom = scrollHeight - scrollTop - clientHeight < 100;
+      
+      setShowScrollButton(!atBottom);
+    };
+    
+    container?.addEventListener('scroll', handleScroll);
+    return () => container?.removeEventListener('scroll', handleScroll);
+  }, []);
+  
   const handleStartSession = () => {
-    // This would normally connect to AI voice service
+    // Preserve messages when switching to voice mode
     console.log('Starting voice session...');
   };
   
   const handleEndSession = () => {
-    // This would normally disconnect from AI voice service
     console.log('Ending voice session...');
   };
   
@@ -54,21 +124,36 @@ const Assistant = () => {
   const handleVoiceMode = () => {
     setMode('voice');
   };
-
-  const toggleFoodSearch = () => {
-    setShowFoodSearch(!showFoodSearch);
+  
+  const handleSuggestionSelect = (suggestion: string) => {
+    setInput(suggestion);
   };
   
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     
+    // Add sound feedback
+    const audio = new Audio('/message-sent.mp3');
+    audio.volume = 0.2;
+    audio.play().catch(e => console.log('Audio play error:', e));
+    
     // Add user message
-    setMessages(prev => [...prev, { text: input, type: 'user' }]);
+    const newMessage: Message = { 
+      text: input, 
+      type: 'user',
+      timestamp: Date.now(),
+      isNew: true
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
     setIsLoading(true);
 
     try {
       // Get recent glucose logs to provide context
       const recentLogs = getRecentLogs(5);
+      
+      // Automatically detect food queries
+      const foodQuery = detectFoodQuery(input);
       
       // Call our Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
@@ -88,28 +173,63 @@ const Assistant = () => {
         });
         setMessages(prev => [...prev, { 
           text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.", 
-          type: 'assistant' 
+          type: 'assistant',
+          timestamp: Date.now(),
+          isNew: true
         }]);
       } else {
         // Add AI response to messages
         setMessages(prev => [...prev, { 
           text: data.response, 
           type: 'assistant',
-          nutritionalInfo: data.nutritionalInfo || undefined
+          nutritionalInfo: data.nutritionalInfo || undefined,
+          timestamp: Date.now(),
+          isNew: true
         }]);
       }
     } catch (err) {
       console.error('Error in handleSend:', err);
       setMessages(prev => [...prev, { 
         text: "I'm sorry, I encountered an error. Please try again.", 
-        type: 'assistant' 
+        type: 'assistant',
+        timestamp: Date.now(),
+        isNew: true
       }]);
     } finally {
       setIsLoading(false);
       setInput('');
-      setFoodQuery('');  // Clear food query after sending
-      setShowFoodSearch(false);  // Hide food search after sending
     }
+  };
+  
+  // Group messages by time
+  const groupedMessages = () => {
+    const grouped: Record<string, Message[]> = {
+      [TIME_GROUPS.NOW]: [],
+      [TIME_GROUPS.TODAY]: [],
+      [TIME_GROUPS.YESTERDAY]: [],
+      [TIME_GROUPS.OLDER]: []
+    };
+    
+    const now = new Date();
+    const today = new Date(now).setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    messages.forEach(message => {
+      const messageDate = new Date(message.timestamp);
+      
+      if (now.getTime() - messageDate.getTime() < 5 * 60 * 1000) {
+        grouped[TIME_GROUPS.NOW].push(message);
+      } else if (messageDate.getTime() >= today) {
+        grouped[TIME_GROUPS.TODAY].push(message);
+      } else if (messageDate.getTime() >= yesterday.getTime()) {
+        grouped[TIME_GROUPS.YESTERDAY].push(message);
+      } else {
+        grouped[TIME_GROUPS.OLDER].push(message);
+      }
+    });
+    
+    return grouped;
   };
 
   return (
@@ -137,74 +257,59 @@ const Assistant = () => {
             exit={{ opacity: 0 }}
             className="flex flex-col h-full"
           >
-            <div className="flex-1 overflow-y-auto mb-4 space-y-4 pb-2">
-              {messages.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Ask me anything about your glucose, diet, or health!</p>
-                </div>
-              )}
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto mb-4 space-y-6 pb-2 relative"
+            >
+              <AnimatePresence>
+                {showWelcome && (
+                  <WelcomeMessage onDismiss={() => setShowWelcome(false)} />
+                )}
+              </AnimatePresence>
               
-              {messages.map((message, index) => (
-                <div key={index} className="space-y-2">
-                  <div
-                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-xl p-3 ${
-                        message.type === 'user'
-                          ? 'bg-buddy-500 text-white rounded-tr-none'
-                          : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                      }`}
-                    >
-                      {message.text}
+              {Object.entries(groupedMessages()).map(([timeGroup, groupMessages]) => (
+                groupMessages.length > 0 && (
+                  <div key={timeGroup} className="space-y-4">
+                    <div className="flex justify-center">
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        {timeGroup}
+                      </span>
                     </div>
+                    
+                    {groupMessages.map((message, index) => (
+                      <MessageBubble
+                        key={`${timeGroup}-${index}`}
+                        text={message.text}
+                        type={message.type}
+                        nutritionalInfo={message.nutritionalInfo}
+                        isNew={message.isNew}
+                      />
+                    ))}
                   </div>
-                  
-                  {message.nutritionalInfo && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="ml-3 max-w-[80%] bg-gray-50 rounded-lg p-3 border border-gray-200"
-                    >
-                      <h4 className="text-sm font-semibold text-buddy-700 mb-1">Nutritional Info: {message.nutritionalInfo.name}</h4>
-                      <p className="text-xs text-gray-600">{message.nutritionalInfo.details}</p>
-                    </motion.div>
-                  )}
-                </div>
+                )
               ))}
+              
+              {isLoading && <TypingIndicator />}
+              
               <div ref={messagesEndRef} />
               
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-xl p-3 bg-gray-100 text-gray-800 rounded-tl-none">
-                    <div className="flex space-x-2">
-                      <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {showScrollButton && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute bottom-2 right-2 p-2 bg-buddy-500 text-white rounded-full shadow-md"
+                    onClick={scrollToBottom}
+                  >
+                    <ArrowDown size={16} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
             
             <div className="sticky bottom-0 bg-white pb-4 space-y-2">
-              <AnimatePresence>
-                {showFoodSearch && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex gap-2 mb-2"
-                  >
-                    <Input
-                      value={foodQuery}
-                      onChange={(e) => setFoodQuery(e.target.value)}
-                      placeholder="Search for food (e.g., apple, pasta)..."
-                      className="resize-none"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <SuggestionChips onSelectSuggestion={handleSuggestionSelect} />
               
               <div className="flex gap-2">
                 <Textarea
@@ -223,15 +328,19 @@ const Assistant = () => {
                 <div className="flex flex-col gap-2">
                   <Button 
                     onClick={handleSend}
-                    className="bg-buddy-500 hover:bg-buddy-600"
+                    className="bg-buddy-500 hover:bg-buddy-600 transition-all duration-200"
                     disabled={isLoading || !input.trim()}
                   >
-                    Send
+                    <motion.span
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ duration: 0.1 }}
+                    >
+                      Send
+                    </motion.span>
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={toggleFoodSearch}
                     className="border-buddy-300"
                   >
                     <Search size={16} />
@@ -245,7 +354,7 @@ const Assistant = () => {
                   onClick={handleVoiceMode}
                   className="flex items-center gap-2"
                 >
-                  <MessageSquare size={16} />
+                  <MessageCircle size={16} />
                   Switch to Voice Mode
                 </Button>
               </div>
