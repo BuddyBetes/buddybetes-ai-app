@@ -8,6 +8,7 @@ import MessageInput from '../components/assistant/MessageInput';
 import { useAssistant, TIME_GROUPS } from '../hooks/assistant/useAssistant';
 import { useIsMobile } from '@/hooks/use-mobile';
 import VoiceSubtitles from '@/components/voice/VoiceSubtitles';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Assistant = () => {
   const {
@@ -109,7 +110,7 @@ const Assistant = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <div className="flex-1 overflow-y-auto pb-20">
+              <ScrollArea className="flex-1 pb-20">
                 <MessageList 
                   messages={messages}
                   isLoading={isLoading}
@@ -119,7 +120,7 @@ const Assistant = () => {
                   onDismissWelcome={handleDismissWelcome}
                   onScrollToBottom={scrollToBottom}
                 />
-              </div>
+              </ScrollArea>
               
               <div className="fixed bottom-0 left-0 right-0 z-20 bg-white pb-[4.5rem] pt-2 border-t border-gray-100">
                 <div className={isMobile ? "w-full px-2" : "max-w-3xl mx-auto px-2"}>

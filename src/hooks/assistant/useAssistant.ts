@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { useUIState } from './useUIState';
 import { useMessageHandling } from './useMessageHandling';
@@ -192,7 +191,6 @@ export const useAssistant = () => {
     await originalHandleSpeechResult(text);
   };
 
-  // When a log is created, offer to navigate to logs page
   useEffect(() => {
     if (logCreated) {
       setTimeout(() => {
@@ -221,7 +219,7 @@ export const useAssistant = () => {
     if (messages.length === 0) {
       setMessages([
         {
-          text: "Hi! I'm your Glucose Buddy. How can I help?",
+          text: "Hi! I'm BuddyBetes. How can I help?",
           type: 'assistant',
           timestamp: Date.now(),
           isNew: true
@@ -238,7 +236,6 @@ export const useAssistant = () => {
     handleInputChange(suggestion);
   };
 
-  // Handle view logs response
   const processMessage = (text: string) => {
     if (text.toLowerCase().includes("yes") && 
         messages[messages.length - 1]?.text.includes("view your logs")) {

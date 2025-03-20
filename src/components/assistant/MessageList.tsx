@@ -69,16 +69,25 @@ const MessageList: React.FC<MessageListProps> = ({
       
       const { scrollTop, scrollHeight, clientHeight } = container;
       const atBottom = scrollHeight - scrollTop - clientHeight < 100;
+      
+      if (!atBottom && messages.length > 2) {
+        onScrollToBottom();
+      }
     };
     
     container?.addEventListener('scroll', handleScroll);
     return () => container?.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [messages.length, onScrollToBottom]);
+  
+  // Ensure scrolling to bottom when new messages are added
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
   
   return (
     <div 
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto pb-2 relative px-2"
+      className="flex-1 overflow-y-auto pb-6 relative px-2 min-h-[300px]"
     >
       <AnimatePresence>
         {showWelcome && (

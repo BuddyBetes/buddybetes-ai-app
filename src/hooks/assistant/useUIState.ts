@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 export const useUIState = () => {
-  const [mode, setMode] = useState<'voice' | 'text'>('text');
+  const [mode, setMode] = useState<'voice' | 'text'>('voice'); // Set voice as default
   const [showWelcome, setShowWelcome] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

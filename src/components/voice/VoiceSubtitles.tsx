@@ -21,7 +21,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto text-center">
+    <div className="w-full max-w-md mx-auto text-center mb-8 mt-4">
       <AnimatePresence>
         {userMessage && !assistantMessage && (
           <motion.div
@@ -29,7 +29,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="inline-block bg-gray-100 text-gray-800 px-4 py-2 rounded-full mt-4 mb-6"
+            className="inline-block bg-gray-100 text-gray-800 px-4 py-2 rounded-full"
           >
             {getFirstSentence(userMessage)}
           </motion.div>
@@ -43,7 +43,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="inline-block bg-[#35cab4] text-white px-4 py-2 rounded-full mt-4 mb-6"
+            className="inline-block bg-[#35cab4] text-white px-4 py-2 rounded-full"
           >
             {getFirstSentence(assistantMessage)}
           </motion.div>
