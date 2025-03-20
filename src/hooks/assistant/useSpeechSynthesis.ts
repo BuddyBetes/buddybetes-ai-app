@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
+import { browserTextToSpeech } from '@/services/browserSpeechServices';
 
 export const useSpeechSynthesis = () => {
   const [isPlayingResponse, setIsPlayingResponse] = useState(false);
@@ -51,50 +52,60 @@ export const useSpeechSynthesis = () => {
       // Add a delay to ensure any previous audio processing is completed
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text: truncatedText }
-      });
-      
-      if (error) {
-        console.error("Text-to-speech error:", error);
-        throw new Error(error.message || "Failed to generate speech");
-      }
-      
-      if (!data) {
-        console.error("No data received from text-to-speech function");
-        throw new Error("No data received from text-to-speech function");
-      }
-      
-      if (data.error) {
-        console.error("Text-to-speech function returned error:", data.error);
-        throw new Error(data.error);
-      }
-      
-      if (data.audioContent && audioRef.current) {
-        console.log("Received audio content, playing...");
-        // Create audio from base64
-        const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
-        audioRef.current.src = audioSrc;
+      try {
+        // Try the Supabase Edge Function first
+        const { data, error } = await supabase.functions.invoke('text-to-speech', {
+          body: { text: truncatedText }
+        });
         
-        try {
-          const playPromise = audioRef.current.play();
-          if (playPromise !== undefined) {
-            await playPromise;
+        if (error) {
+          console.error("Text-to-speech error:", error);
+          throw new Error(error.message || "Failed to generate speech");
+        }
+        
+        if (!data) {
+          console.error("No data received from text-to-speech function");
+          throw new Error("No data received from text-to-speech function");
+        }
+        
+        if (data.error) {
+          console.error("Text-to-speech function returned error:", data.error);
+          throw new Error(data.error);
+        }
+        
+        if (data.audioContent && audioRef.current) {
+          console.log("Received audio content, playing...");
+          // Create audio from base64
+          const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+          audioRef.current.src = audioSrc;
+          
+          try {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              await playPromise;
+            }
+          } catch (error) {
+            console.error("Audio play method error:", error);
+            throw new Error("Browser blocked autoplay");
           }
-        } catch (error) {
-          console.error("Audio play method error:", error);
+        } else {
+          console.log("No audio content received or audio reference is null");
+          throw new Error("No audio content received");
+        }
+      } catch (edgeFunctionError) {
+        // If Edge Function fails, fall back to browser TTS
+        console.log("Edge function failed, falling back to browser TTS:", edgeFunctionError);
+        
+        const browserTtsResult = await browserTextToSpeech(truncatedText);
+        if (!browserTtsResult) {
+          console.error("Browser TTS also failed");
           setIsPlayingResponse(false);
           toast({
             title: "Audio Playback Error",
-            description: "Browser blocked autoplay. Try again or click to enable audio.",
+            description: "Could not play audio response using any method",
             variant: "destructive"
           });
         }
-      } else {
-        console.log("No audio content received or audio reference is null");
-        setIsPlayingResponse(false);
-        // Still consider this "completed" even though no audio played
-        return;
       }
     } catch (error) {
       console.error("TTS error:", error);

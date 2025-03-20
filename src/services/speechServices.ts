@@ -1,8 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { browserSpeechToText, browserTextToSpeech } from './browserSpeechServices';
 
 /**
- * Converts spoken audio to text using Supabase Edge Function
+ * Converts spoken audio to text using Supabase Edge Function with browser fallback
  * @param base64Audio - Base64 encoded audio data
  * @returns Promise with transcription result
  */
@@ -25,7 +26,21 @@ export async function convertSpeechToText(base64Audio: string): Promise<{ text: 
     
     if (error) {
       console.error("Speech-to-text function error:", error);
-      throw new Error(`Speech-to-text error: ${error.message}`);
+      console.log("Trying browser-based speech recognition as fallback...");
+      
+      // Try browser-based speech recognition as fallback
+      try {
+        const browserResult = await browserSpeechToText();
+        if (browserResult && browserResult.text) {
+          console.log("Browser speech recognition succeeded:", browserResult.text);
+          return browserResult;
+        } else {
+          throw new Error("Browser speech recognition failed");
+        }
+      } catch (browserError) {
+        console.error("Browser speech recognition error:", browserError);
+        throw new Error(`Speech-to-text error: ${error.message}`);
+      }
     }
     
     if (!data) {
@@ -35,7 +50,21 @@ export async function convertSpeechToText(base64Audio: string): Promise<{ text: 
     
     if (data.error) {
       console.error("Speech-to-text function returned an error:", data.error);
-      throw new Error(`Speech-to-text API error: ${data.error}`);
+      console.log("Trying browser-based speech recognition as fallback...");
+      
+      // Try browser fallback
+      try {
+        const browserResult = await browserSpeechToText();
+        if (browserResult && browserResult.text) {
+          console.log("Browser speech recognition succeeded:", browserResult.text);
+          return browserResult;
+        } else {
+          throw new Error("Browser speech recognition failed");
+        }
+      } catch (browserError) {
+        console.error("Browser speech recognition error:", browserError);
+        throw new Error(`Speech-to-text API error: ${data.error}`);
+      }
     }
     
     if (!data.text) {
@@ -47,12 +76,26 @@ export async function convertSpeechToText(base64Audio: string): Promise<{ text: 
     return data;
   } catch (error) {
     console.error("Error in convertSpeechToText:", error);
+    
+    // Final attempt with browser API if everything else failed
+    try {
+      console.log("Making final attempt with browser speech recognition...");
+      const browserResult = await browserSpeechToText();
+      if (browserResult && browserResult.text) {
+        console.log("Browser speech recognition succeeded:", browserResult.text);
+        return browserResult;
+      }
+    } catch (browserError) {
+      console.error("Final browser speech recognition attempt failed:", browserError);
+    }
+    
     throw error;
   }
 }
 
 /**
  * Sends audio file directly to speech-to-text function using FormData
+ * with browser fallback
  * @param audioFile - Audio file to convert
  * @returns Promise with transcription result
  */
@@ -90,9 +133,23 @@ export async function convertAudioFileToText(audioFile: File): Promise<{ text: s
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Speech-to-text function error:", errorText);
-      throw new Error(`Speech-to-text error: ${errorText}`);
+      console.error("Speech-to-text function error response:", response.status);
+      console.log("Trying browser-based speech recognition as fallback...");
+      
+      // Try browser-based fallback
+      try {
+        const browserResult = await browserSpeechToText(audioFile);
+        if (browserResult && browserResult.text) {
+          console.log("Browser speech recognition succeeded:", browserResult.text);
+          return browserResult;
+        } else {
+          throw new Error("Browser speech recognition failed");
+        }
+      } catch (browserError) {
+        console.error("Browser speech recognition error:", browserError);
+        const errorText = await response.text();
+        throw new Error(`Speech-to-text error: ${errorText}`);
+      }
     }
     
     const data = await response.json();
@@ -104,7 +161,20 @@ export async function convertAudioFileToText(audioFile: File): Promise<{ text: s
     
     if (data.error) {
       console.error("Speech-to-text function returned an error:", data.error);
-      throw new Error(`Speech-to-text API error: ${data.error}`);
+      
+      // Try browser fallback
+      try {
+        const browserResult = await browserSpeechToText(audioFile);
+        if (browserResult && browserResult.text) {
+          console.log("Browser speech recognition succeeded:", browserResult.text);
+          return browserResult;
+        } else {
+          throw new Error("Browser speech recognition failed");
+        }
+      } catch (browserError) {
+        console.error("Browser speech recognition error:", browserError);
+        throw new Error(`Speech-to-text API error: ${data.error}`);
+      }
     }
     
     if (!data.text) {
@@ -116,6 +186,19 @@ export async function convertAudioFileToText(audioFile: File): Promise<{ text: s
     return data;
   } catch (error) {
     console.error("Error in convertAudioFileToText:", error);
+    
+    // Final attempt with browser API if everything else failed
+    try {
+      console.log("Making final attempt with browser speech recognition...");
+      const browserResult = await browserSpeechToText(audioFile);
+      if (browserResult && browserResult.text) {
+        console.log("Browser speech recognition succeeded:", browserResult.text);
+        return browserResult;
+      }
+    } catch (browserError) {
+      console.error("Final browser speech recognition attempt failed:", browserError);
+    }
+    
     throw error;
   }
 }
