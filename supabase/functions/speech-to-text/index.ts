@@ -61,6 +61,7 @@ serve(async (req) => {
     
     let audioData;
     let language = 'en';
+    let detectedMimeType = '';
     
     // Check if the request is FormData or JSON
     const contentType = req.headers.get('content-type') || '';
@@ -88,7 +89,8 @@ serve(async (req) => {
         const arrayBuffer = await audioFile.arrayBuffer();
         audioData = new Uint8Array(arrayBuffer);
         
-        console.log("📊 Audio file received, size:", audioData.length, "type:", audioFile.type);
+        detectedMimeType = audioFile.type;
+        console.log("📊 Audio file received, size:", audioData.length, "type:", detectedMimeType);
       } catch (formError) {
         console.error("🚫 Error processing form data:", formError);
         return new Response(
@@ -133,6 +135,19 @@ serve(async (req) => {
       console.log("🎤 Received audio data, processing...");
       console.log("📊 Audio data length:", audio.length);
       
+      // Try to detect MIME type from base64 prefix
+      if (audio.startsWith("data:")) {
+        const mimeMatch = audio.match(/^data:([^;]+);base64,/);
+        if (mimeMatch && mimeMatch[1]) {
+          detectedMimeType = mimeMatch[1];
+          console.log("🔍 Detected MIME type from prefix:", detectedMimeType);
+        }
+      } else {
+        // If no MIME type detected, use a default supported format
+        detectedMimeType = 'audio/webm';
+        console.log("⚠️ No MIME type detected from prefix, using default:", detectedMimeType);
+      }
+      
       // Process audio in chunks
       try {
         audioData = processBase64Chunks(audio);
@@ -173,16 +188,54 @@ serve(async (req) => {
         }
       );
     }
+
+    // Check supported formats
+    const supportedFormats = ['audio/flac', 'audio/x-flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
+      'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 'audio/wav', 'audio/webm'];
     
-    // Prepare form data - explicitly use webm MIME type which is supported by Whisper API
+    // Ensure we have a valid MIME type for Whisper API
+    let mimeType = detectedMimeType;
+    if (!supportedFormats.includes(mimeType)) {
+      console.warn(`⚠️ Detected MIME type ${mimeType} may not be supported by Whisper API`);
+      
+      // Try to convert to a more standard MIME type if possible
+      if (mimeType.includes('webm')) {
+        mimeType = 'audio/webm';
+      } else if (mimeType.includes('mp3') || mimeType.includes('mpeg')) {
+        mimeType = 'audio/mp3';
+      } else if (mimeType.includes('wav')) {
+        mimeType = 'audio/wav';
+      } else if (mimeType.includes('ogg')) {
+        mimeType = 'audio/ogg';
+      } else {
+        // Default to webm as last resort
+        mimeType = 'audio/webm';
+      }
+      console.log(`🔄 Using normalized MIME type: ${mimeType}`);
+    }
+    
+    // Prepare form data with explicit MIME type
     const formData = new FormData();
-    const blob = new Blob([audioData], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
+    const blob = new Blob([audioData], { type: mimeType });
+    
+    // Use file extension that matches the MIME type
+    let filename = 'audio.webm';
+    if (mimeType.includes('mp3')) {
+      filename = 'audio.mp3';
+    } else if (mimeType.includes('wav')) {
+      filename = 'audio.wav';
+    } else if (mimeType.includes('ogg')) {
+      filename = 'audio.ogg';
+    } else if (mimeType.includes('flac')) {
+      filename = 'audio.flac';
+    }
+    
+    formData.append('file', blob, filename);
     formData.append('model', 'whisper-1');
     formData.append('language', language);
 
-    console.log("🚀 Sending to OpenAI Whisper API...");
-    console.log("📊 Blob size:", blob.size, "type:", blob.type);
+    console.log(`🚀 Sending to OpenAI Whisper API...`);
+    console.log(`📊 Using filename: ${filename}, MIME type: ${mimeType}, blob size: ${blob.size}`);
     
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {

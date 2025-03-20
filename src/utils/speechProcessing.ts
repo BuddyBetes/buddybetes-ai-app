@@ -31,11 +31,26 @@ export const processSpeechFromBlob = async (
     console.log("Audio blob type:", audioBlob.type);
     
     // Check if the audio format is supported by Whisper API
-    const supportedFormats = ['audio/webm', 'audio/ogg', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/mpga', 'audio/m4a', 'audio/flac'];
+    const supportedFormats = ['audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 'audio/wav', 'audio/webm'];
     const audioType = audioBlob.type.split(';')[0]; // Get base MIME type without codec info
     
-    if (!supportedFormats.some(format => audioType.includes(format))) {
-      console.warn(`Audio format ${audioBlob.type} may not be supported by Whisper API. Supported formats: webm, ogg, wav, mp3, etc.`);
+    // Log detailed information about the audio format
+    if (audioBlob.type.includes('codecs')) {
+      console.log(`Audio format includes codec information: ${audioBlob.type}`);
+    }
+    
+    let isSupported = false;
+    for (const format of supportedFormats) {
+      if (audioType.includes(format) || format.includes(audioType)) {
+        isSupported = true;
+        console.log(`Audio format ${audioBlob.type} matches supported format ${format}`);
+        break;
+      }
+    }
+    
+    if (!isSupported) {
+      console.warn(`Audio format ${audioBlob.type} may not be supported by Whisper API.`);
+      console.log(`Supported formats: ${supportedFormats.join(', ')}`);
     }
     
     try {
