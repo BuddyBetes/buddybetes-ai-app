@@ -102,17 +102,20 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
             console.log("Audio converted to base64, sending to speech-to-text function...");
             
             // Send to speech-to-text function
+            console.log("📤 SENDING AUDIO to speech-to-text function");
             const { data, error } = await supabase.functions.invoke('speech-to-text', {
               body: { audio: base64Audio }
             });
             
+            console.log("📥 RECEIVED RESPONSE from speech-to-text function:", data);
+            
             if (error) {
-              console.error("Speech-to-text error:", error);
+              console.error("❌ Speech-to-text error:", error);
               setIsProcessing(false);
               throw new Error(error.message);
             }
             
-            if (data.text) {
+            if (data && data.text) {
               console.log("🎯 TRANSCRIBED TEXT:", data.text);
               console.log("Speech recognition successful, passing text to handler...");
               // Call the callback with the transcribed text
@@ -123,7 +126,8 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
                 setIsProcessing(false);
               }, 500);
             } else {
-              console.log("No transcription received from speech-to-text function");
+              console.log("❌ No transcription received from speech-to-text function");
+              console.log("Raw response data:", JSON.stringify(data));
               setIsProcessing(false);
               toast({
                 title: "No Speech Detected",
@@ -134,7 +138,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
             
             resolve(true);
           } catch (error) {
-            console.error("Processing error:", error);
+            console.error("❌ Processing error:", error);
             setIsProcessing(false);
             toast({
               title: "Processing Error",

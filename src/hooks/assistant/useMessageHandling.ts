@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
@@ -19,6 +20,7 @@ export const useMessageHandling = (
     if (!message.trim() || isLoading) return;
     
     console.log("🔄 Processing user message:", message);
+    console.log(`🎙️ Current mode: ${currentMode || 'text'}`);
     
     // Add sound feedback
     const audio = new Audio('/message-sent.mp3');
@@ -147,10 +149,14 @@ export const useMessageHandling = (
   };
   
   const handleSpeechResult = async (text: string) => {
-    console.log("Speech result received:", text);
-    if (!text.trim()) return;
+    console.log("💬 Speech result received:", text);
+    if (!text.trim()) {
+      console.log("⚠️ Empty speech result, ignoring");
+      return;
+    }
     
     // Process the speech result as a user message
+    console.log("🔄 Processing speech result as user message");
     await handleUserMessage(text);
   };
   
