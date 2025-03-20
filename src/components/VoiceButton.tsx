@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import VoiceCircle from './voice/VoiceCircle';
 import SessionModeButtons from './voice/SessionModeButtons';
-import AudioRecorder from './voice/AudioRecorder';
 import VoiceSubtitles from './voice/VoiceSubtitles';
 import VoiceInitializing from './voice/VoiceInitializing';
 import VoiceStatusHeading from './voice/VoiceStatusHeading';
 import VoiceButtonFooter from './voice/VoiceButtonFooter';
+import VoiceProcessor from './voice/VoiceProcessor';
+import { useVoiceButtonState } from '@/hooks/useVoiceButtonState';
 import { useToast } from '@/hooks/use-toast';
 
 interface VoiceButtonProps {
@@ -26,13 +27,44 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   isPlayingResponse,
   isLoading = false
 }) => {
-  const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [playbackCompleted, setPlaybackCompleted] = useState(false);
-  const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
-  const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const { toast } = useToast();
+  
+  // Initialize state and status handling
+  const {
+    status,
+    errorMsg,
+    playbackCompleted,
+    lastUserMessage,
+    lastAssistantMessage,
+    setStatus,
+    setLastUserMessage,
+    setPlaybackCompleted
+  } = useVoiceButtonState({
+    onStartSession,
+    onEndSession,
+    onSpeechResult,
+    isPlayingResponse
+  });
+
+  // Set up voice processing logic
+  const {
+    handleStartSession,
+    handleEndSession,
+    handleStopButton
+  } = VoiceProcessor({
+    onSpeechResult: onSpeechResult || (() => {}),
+    onProcessingStateChange: (isProcessing) => {
+      if (!isProcessing && status === 'processing') {
+        console.log("Processing complete, ready for speaking state");
+      }
+    },
+    status,
+    setStatus,
+    setLastUserMessage,
+    onStartSession,
+    onEndSession
+  });
   
   // Add loading state that resolves after a short delay
   useEffect(() => {
@@ -42,125 +74,11 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     return () => clearTimeout(timer);
   }, []);
   
-  const { isRecording, startRecording, stopRecording } = AudioRecorder({
-    onSpeechResult: (text) => {
-      console.log("Speech recognized:", text);
-      setStatus('processing');
-      setErrorMsg(null);
-      setLastUserMessage(text);
-      
-      if (text.trim().length > 0) {
-        onSpeechResult && onSpeechResult(text);
-      } else {
-        console.log("Empty text received from speech recognition");
-        setStatus('idle');
-      }
-    },
-    onProcessingStateChange: (isProcessing) => {
-      console.log("Processing state changed:", isProcessing);
-      if (!isProcessing && status === 'processing') {
-        console.log("Processing complete, ready for speaking state");
-      }
-    }
-  });
-
-  useEffect(() => {
-    console.log("isPlayingResponse changed:", isPlayingResponse, "current status:", status);
-    
-    if (isPlayingResponse) {
-      console.log("Setting status to speaking because isPlayingResponse is true");
-      setStatus('speaking');
-      setPlaybackCompleted(false);
-    } else if (status === 'speaking') {
-      console.log("Response finished playing, setting status to idle after delay");
-      const timer = setTimeout(() => {
-        console.log("Timeout executed, setting status to idle");
-        setStatus('idle');
-        setPlaybackCompleted(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isPlayingResponse, status]);
-
-  useEffect(() => {
-    if (status !== 'idle') {
-      setErrorMsg(null);
-    }
-  }, [status]);
-
-  useEffect(() => {
-    console.log("Voice button status changed to:", status);
-  }, [status]);
-
-  // Listen for messages in the assistant context
-  useEffect(() => {
-    const handleMessageUpdate = (event: CustomEvent) => {
-      if (event.detail?.type === 'assistant' && event.detail?.text) {
-        setLastAssistantMessage(event.detail.text);
-      }
-    };
-
-    window.addEventListener('new-message' as any, handleMessageUpdate);
-    return () => {
-      window.removeEventListener('new-message' as any, handleMessageUpdate);
-    };
-  }, []);
-
   const handleToggle = () => {
     if (status === 'listening') {
       handleEndSession();
     } else {
       handleStartSession();
-    }
-  };
-
-  const handleStartSession = () => {
-    try {
-      startRecording().catch(error => {
-        console.error("Error starting recording:", error);
-        toast({
-          title: "Recording Error",
-          description: "Could not start recording. Please check microphone permissions.",
-          variant: "destructive"
-        });
-        setStatus('idle');
-        return;
-      });
-      
-      setStatus('listening');
-      setErrorMsg(null);
-      setPlaybackCompleted(false);
-      onStartSession && onStartSession();
-    } catch (error) {
-      console.error("Error in handleStartSession:", error);
-      setStatus('idle');
-    }
-  };
-
-  const handleEndSession = () => {
-    try {
-      stopRecording();
-      setStatus('processing');
-      onEndSession && onEndSession();
-    } catch (error) {
-      console.error("Error in handleEndSession:", error);
-      setStatus('idle');
-      toast({
-        title: "Error",
-        description: "An error occurred while processing your voice. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleStopButton = () => {
-    try {
-      stopRecording();
-      setStatus('processing');
-      onEndSession && onEndSession();
-    } catch (error) {
-      console.error("Error in handleStopButton:", error);
-      setStatus('idle');
     }
   };
 
