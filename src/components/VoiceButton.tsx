@@ -33,13 +33,8 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     onProcessingStateChange: (isProcessing) => {
       if (!isProcessing && status === 'processing') {
         console.log("Processing complete, ready for speaking state");
-        // Allow transition to idle if we aren't going to play a response
-        if (!isPlayingResponse) {
-          console.log("No response to play, returning to idle state");
-          setTimeout(() => {
-            setStatus('idle');
-          }, 500);
-        }
+        // Don't transition to idle here - we need to wait for the assistant response
+        // The transition will be handled by the isPlayingResponse effect
       }
     }
   });

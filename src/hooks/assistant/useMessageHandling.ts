@@ -95,8 +95,10 @@ export const useMessageHandling = (
         if (currentMode === 'voice' && playResponseAudio) {
           console.log("In voice mode, playing TTS response:", data.response.substring(0, 50) + "...");
           try {
+            console.log("Starting audio playback - isLoading will remain true");
             // Ensure isLoading remains true while audio is playing
             await playResponseAudio(data.response);
+            console.log("Audio playback completed");
           } catch (playbackError) {
             console.error("Error playing response audio:", playbackError);
             toast({
@@ -127,6 +129,7 @@ export const useMessageHandling = (
         }
       }
     } finally {
+      console.log("Completing message handling and setting isLoading to false");
       setIsLoading(false);
       setInput('');
     }
