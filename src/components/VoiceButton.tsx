@@ -31,13 +31,13 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const [playbackCompleted, setPlaybackCompleted] = useState(false);
   const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const isMobile = useIsMobile();
   
   // Add loading state that resolves after a short delay
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      setIsInitializing(false);
     }, 800);
     return () => clearTimeout(timer);
   }, []);
@@ -142,7 +142,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto">
         <div className="w-48 h-48 rounded-full bg-[#35cab4]/30 flex items-center justify-center">
