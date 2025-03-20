@@ -4,17 +4,22 @@ import { browserSpeechToText } from '../browserSpeechServices';
 
 /**
  * Sends audio to Supabase Edge Function for speech-to-text conversion
- * @param base64Audio - Base64 encoded audio data
+ * @param payload - Object containing base64 encoded audio data and options
  * @returns Promise with transcription result
  */
-export async function supabaseSpeechToText(base64Audio: string): Promise<{ text: string } | null> {
-  console.log("Sending audio to Supabase speech-to-text function...");
+export async function supabaseSpeechToText(payload: { 
+  audio: string; 
+  language: string; 
+  mimeType?: string;
+}): Promise<{ text: string } | null> {
+  console.log("Sending audio to Supabase speech-to-text function...", {
+    audioLength: payload.audio.length,
+    language: payload.language,
+    mimeType: payload.mimeType || 'not specified'
+  });
   
   const { data, error } = await supabase.functions.invoke('speech-to-text', {
-    body: { 
-      audio: base64Audio,
-      language: 'en'  // Default to English
-    }
+    body: payload
   });
   
   if (error) {

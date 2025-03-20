@@ -74,6 +74,7 @@ serve(async (req) => {
     let audioData;
     let language = 'en';
     let detectedMimeType = '';
+    let requestBody: any = {};
     
     // Check if the request is FormData or JSON
     if (contentType.includes('multipart/form-data')) {
@@ -113,24 +114,57 @@ serve(async (req) => {
           }
         );
       }
-    } else if (contentType.includes('application/json')) {
-      console.log("📜 Processing JSON request");
+    } else {
+      // For JSON and other content types
+      console.log("📜 Processing request as JSON");
       
-      // Handle JSON request
       try {
-        const body = await req.json();
-        console.log("📊 JSON body keys:", Object.keys(body));
+        let body;
         
-        const { audio, language: reqLanguage } = body;
+        // Try to parse as JSON
+        try {
+          body = await req.json();
+          requestBody = body; // Store the full body for logging
+          console.log("📊 Request body keys:", Object.keys(body));
+        } catch (jsonError) {
+          console.warn("⚠️ Failed to parse as JSON, trying as text");
+          const text = await req.text();
+          
+          try {
+            body = JSON.parse(text);
+            requestBody = body;
+            console.log("📊 Parsed text as JSON, keys:", Object.keys(body));
+          } catch (parseError) {
+            console.error("🚫 Failed to parse request as JSON:", parseError);
+            return new Response(
+              JSON.stringify({ error: 'Invalid request format. Expected JSON.' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          }
+        }
+        
+        // Extract audio data and other parameters
+        const { audio, language: reqLanguage, mimeType } = body;
         
         if (reqLanguage) {
           language = reqLanguage;
         }
         
+        if (mimeType) {
+          detectedMimeType = mimeType;
+          console.log("🎵 Client provided MIME type:", detectedMimeType);
+        }
+        
         if (!audio) {
-          console.error("🚫 No audio data received in request");
+          console.error("🚫 No audio data in request");
           return new Response(
-            JSON.stringify({ error: 'No audio data provided' }),
+            JSON.stringify({ 
+              error: 'No audio data provided',
+              receivedKeys: Object.keys(body)
+            }),
             {
               status: 400,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -140,7 +174,7 @@ serve(async (req) => {
 
         // Validate base64
         if (!isValidBase64(audio)) {
-          console.error("🚫 Invalid base64 data received");
+          console.error("🚫 Invalid base64 data");
           return new Response(
             JSON.stringify({ error: 'Invalid base64 audio data' }),
             {
@@ -150,35 +184,15 @@ serve(async (req) => {
           );
         }
 
-        if (audio.length < 100) {
-          console.error("🚫 Audio data too small, length:", audio.length);
-          return new Response(
-            JSON.stringify({ error: 'Audio data too small or empty' }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            }
-          );
-        }
-
-        console.log("🎤 Received audio data, processing...");
-        console.log("📊 Audio data length:", audio.length);
-        
         // Clean base64 data if it includes a data URL prefix
         let cleanBase64 = audio;
         if (audio.startsWith("data:")) {
           const mimeMatch = audio.match(/^data:([^;]+);base64,/);
           if (mimeMatch && mimeMatch[1]) {
             detectedMimeType = mimeMatch[1];
-            console.log("🔍 Detected MIME type from prefix:", detectedMimeType);
+            console.log("🔍 Detected MIME type from data URL:", detectedMimeType);
             cleanBase64 = audio.split(',')[1];
           }
-        }
-        
-        if (!detectedMimeType || detectedMimeType === '') {
-          // If no MIME type detected, use a default supported format
-          detectedMimeType = 'audio/webm';
-          console.log("⚠️ No MIME type detected, using default:", detectedMimeType);
         }
         
         // Process audio in chunks
@@ -194,77 +208,10 @@ serve(async (req) => {
             }
           );
         }
-      } catch (jsonError) {
-        console.error("🚫 Error parsing JSON:", jsonError);
+      } catch (requestError) {
+        console.error("🚫 Error processing request:", requestError);
         return new Response(
-          JSON.stringify({ error: `Invalid JSON: ${jsonError.message}` }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-    } else {
-      console.warn("⚠️ Unknown Content-Type. Defaulting to JSON parsing.");
-      
-      try {
-        const text = await req.text();
-        console.log("📝 Request body text length:", text.length);
-        
-        try {
-          const body = JSON.parse(text);
-          const { audio, language: reqLanguage } = body;
-          
-          if (reqLanguage) {
-            language = reqLanguage;
-          }
-          
-          if (!audio) {
-            console.error("🚫 No audio data in parsed text");
-            return new Response(
-              JSON.stringify({ error: 'No audio data provided' }),
-              {
-                status: 400,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              }
-            );
-          }
-          
-          // Process as JSON...
-          // Clean base64 data if it includes a data URL prefix
-          let cleanBase64 = audio;
-          if (audio.startsWith("data:")) {
-            const mimeMatch = audio.match(/^data:([^;]+);base64,/);
-            if (mimeMatch && mimeMatch[1]) {
-              detectedMimeType = mimeMatch[1];
-              console.log("🔍 Detected MIME type from prefix:", detectedMimeType);
-              cleanBase64 = audio.split(',')[1];
-            }
-          }
-          
-          if (!detectedMimeType || detectedMimeType === '') {
-            // If no MIME type detected, use a default supported format
-            detectedMimeType = 'audio/webm';
-            console.log("⚠️ No MIME type detected, using default:", detectedMimeType);
-          }
-          
-          // Process audio in chunks
-          audioData = processBase64Chunks(cleanBase64);
-          
-        } catch (parseError) {
-          console.error("🚫 Error parsing request body as JSON:", parseError);
-          return new Response(
-            JSON.stringify({ error: `Failed to parse request: ${parseError.message}` }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            }
-          );
-        }
-      } catch (readError) {
-        console.error("🚫 Error reading request body:", readError);
-        return new Response(
-          JSON.stringify({ error: `Failed to read request: ${readError.message}` }),
+          JSON.stringify({ error: `Failed to process request: ${requestError.message}` }),
           {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -273,6 +220,7 @@ serve(async (req) => {
       }
     }
     
+    // Validate audio data
     if (!audioData || audioData.length === 0) {
       console.error("🚫 No audio data after processing");
       return new Response(
@@ -285,17 +233,6 @@ serve(async (req) => {
     }
     
     console.log("✅ Audio data processed successfully, size:", audioData.length);
-    
-    if (audioData.length < 100) {
-      console.error("🚫 Processed audio too small");
-      return new Response(
-        JSON.stringify({ error: 'Processed audio data too small' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
     
     // Check if we have an OpenAI API key
     const apiKey = Deno.env.get('OPENAI_API_KEY');
@@ -310,50 +247,64 @@ serve(async (req) => {
       );
     }
 
-    // Check supported formats
+    // Define supported formats for Whisper API
     const supportedFormats = ['audio/flac', 'audio/x-flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
       'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 'audio/wav', 'audio/webm'];
     
-    // Ensure we have a valid MIME type for Whisper API
+    // Normalize MIME type
     let mimeType = detectedMimeType;
-    if (!supportedFormats.includes(mimeType)) {
-      console.warn(`⚠️ Detected MIME type ${mimeType} may not be supported by Whisper API`);
-      
-      // Try to convert to a more standard MIME type if possible
-      if (mimeType.includes('webm')) {
-        mimeType = 'audio/webm';
-      } else if (mimeType.includes('mp3') || mimeType.includes('mpeg')) {
-        mimeType = 'audio/mp3';
-      } else if (mimeType.includes('wav')) {
-        mimeType = 'audio/wav';
-      } else if (mimeType.includes('ogg')) {
-        mimeType = 'audio/ogg';
-      } else if (mimeType.includes('flac')) {
-        mimeType = 'audio/flac';
-      } else {
-        // Default to webm as last resort
-        mimeType = 'audio/webm';
-      }
-      console.log(`🔄 Using normalized MIME type: ${mimeType}`);
+    if (!mimeType || mimeType === '') {
+      mimeType = 'audio/webm'; // Default if none provided
+      console.log("ℹ️ No MIME type detected, using default:", mimeType);
+    } else {
+      console.log("🎵 Using detected MIME type:", mimeType);
     }
+    
+    // Check if MIME type is supported and normalize if needed
+    let isSupported = false;
+    for (const format of supportedFormats) {
+      if (mimeType.includes(format) || format.includes(mimeType)) {
+        isSupported = true;
+        // Normalize to standard format
+        for (const stdFormat of supportedFormats) {
+          if (mimeType.includes(stdFormat)) {
+            mimeType = stdFormat;
+            break;
+          }
+        }
+        console.log(`✅ Audio format ${mimeType} is supported`);
+        break;
+      }
+    }
+    
+    if (!isSupported) {
+      console.warn(`⚠️ MIME type ${mimeType} may not be supported by Whisper API`);
+      // Use a safe default
+      mimeType = 'audio/webm';
+      console.log(`🔄 Using fallback MIME type: ${mimeType}`);
+    }
+    
+    // Map MIME type to file extension
+    const mimeToExtension: Record<string, string> = {
+      'audio/flac': 'flac',
+      'audio/x-flac': 'flac',
+      'audio/m4a': 'm4a',
+      'audio/mp3': 'mp3',
+      'audio/mp4': 'mp4',
+      'audio/mpeg': 'mp3',
+      'audio/mpga': 'mp3',
+      'audio/oga': 'ogg',
+      'audio/ogg': 'ogg',
+      'audio/wav': 'wav',
+      'audio/webm': 'webm'
+    };
+    
+    const extension = mimeToExtension[mimeType] || 'webm';
+    const filename = `audio.${extension}`;
     
     // Prepare form data with explicit MIME type
     const formData = new FormData();
     const blob = new Blob([audioData], { type: mimeType });
-    
-    // Use file extension that matches the MIME type
-    let filename = 'audio.webm';
-    if (mimeType.includes('mp3')) {
-      filename = 'audio.mp3';
-    } else if (mimeType.includes('wav')) {
-      filename = 'audio.wav';
-    } else if (mimeType.includes('ogg')) {
-      filename = 'audio.ogg';
-    } else if (mimeType.includes('flac')) {
-      filename = 'audio.flac';
-    } else if (mimeType.includes('m4a')) {
-      filename = 'audio.m4a';
-    }
     
     formData.append('file', blob, filename);
     formData.append('model', 'whisper-1');
@@ -374,10 +325,26 @@ serve(async (req) => {
     console.log("📥 OpenAI response status:", response.status);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("⛔ OpenAI API error:", errorText);
+      let errorText;
+      try {
+        const errorJson = await response.json();
+        errorText = JSON.stringify(errorJson);
+        console.error("⛔ OpenAI API error JSON:", errorJson);
+      } catch (e) {
+        errorText = await response.text();
+        console.error("⛔ OpenAI API error text:", errorText);
+      }
+      
       return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${errorText}` }),
+        JSON.stringify({ 
+          error: `OpenAI API error: ${errorText}`,
+          requestDetails: {
+            mimeType,
+            filename,
+            blobSize: blob.size,
+            audioDataSize: audioData.length
+          }
+        }),
         {
           status: response.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

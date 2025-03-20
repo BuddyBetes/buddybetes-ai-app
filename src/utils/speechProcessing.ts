@@ -30,20 +30,12 @@ export const processSpeechFromBlob = async (
     console.log("Processing audio blob of size:", audioBlob.size, "bytes");
     console.log("Audio blob type:", audioBlob.type);
     
-    // Log detailed information about the blob for debugging
-    try {
-      const slice = await audioBlob.slice(0, Math.min(100, audioBlob.size)).text();
-      console.log("Audio blob sample (first 100 bytes):", slice);
-      if (slice.includes("data:")) {
-        console.log("Audio blob appears to contain a data URL prefix");
-      }
-    } catch (error) {
-      console.log("Could not get blob sample:", error);
-    }
+    // Detailed information about the blob for debugging
+    const audioType = audioBlob.type.split(';')[0]; // Get base MIME type without codec info
+    console.log("Audio base type:", audioType);
     
     // Check if the audio format is supported by Whisper API
     const supportedFormats = ['audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 'audio/wav', 'audio/webm'];
-    const audioType = audioBlob.type.split(';')[0]; // Get base MIME type without codec info
     
     // Log detailed information about the audio format
     if (audioBlob.type.includes('codecs')) {
@@ -96,8 +88,24 @@ export const processSpeechFromBlob = async (
         return;
       }
       
-      // Process speech using the API service
-      const result = await convertSpeechToText(base64Audio);
+      // Add explicit information about the mime type if available
+      const payload: any = { 
+        audio: base64Audio,
+        language: 'en'
+      };
+      
+      // Include original MIME type for the edge function to handle properly
+      if (audioBlob.type) {
+        payload.mimeType = audioBlob.type;
+      }
+      
+      console.log("Sending to speech-to-text function with payload:", {
+        audioLength: payload.audio.length,
+        mimeType: payload.mimeType || 'not specified'
+      });
+      
+      // Process speech using the API service with enhanced payload
+      const result = await convertSpeechToText(base64Audio, payload.mimeType);
       
       if (result && result.text) {
         onSpeechResult(result.text);

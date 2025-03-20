@@ -6,9 +6,10 @@ import { blobToBase64 } from './speech/speechUtils';
 /**
  * Converts spoken audio to text using Supabase Edge Function with browser fallback
  * @param base64Audio - Base64 encoded audio data
+ * @param mimeType - Optional MIME type of the audio data
  * @returns Promise with transcription result
  */
-export async function convertSpeechToText(base64Audio: string): Promise<{ text: string } | null> {
+export async function convertSpeechToText(base64Audio: string, mimeType?: string): Promise<{ text: string } | null> {
   if (!base64Audio || base64Audio.length < 100) {
     console.error("Invalid base64 audio data");
     throw new Error("Invalid audio data provided");
@@ -17,9 +18,20 @@ export async function convertSpeechToText(base64Audio: string): Promise<{ text: 
   console.log("Processing speech-to-text conversion...");
   console.log("Base64 audio length:", base64Audio.length);
   
+  if (mimeType) {
+    console.log("Audio MIME type:", mimeType);
+  }
+  
   try {
-    // Try Supabase Edge Function first
-    return await supabaseSpeechToText(base64Audio);
+    // Try Supabase Edge Function first with enhanced payload
+    const payload: any = { audio: base64Audio, language: "en" };
+    
+    // Include MIME type if available
+    if (mimeType) {
+      payload.mimeType = mimeType;
+    }
+    
+    return await supabaseSpeechToText(payload);
   } catch (supabaseError) {
     console.error("Supabase speech-to-text error:", supabaseError);
     console.log("Trying browser-based speech recognition as fallback...");
