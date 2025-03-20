@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -15,6 +15,30 @@ const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const isMobile = useIsMobile();
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  
+  // Monitor if any textarea or input is focused
+  useEffect(() => {
+    const handleFocus = (e: FocusEvent) => {
+      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
+        setIsInputFocused(true);
+      }
+    };
+    
+    const handleBlur = (e: FocusEvent) => {
+      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
+        setIsInputFocused(false);
+      }
+    };
+    
+    document.addEventListener('focusin', handleFocus);
+    document.addEventListener('focusout', handleBlur);
+    
+    return () => {
+      document.removeEventListener('focusin', handleFocus);
+      document.removeEventListener('focusout', handleBlur);
+    };
+  }, []);
   
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
@@ -25,6 +49,9 @@ const Navigation: React.FC = () => {
   ];
   
   const handleNavigation = (path: string) => {
+    if (isInputFocused && path === '/add-log') {
+      return; // Prevent navigation to add log when input is focused
+    }
     navigate(path);
   };
 
@@ -33,16 +60,17 @@ const Navigation: React.FC = () => {
       {navItems.map((item) => {
         const isActive = currentPath === item.path;
         const isAdd = item.name === 'Add';
+        const disabled = isAdd && isInputFocused;
         
         return (
           <div 
             key={item.name}
-            className={`relative flex-1 flex items-center justify-center ${isAdd ? 'px-3' : ''}`}
+            className={`relative flex-1 flex items-center justify-center ${isAdd ? 'px-3' : ''} ${disabled ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
             onClick={() => handleNavigation(item.path)}
           >
             {isAdd ? (
               <div className="absolute -top-6">
-                <div className="buddy-gradient w-14 h-14 rounded-full flex items-center justify-center shadow-lg cursor-pointer">
+                <div className={`${disabled ? 'bg-gray-400' : 'buddy-gradient'} w-14 h-14 rounded-full flex items-center justify-center shadow-lg`}>
                   <item.icon size={24} className="text-white" />
                 </div>
               </div>

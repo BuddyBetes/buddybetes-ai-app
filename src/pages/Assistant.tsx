@@ -42,7 +42,7 @@ const Assistant = () => {
 
   return (
     <Layout>
-      <div className={`mx-auto h-full ${isMobile ? 'w-full' : 'max-w-3xl'}`}>
+      <div className={`mx-auto h-full flex flex-col ${isMobile ? 'w-full' : 'max-w-3xl'}`}>
         <AnimatePresence mode="wait">
           {mode === 'voice' ? (
             <motion.div
@@ -68,24 +68,28 @@ const Assistant = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <MessageList 
-                messages={messages}
-                isLoading={isLoading}
-                showWelcome={showWelcome}
-                showScrollButton={showScrollButton}
-                timeGroups={TIME_GROUPS}
-                onDismissWelcome={handleDismissWelcome}
-                onScrollToBottom={scrollToBottom}
-              />
+              <div className="flex-1 overflow-y-auto">
+                <MessageList 
+                  messages={messages}
+                  isLoading={isLoading}
+                  showWelcome={showWelcome}
+                  showScrollButton={showScrollButton}
+                  timeGroups={TIME_GROUPS}
+                  onDismissWelcome={handleDismissWelcome}
+                  onScrollToBottom={scrollToBottom}
+                />
+              </div>
               
-              <MessageInput 
-                input={input}
-                isLoading={isLoading || isPlayingResponse}
-                onInputChange={handleInputChange}
-                onSend={handleSend}
-                onSuggestionSelect={handleSuggestionSelect}
-                onVoiceMode={handleVoiceMode}
-              />
+              <div className="sticky bottom-0 z-10 bg-white">
+                <MessageInput 
+                  input={input}
+                  isLoading={isLoading || isPlayingResponse}
+                  onInputChange={handleInputChange}
+                  onSend={handleSend}
+                  onSuggestionSelect={handleSuggestionSelect}
+                  onVoiceMode={handleVoiceMode}
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

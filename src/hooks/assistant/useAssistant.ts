@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useUIState } from './useUIState';
 import { useMessageHandling } from './useMessageHandling';
@@ -39,64 +38,71 @@ export const useAssistant = () => {
     setMessages
   } = useMessageHandling(playResponseAudio, mode);
   
-  // Enhanced speech result handler that also extracts log data
   const handleSpeechResult = async (text: string) => {
-    // First, process the speech normally
-    await originalHandleSpeechResult(text);
+    console.log("Processing voice input for glucose logging intent...");
     
-    // Then check if it contains glucose logging intent
     if (isGlucoseLogIntent(text)) {
+      console.log("Glucose logging intent detected in voice input!");
       const logInfo = extractGlucoseInfo(text);
+      console.log("Extracted log info:", logInfo);
       
       if (logInfo && logInfo.glucoseLevel) {
-        // Create a new log
-        addLog({
+        const newLog = {
           timestamp: new Date(),
           glucoseLevel: logInfo.glucoseLevel,
-          food: logInfo.food,
-          mealContext: logInfo.mealContext,
-          notes: logInfo.notes
-        });
+          food: logInfo.food || "",
+          mealContext: logInfo.mealContext || "after",
+          notes: logInfo.notes || ""
+        };
+        
+        console.log("Creating new glucose log:", newLog);
+        addLog(newLog);
         
         setLogCreated(true);
         
-        // Show a toast notification
         toast({
           title: "Log Added",
           description: `Glucose reading of ${logInfo.glucoseLevel} mg/dL added to your logs.`,
           duration: 5000
         });
         
-        // Add a confirmation message from the assistant
-        setTimeout(() => {
-          setMessages(prev => [
-            ...prev,
-            {
-              text: `I've added your glucose reading of ${logInfo.glucoseLevel} mg/dL to your logs.${
-                logInfo.mealContext ? ` Context: ${logInfo.mealContext} meal.` : ''
-              }${
-                logInfo.food ? ` Food: ${logInfo.food}.` : ''
-              }`,
-              type: 'assistant',
-              timestamp: Date.now(),
-              isNew: true
-            }
-          ]);
-          
-          if (mode === 'voice' && playResponseAudio) {
-            playResponseAudio(`I've added your glucose reading of ${logInfo.glucoseLevel} mg/dL to your logs.`);
+        const confirmationMessage = `I've added your glucose reading of ${logInfo.glucoseLevel} mg/dL to your logs.${
+          logInfo.mealContext ? ` Context: ${logInfo.mealContext} meal.` : ''
+        }${
+          logInfo.food ? ` Food: ${logInfo.food}.` : ''
+        }`;
+        
+        setMessages(prev => [
+          ...prev,
+          {
+            text: text,
+            type: 'user',
+            timestamp: Date.now(),
+            isNew: true
+          },
+          {
+            text: confirmationMessage,
+            type: 'assistant',
+            timestamp: Date.now(),
+            isNew: true
           }
-        }, 1000);
+        ]);
+        
+        if (mode === 'voice' && playResponseAudio) {
+          playResponseAudio(confirmationMessage);
+        }
+        
+        return;
       }
     }
+    
+    await originalHandleSpeechResult(text);
   };
   
-  // Reset log created flag when mode changes
   useEffect(() => {
     setLogCreated(false);
   }, [mode]);
   
-  // Add initial system message
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
@@ -110,7 +116,6 @@ export const useAssistant = () => {
     }
   }, [messages.length, setMessages]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -143,5 +148,4 @@ export const useAssistant = () => {
   };
 };
 
-// Re-export constants for backwards compatibility
 export { TIME_GROUPS } from './constants';

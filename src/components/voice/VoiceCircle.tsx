@@ -8,9 +8,10 @@ import CancelButton from './CancelButton';
 interface VoiceCircleProps {
   status: 'idle' | 'listening' | 'processing' | 'speaking';
   onStopButtonClick: () => void;
+  onClick?: () => void;
 }
 
-const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick }) => {
+const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick, onClick }) => {
   // Render content for the main circle based on the current status
   const renderCircleContent = () => {
     if (status === 'processing') {
@@ -25,12 +26,12 @@ const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick }) 
 
   // Determine if the circle should have hover effects (only when not processing or speaking)
   const isInteractive = status !== 'processing' && status !== 'speaking';
-
+  
   return (
     <div className="relative mb-16">
       <motion.div 
         className={`w-48 h-48 rounded-full bg-[#35cab4] flex items-center justify-center relative 
-          ${isInteractive ? 'shadow-lg hover:shadow-xl hover:bg-[#2ba999] transition-all duration-200' : ''}`}
+          ${isInteractive ? 'shadow-lg hover:shadow-xl hover:bg-[#2ba999] cursor-pointer transition-all duration-200' : ''}`}
         animate={{
           scale: status === 'speaking' ? [1, 1.05, 1] : 1
         }}
@@ -41,6 +42,7 @@ const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick }) 
         }}
         whileHover={isInteractive ? { scale: 1.05 } : {}}
         whileTap={isInteractive ? { scale: 0.95 } : {}}
+        onClick={isInteractive && onClick ? onClick : undefined}
       >
         <PulseAnimation isActive={status === 'listening'} />
         {renderCircleContent()}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import VoiceCircle from './voice/VoiceCircle';
@@ -27,7 +26,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const [playbackCompleted, setPlaybackCompleted] = useState(false);
   const isMobile = useIsMobile();
   
-  // Initialize the audio recorder
   const { isRecording, startRecording, stopRecording } = AudioRecorder({
     onSpeechResult: (text) => {
       console.log("Speech recognized:", text);
@@ -47,7 +45,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     }
   });
 
-  // Effect to handle state changes based on external isPlayingResponse prop
   useEffect(() => {
     console.log("isPlayingResponse changed:", isPlayingResponse, "current status:", status);
     
@@ -66,14 +63,12 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     }
   }, [isPlayingResponse, status]);
 
-  // Reset error message when status changes
   useEffect(() => {
     if (status !== 'idle') {
       setErrorMsg(null);
     }
   }, [status]);
 
-  // Debugging effect to monitor status changes
   useEffect(() => {
     console.log("Voice button status changed to:", status);
   }, [status]);
@@ -100,7 +95,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     onEndSession && onEndSession();
   };
 
-  // Add a dedicated function for the X button
   const handleStopButton = () => {
     stopRecording();
     setStatus('processing');
@@ -117,24 +111,21 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full px-4">
+    <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto">
       <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-6 md:mb-8 text-gray-800`}>
         {getStatusHeading()}
       </h1>
       
-      <div onClick={status !== 'processing' && status !== 'speaking' ? handleToggle : undefined} 
-           className={status !== 'processing' && status !== 'speaking' ? 'cursor-pointer' : ''}>
-        <VoiceCircle 
-          status={status} 
-          onStopButtonClick={handleStopButton} 
-        />
-      </div>
+      <VoiceCircle 
+        status={status} 
+        onStopButtonClick={handleStopButton}
+        onClick={status !== 'processing' && status !== 'speaking' ? handleToggle : undefined}
+      />
       
       {errorMsg && (
         <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
       )}
       
-      {/* SessionModeButtons still included but it returns null now */}
       <SessionModeButtons status={status} />
       
       <VoiceControlButton 

@@ -24,7 +24,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onVoiceMode,
 }) => {
   return (
-    <div className="sticky bottom-0 bg-white pt-2 pb-4 border-t border-gray-100">
+    <div className="sticky bottom-0 left-0 right-0 bg-white pt-2 pb-4 border-t border-gray-100 z-20">
       <SuggestionChips onSelectSuggestion={onSuggestionSelect} />
       
       <div className="flex items-center gap-2 bg-gray-50 rounded-full p-2 border border-gray-200">
