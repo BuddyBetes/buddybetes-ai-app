@@ -10,7 +10,14 @@ const AUDIO_CONSTRAINTS = {
 };
 
 // Use a supported audio format that works well with the OpenAI Whisper API
-const AUDIO_MIME_TYPE = 'audio/webm';
+// Explicitly use webm with opus codec which is well supported by Whisper API
+const PREFERRED_MIME_TYPES = [
+  'audio/webm;codecs=opus',  // Most compatible with Whisper API
+  'audio/webm',
+  'audio/ogg;codecs=opus',
+  'audio/wav',
+  'audio/mp3'
+];
 
 export interface AudioCaptureState {
   isRecording: boolean;
@@ -68,6 +75,20 @@ export const useAudioCapture = (): AudioCaptureControls => {
   };
 
   /**
+   * Find the first supported MIME type for audio recording
+   */
+  const getSupportedMimeType = (): string | null => {
+    for (const mimeType of PREFERRED_MIME_TYPES) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        console.log(`Using supported MIME type: ${mimeType}`);
+        return mimeType;
+      }
+    }
+    console.warn('None of the preferred MIME types are supported, using browser default');
+    return null;
+  };
+
+  /**
    * Request microphone access and initialize media stream
    */
   const initializeMicrophone = async (): Promise<MediaStream> => {
@@ -94,15 +115,12 @@ export const useAudioCapture = (): AudioCaptureControls => {
    * Create and configure a MediaRecorder for the given stream
    */
   const initializeMediaRecorder = (stream: MediaStream): MediaRecorder => {
-    let options = {};
-    
     // Try to use a specific MIME type that works well with speech recognition
-    if (MediaRecorder.isTypeSupported(AUDIO_MIME_TYPE)) {
-      options = { mimeType: AUDIO_MIME_TYPE };
-      console.log(`Using supported MIME type: ${AUDIO_MIME_TYPE}`);
-    } else {
-      console.warn(`${AUDIO_MIME_TYPE} is not supported, using default`);
-    }
+    const mimeType = getSupportedMimeType();
+    
+    // Create media recorder with supported MIME type
+    const options = mimeType ? { mimeType } : {};
+    console.log("Creating MediaRecorder with options:", options);
     
     // Create media recorder
     const mediaRecorder = new MediaRecorder(stream, options);
@@ -181,7 +199,7 @@ export const useAudioCapture = (): AudioCaptureControls => {
   const getAudioBlob = (): Blob | null => {
     if (audioChunks.length > 0 && hasRecordingStarted) {
       // Get MIME type from the first chunk or use a fallback
-      const mimeType = audioChunks[0].type || AUDIO_MIME_TYPE;
+      const mimeType = audioChunks[0].type || PREFERRED_MIME_TYPES[0];
       console.log(`Creating audio blob with MIME type: ${mimeType}`);
       
       return new Blob(audioChunks, { type: mimeType });

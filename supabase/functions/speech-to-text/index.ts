@@ -115,7 +115,7 @@ serve(async (req) => {
         );
       }
       
-      // Prepare form data
+      // Prepare form data - explicitly use webm MIME type which is supported by Whisper API
       const formData = new FormData();
       const blob = new Blob([binaryAudio], { type: 'audio/webm' });
       formData.append('file', blob, 'audio.webm');
@@ -123,7 +123,7 @@ serve(async (req) => {
       formData.append('language', 'en');
 
       console.log("🚀 Sending to OpenAI Whisper API...");
-      console.log("📊 Blob size:", blob.size);
+      console.log("📊 Blob size:", blob.size, "type:", blob.type);
       
       // Send to OpenAI
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {

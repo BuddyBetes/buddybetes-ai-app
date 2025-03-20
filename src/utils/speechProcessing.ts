@@ -29,6 +29,14 @@ export const processSpeechFromBlob = async (
     console.log("Processing audio blob of size:", audioBlob.size, "bytes");
     console.log("Audio blob type:", audioBlob.type);
     
+    // Check if the audio format is supported by Whisper API
+    const supportedFormats = ['audio/webm', 'audio/ogg', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/mpga', 'audio/m4a', 'audio/flac'];
+    const audioType = audioBlob.type.split(';')[0]; // Get base MIME type without codec info
+    
+    if (!supportedFormats.some(format => audioType.includes(format))) {
+      console.warn(`Audio format ${audioBlob.type} may not be supported by Whisper API. Supported formats: webm, ogg, wav, mp3, etc.`);
+    }
+    
     try {
       // Convert blob to base64
       const base64Audio = await blobToBase64(audioBlob);
