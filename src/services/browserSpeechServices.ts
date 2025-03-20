@@ -16,8 +16,8 @@ export const browserSpeechToText = async (audioBlob?: Blob): Promise<{ text: str
       }
 
       // Create speech recognition instance
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionAPI();
       
       // Configure recognition
       recognition.lang = 'en-US';
