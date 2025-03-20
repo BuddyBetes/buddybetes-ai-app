@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -44,14 +43,12 @@ const Assistant = () => {
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const [fromAddLog, setFromAddLog] = useState(false);
 
-  // Check if we came from the add-log page
   useEffect(() => {
     if (location.state && location.state.from === 'add-log') {
       setFromAddLog(true);
     }
   }, [location]);
 
-  // Create a custom event for message updates
   React.useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && mode === 'voice') {
@@ -62,10 +59,8 @@ const Assistant = () => {
     }
   }, [messages, mode]);
 
-  // Track last messages for subtitles
   useEffect(() => {
     if (messages.length > 0) {
-      // Find last user and assistant messages
       for (let i = messages.length - 1; i >= 0; i--) {
         const msg = messages[i];
         if (msg.type === 'user' && !lastUserMessage) {
@@ -79,10 +74,8 @@ const Assistant = () => {
     }
   }, [messages]);
 
-  // Reset last messages when changing mode
   useEffect(() => {
     if (mode === 'voice') {
-      // Look for the two most recent messages when entering voice mode
       let foundUser = false;
       let foundAssistant = false;
       const userMsg = messages.slice().reverse().find(m => m.type === 'user' && !foundUser && (foundUser = true));
@@ -99,8 +92,7 @@ const Assistant = () => {
   const handleBackToLog = () => {
     navigate('/add-log');
   };
-  
-  // Wrapper for speech result handling that supports Taglish
+
   const handleSpeechResultWithTaglish = (text: string, isTaglish?: boolean) => {
     console.log(`Speech result received${isTaglish ? ' (Taglish mode)' : ''}:`, text);
     handleSpeechResult(text, isTaglish);
@@ -110,7 +102,6 @@ const Assistant = () => {
     <Layout>
       <AppHeader />
       <div className={`mx-auto h-full flex flex-col ${isMobile ? 'w-full' : 'max-w-3xl'}`}>
-        {/* Back Button (when coming from Add Log) */}
         {fromAddLog && (
           <Button
             variant="ghost"
@@ -155,7 +146,7 @@ const Assistant = () => {
                   isLoading={isLoading}
                   showWelcome={showWelcome}
                   showScrollButton={showScrollButton}
-                  timeGroups={TIME_GROUPS}
+                  timeGroups={TIME_GROUPS as Record<string, string>}
                   onDismissWelcome={handleDismissWelcome}
                   onScrollToBottom={scrollToBottom}
                 />
