@@ -14,11 +14,47 @@ serve(async (req) => {
   }
 
   try {
-    const { message, glucoseHistory } = await req.json();
+    const { message, glucoseHistory, foodQuery } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const FATSECRET_API_KEY = Deno.env.get("FATSECRET_API_KEY");
 
     if (!OPENAI_API_KEY) {
       throw new Error("OpenAI API key not found");
+    }
+
+    let nutritionalInfo = null;
+    // If user is asking about food, look up nutritional information
+    if (foodQuery && FATSECRET_API_KEY) {
+      try {
+        // Implement FatSecret API call to get nutritional information
+        const fatSecretUrl = `https://platform.fatsecret.com/rest/server.api?method=foods.search&search_expression=${encodeURIComponent(foodQuery)}&format=json`;
+        
+        const fatSecretResponse = await fetch(fatSecretUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${FATSECRET_API_KEY}`
+          }
+        });
+        
+        if (fatSecretResponse.ok) {
+          const data = await fatSecretResponse.json();
+          if (data.foods && data.foods.food) {
+            // Get the first result if there are multiple
+            const foodItem = Array.isArray(data.foods.food) ? data.foods.food[0] : data.foods.food;
+            nutritionalInfo = {
+              name: foodItem.food_name,
+              calories: foodItem.food_description,
+              carbs: foodItem.food_description.match(/carbs=(\d+(\.\d+)?)g/i)?.[1] || "Unknown",
+              details: foodItem.food_description
+            };
+          }
+        }
+        
+        console.log("Nutritional info from FatSecret:", nutritionalInfo);
+      } catch (error) {
+        console.error("Error fetching from FatSecret API:", error);
+      }
     }
 
     // Prepare system prompt with context about being a glucose assistant
@@ -56,6 +92,21 @@ serve(async (req) => {
       });
     }
 
+    // If we have nutritional information, include it in the context
+    if (nutritionalInfo) {
+      const nutritionalContext = `
+        Nutritional information for "${nutritionalInfo.name}":
+        ${nutritionalInfo.details}
+        
+        Be sure to consider this nutritional information when answering the user's question, especially regarding carbohydrate content (${nutritionalInfo.carbs}g) and its potential impact on blood glucose levels.
+      `;
+      
+      messagesPayload.splice(1, 0, { 
+        role: "system", 
+        content: nutritionalContext 
+      });
+    }
+
     console.log("Sending request to OpenAI with payload:", JSON.stringify(messagesPayload));
 
     // Make request to OpenAI API
@@ -83,7 +134,10 @@ serve(async (req) => {
     const assistantResponse = data.choices[0].message.content;
 
     return new Response(
-      JSON.stringify({ response: assistantResponse }),
+      JSON.stringify({ 
+        response: assistantResponse,
+        nutritionalInfo: nutritionalInfo 
+      }),
       { 
         headers: { 
           ...corsHeaders, 

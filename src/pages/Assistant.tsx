@@ -2,19 +2,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import VoiceButton from '../components/VoiceButton';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/components/ui/use-toast';
 
+interface NutritionalInfo {
+  name: string;
+  calories: string;
+  carbs: string;
+  details: string;
+}
+
 const Assistant = () => {
   const [mode, setMode] = useState<'voice' | 'text'>('voice');
-  const [messages, setMessages] = useState<Array<{text: string, type: 'user' | 'assistant'}>>([]);
+  const [messages, setMessages] = useState<Array<{text: string, type: 'user' | 'assistant', nutritionalInfo?: NutritionalInfo}>>([]);
   const [input, setInput] = useState('');
+  const [foodQuery, setFoodQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showFoodSearch, setShowFoodSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { getRecentLogs } = useLogContext();
   const { toast } = useToast();
@@ -44,6 +54,10 @@ const Assistant = () => {
   const handleVoiceMode = () => {
     setMode('voice');
   };
+
+  const toggleFoodSearch = () => {
+    setShowFoodSearch(!showFoodSearch);
+  };
   
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -60,7 +74,8 @@ const Assistant = () => {
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
         body: { 
           message: input,
-          glucoseHistory: recentLogs
+          glucoseHistory: recentLogs,
+          foodQuery: foodQuery
         }
       });
       
@@ -79,7 +94,8 @@ const Assistant = () => {
         // Add AI response to messages
         setMessages(prev => [...prev, { 
           text: data.response, 
-          type: 'assistant' 
+          type: 'assistant',
+          nutritionalInfo: data.nutritionalInfo || undefined
         }]);
       }
     } catch (err) {
@@ -91,6 +107,8 @@ const Assistant = () => {
     } finally {
       setIsLoading(false);
       setInput('');
+      setFoodQuery('');  // Clear food query after sending
+      setShowFoodSearch(false);  // Hide food search after sending
     }
   };
 
@@ -127,19 +145,31 @@ const Assistant = () => {
               )}
               
               {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+                <div key={index} className="space-y-2">
                   <div
-                    className={`max-w-[80%] rounded-xl p-3 ${
-                      message.type === 'user'
-                        ? 'bg-buddy-500 text-white rounded-tr-none'
-                        : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                    }`}
+                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    {message.text}
+                    <div
+                      className={`max-w-[80%] rounded-xl p-3 ${
+                        message.type === 'user'
+                          ? 'bg-buddy-500 text-white rounded-tr-none'
+                          : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                      }`}
+                    >
+                      {message.text}
+                    </div>
                   </div>
+                  
+                  {message.nutritionalInfo && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="ml-3 max-w-[80%] bg-gray-50 rounded-lg p-3 border border-gray-200"
+                    >
+                      <h4 className="text-sm font-semibold text-buddy-700 mb-1">Nutritional Info: {message.nutritionalInfo.name}</h4>
+                      <p className="text-xs text-gray-600">{message.nutritionalInfo.details}</p>
+                    </motion.div>
+                  )}
                 </div>
               ))}
               <div ref={messagesEndRef} />
@@ -157,7 +187,25 @@ const Assistant = () => {
               )}
             </div>
             
-            <div className="sticky bottom-0 bg-white pb-4">
+            <div className="sticky bottom-0 bg-white pb-4 space-y-2">
+              <AnimatePresence>
+                {showFoodSearch && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex gap-2 mb-2"
+                  >
+                    <Input
+                      value={foodQuery}
+                      onChange={(e) => setFoodQuery(e.target.value)}
+                      placeholder="Search for food (e.g., apple, pasta)..."
+                      className="resize-none"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
               <div className="flex gap-2">
                 <Textarea
                   value={input}
@@ -172,13 +220,23 @@ const Assistant = () => {
                     }
                   }}
                 />
-                <Button 
-                  onClick={handleSend}
-                  className="bg-buddy-500 hover:bg-buddy-600"
-                  disabled={isLoading || !input.trim()}
-                >
-                  Send
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    onClick={handleSend}
+                    className="bg-buddy-500 hover:bg-buddy-600"
+                    disabled={isLoading || !input.trim()}
+                  >
+                    Send
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleFoodSearch}
+                    className="border-buddy-300"
+                  >
+                    <Search size={16} />
+                  </Button>
+                </div>
               </div>
               
               <div className="flex justify-center mt-4">
