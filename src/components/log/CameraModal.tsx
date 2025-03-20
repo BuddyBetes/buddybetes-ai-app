@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import CameraCapture from '@/components/camera/CameraCapture';
@@ -42,14 +41,12 @@ const CameraModal: React.FC<CameraModalProps> = ({
           description: "Detected: Apple (15g carbs). Adding to your log entry.",
         });
         
-        // Add food data to logs
+        // Add food data to logs - fixed to match GlucoseLog type
         addLog({
           timestamp: new Date(),
-          foodItem: {
-            name: "Apple",
-            carbs: 15,
-            calories: 95
-          }
+          glucoseLevel: 0, // Setting a default value since it's required by the type
+          food: "Apple",
+          notes: "Estimated: 15g carbs, 95 calories"
         });
         
         // Close modal and reset state
