@@ -54,7 +54,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     if (isPlayingResponse) {
       console.log("Setting status to speaking because isPlayingResponse is true");
       setStatus('speaking');
-    } else if (!isPlayingResponse && status === 'speaking') {
+    } else if (status === 'speaking') {
       console.log("Response finished playing, setting status to idle after delay");
       // Reset to idle after response is done playing
       const timer = setTimeout(() => {

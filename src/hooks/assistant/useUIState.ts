@@ -7,6 +7,9 @@ export const useUIState = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Track previous mode to handle transitions
+  const prevModeRef = useRef<'voice' | 'text'>(mode);
+  
   // Check if this is the first visit
   useEffect(() => {
     const hasVisitedBefore = localStorage.getItem('assistantVisited');
@@ -16,6 +19,11 @@ export const useUIState = () => {
       localStorage.setItem('assistantVisited', 'true');
     }
   }, []);
+
+  // Update previous mode ref when mode changes
+  useEffect(() => {
+    prevModeRef.current = mode;
+  }, [mode]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

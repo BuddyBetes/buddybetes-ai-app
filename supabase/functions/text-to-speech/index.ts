@@ -19,19 +19,27 @@ serve(async (req) => {
     if (!text) {
       throw new Error('Text is required');
     }
+    
+    // Limit text length to prevent potential issues
+    const truncatedText = text.substring(0, 1000);
+    console.log("Processing text-to-speech request with text length:", truncatedText.length);
 
-    console.log("Received text for speech synthesis:", text.substring(0, 50) + "...");
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
 
     // Generate speech from text
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'tts-1',
-        input: text,
+        input: truncatedText,
         voice: voice || 'nova', // Using 'nova' as default for a natural, friendly voice
         response_format: 'mp3',
       }),
@@ -47,9 +55,23 @@ serve(async (req) => {
 
     // Convert audio buffer to base64
     const arrayBuffer = await response.arrayBuffer();
-    const base64Audio = btoa(
-      String.fromCharCode(...new Uint8Array(arrayBuffer))
-    );
+    
+    // Process the binary data in chunks to avoid stack overflow
+    const chunks = [];
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const chunkSize = 32768; // Process in smaller chunks
+    
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      chunks.push(
+        String.fromCharCode.apply(
+          null, 
+          uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length))
+        )
+      );
+    }
+    
+    const base64Audio = btoa(chunks.join(''));
+    console.log("Audio converted to base64, length:", base64Audio.length);
 
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
