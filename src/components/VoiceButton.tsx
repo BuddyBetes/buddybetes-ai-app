@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, X } from 'lucide-react';
+import { Mic, X, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ActionButtons from './voice/ActionButtons';
 import AudioRecorder from './voice/AudioRecorder';
 import AudioPlayer from './voice/AudioPlayer';
+import PulseAnimation from './voice/PulseAnimation';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -21,19 +21,24 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   onSpeechResult
 }) => {
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   // Initialize the audio recorder
   const { isRecording, startRecording, stopRecording } = AudioRecorder({
     onSpeechResult: (text) => {
+      console.log("Speech recognized:", text);
+      setStatus('processing');
       onSpeechResult && onSpeechResult(text);
     },
     onProcessingStateChange: (isProcessing) => {
-      setStatus(isProcessing ? 'processing' : 'idle');
+      if (!isProcessing && status === 'processing') {
+        setStatus('speaking');
+      }
     }
   });
 
   // Initialize the audio player
-  const { audioRef, playResponseAudio } = AudioPlayer({
+  const { playResponseAudio } = AudioPlayer({
     onPlaybackStateChange: (isPlaying) => {
       setStatus(isPlaying ? 'speaking' : 'idle');
     }
@@ -55,8 +60,20 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
 
   const handleEndSession = () => {
     stopRecording();
-    setStatus('idle');
     onEndSession && onEndSession();
+  };
+
+  const renderButtonContent = () => {
+    switch (status) {
+      case 'listening':
+        return <X size={24} className="text-gray-800" />;
+      case 'processing':
+        return <Loader size={24} className="text-gray-800 animate-spin" />;
+      case 'speaking':
+        return <Mic size={24} className="text-gray-800" />;
+      default:
+        return <span className="text-gray-800 font-medium">begin session</span>;
+    }
   };
 
   return (
@@ -64,25 +81,26 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       <audio ref={audioRef} className="hidden" />
       
       <h1 className="text-3xl font-medium mb-8 text-gray-800">
-        {status === 'idle' ? "still up? same!" : "I'm listening..."}
+        {status === 'idle' ? "still up? same!" : 
+         status === 'listening' ? "I'm listening..." :
+         status === 'processing' ? "Processing..." :
+         "Speaking..."}
       </h1>
       
-      <motion.div 
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="w-48 h-48 rounded-full bg-[#FFD872] mb-16 relative flex items-center justify-center"
-      >
-        {status === 'listening' && (
-          <motion.div
-            className="absolute inset-0 rounded-full bg-[#FFD872] opacity-70"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ 
-              duration: 2, 
-              repeat: Infinity, 
-              repeatType: "loop" 
-            }}
-          />
-        )}
+      <div className="relative mb-16">
+        <motion.div 
+          className="w-48 h-48 rounded-full bg-[#FFD872] flex items-center justify-center relative"
+          animate={{
+            scale: status === 'speaking' ? [1, 1.05, 1] : 1
+          }}
+          transition={{ 
+            duration: 2, 
+            repeat: status === 'speaking' ? Infinity : 0,
+            repeatType: "loop" 
+          }}
+        >
+          <PulseAnimation isActive={status === 'listening'} />
+        </motion.div>
         
         {status === 'listening' && (
           <motion.button
@@ -94,7 +112,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
             <X size={18} className="text-gray-600" />
           </motion.button>
         )}
-      </motion.div>
+      </div>
       
       <div className="flex space-x-4 mb-6">
         <Button 
@@ -113,9 +131,10 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       
       <Button 
         onClick={handleToggle}
-        className="bg-[#FFD872] hover:bg-[#E5C267] text-gray-800 rounded-full px-12 py-6 text-lg font-medium w-64"
+        disabled={status === 'processing'}
+        className={`bg-[#FFD872] hover:bg-[#E5C267] text-gray-800 rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' ? 'opacity-80' : ''}`}
       >
-        {status === 'listening' ? "end session" : "begin session"}
+        {renderButtonContent()}
       </Button>
       
       <Button

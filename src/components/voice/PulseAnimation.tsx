@@ -14,16 +14,16 @@ const PulseAnimation = ({ isActive }: PulseAnimationProps) => {
       {[...Array(3)].map((_, i) => (
         <motion.div
           key={i}
-          initial={{ scale: 0.5, opacity: 0.7 }}
+          initial={{ scale: 0.8, opacity: 0.7 }}
           animate={{ scale: 1.5, opacity: 0 }}
           exit={{ opacity: 0 }}
           transition={{
             repeat: Infinity,
-            duration: 2,
-            delay: i * 0.6,
+            duration: 1.5,
+            delay: i * 0.4,
             ease: "easeOut"
           }}
-          className="absolute w-full h-full rounded-full bg-buddy-500/20"
+          className="absolute w-full h-full rounded-full bg-[#FFD872]/30"
         />
       ))}
     </AnimatePresence>

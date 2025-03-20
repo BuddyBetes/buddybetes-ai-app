@@ -12,7 +12,13 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+
+  // Effect to propagate processing state changes
+  useEffect(() => {
+    onProcessingStateChange(isProcessing);
+  }, [isProcessing, onProcessingStateChange]);
 
   // Initialize media recorder
   useEffect(() => {
@@ -39,7 +45,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
           if (!mounted) return;
           
           if (audioChunks.length > 0) {
-            onProcessingStateChange(true);
+            setIsProcessing(true);
             console.log("Processing audio...");
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             await processAudio(audioBlob);
@@ -102,6 +108,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
             
             if (error) {
               console.error("Speech-to-text error:", error);
+              setIsProcessing(false);
               throw new Error(error.message);
             }
             
@@ -110,14 +117,13 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
               // Call the callback with the transcribed text
               onSpeechResult(data.text);
               
-              // Show transcription toast
-              toast({
-                title: "Transcription",
-                description: data.text,
-              });
+              // Wait a moment before switching from processing to allow for AI response
+              setTimeout(() => {
+                setIsProcessing(false);
+              }, 500);
             } else {
               console.log("No transcription received from speech-to-text function");
-              onProcessingStateChange(false);
+              setIsProcessing(false);
               toast({
                 title: "No Speech Detected",
                 description: "We couldn't detect any speech in your recording.",
@@ -128,7 +134,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
             resolve(true);
           } catch (error) {
             console.error("Processing error:", error);
-            onProcessingStateChange(false);
+            setIsProcessing(false);
             toast({
               title: "Processing Error",
               description: error instanceof Error ? error.message : "Failed to process audio",
@@ -140,14 +146,14 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
         
         reader.onerror = (error) => {
           console.error("File reader error:", error);
-          onProcessingStateChange(false);
+          setIsProcessing(false);
           reject(error);
         };
         
         reader.readAsDataURL(audioBlob);
       });
     } catch (error) {
-      onProcessingStateChange(false);
+      setIsProcessing(false);
       console.error("Audio processing error:", error);
       toast({
         title: "Processing Error",
