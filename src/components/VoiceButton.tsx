@@ -24,6 +24,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
 }) => {
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [playbackCompleted, setPlaybackCompleted] = useState(false);
   const isMobile = useIsMobile();
   
   // Initialize the audio recorder
@@ -53,11 +54,13 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     if (isPlayingResponse) {
       console.log("Setting status to speaking because isPlayingResponse is true");
       setStatus('speaking');
+      setPlaybackCompleted(false);
     } else if (status === 'speaking') {
       console.log("Response finished playing, setting status to idle after delay");
       const timer = setTimeout(() => {
         console.log("Timeout executed, setting status to idle");
         setStatus('idle');
+        setPlaybackCompleted(true);
       }, 500);
       return () => clearTimeout(timer);
     }
@@ -87,6 +90,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     startRecording();
     setStatus('listening');
     setErrorMsg(null);
+    setPlaybackCompleted(false);
     onStartSession && onStartSession();
   };
 
@@ -118,10 +122,13 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         {getStatusHeading()}
       </h1>
       
-      <VoiceCircle 
-        status={status} 
-        onStopButtonClick={handleStopButton} 
-      />
+      <div onClick={status !== 'processing' && status !== 'speaking' ? handleToggle : undefined} 
+           className={status !== 'processing' && status !== 'speaking' ? 'cursor-pointer' : ''}>
+        <VoiceCircle 
+          status={status} 
+          onStopButtonClick={handleStopButton} 
+        />
+      </div>
       
       {errorMsg && (
         <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
@@ -134,6 +141,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         status={status}
         onClick={handleToggle}
         disabled={status === 'processing' || status === 'speaking'}
+        playbackCompleted={playbackCompleted}
       />
       
       <Button

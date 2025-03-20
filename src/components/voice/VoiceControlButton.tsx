@@ -7,12 +7,14 @@ interface VoiceControlButtonProps {
   status: 'idle' | 'listening' | 'processing' | 'speaking';
   onClick: () => void;
   disabled: boolean;
+  playbackCompleted?: boolean;
 }
 
 const VoiceControlButton: React.FC<VoiceControlButtonProps> = ({ 
   status, 
   onClick, 
-  disabled 
+  disabled,
+  playbackCompleted = false
 }) => {
   const renderButtonContent = () => {
     switch (status) {
@@ -23,7 +25,11 @@ const VoiceControlButton: React.FC<VoiceControlButtonProps> = ({
       case 'speaking':
         return <Mic size={24} className="text-gray-800" />;
       default:
-        return <span className="text-gray-800 font-medium">begin session</span>;
+        return (
+          <span className="text-gray-800 font-medium">
+            {playbackCompleted ? "continue session" : "begin session"}
+          </span>
+        );
     }
   };
 

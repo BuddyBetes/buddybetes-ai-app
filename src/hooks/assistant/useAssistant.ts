@@ -1,9 +1,12 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useUIState } from './useUIState';
 import { useMessageHandling } from './useMessageHandling';
 import { useSpeechSynthesis } from './useSpeechSynthesis';
 import { Message } from '@/types';
+import { useLogContext } from '@/context/LogContext';
+import { useToast } from '@/hooks/use-toast';
+import { extractGlucoseInfo, isGlucoseLogIntent } from '@/utils/voiceParser';
 
 export const useAssistant = () => {
   const {
@@ -21,6 +24,9 @@ export const useAssistant = () => {
   } = useUIState();
 
   const { isPlayingResponse, playResponseAudio } = useSpeechSynthesis();
+  const { addLog } = useLogContext();
+  const { toast } = useToast();
+  const [logCreated, setLogCreated] = useState(false);
   
   const {
     messages,
@@ -29,9 +35,66 @@ export const useAssistant = () => {
     handleUserMessage,
     handleInputChange,
     handleSend,
-    handleSpeechResult,
+    handleSpeechResult: originalHandleSpeechResult,
     setMessages
   } = useMessageHandling(playResponseAudio, mode);
+  
+  // Enhanced speech result handler that also extracts log data
+  const handleSpeechResult = async (text: string) => {
+    // First, process the speech normally
+    await originalHandleSpeechResult(text);
+    
+    // Then check if it contains glucose logging intent
+    if (isGlucoseLogIntent(text)) {
+      const logInfo = extractGlucoseInfo(text);
+      
+      if (logInfo && logInfo.glucoseLevel) {
+        // Create a new log
+        addLog({
+          timestamp: new Date(),
+          glucoseLevel: logInfo.glucoseLevel,
+          food: logInfo.food,
+          mealContext: logInfo.mealContext,
+          notes: logInfo.notes
+        });
+        
+        setLogCreated(true);
+        
+        // Show a toast notification
+        toast({
+          title: "Log Added",
+          description: `Glucose reading of ${logInfo.glucoseLevel} mg/dL added to your logs.`,
+          duration: 5000
+        });
+        
+        // Add a confirmation message from the assistant
+        setTimeout(() => {
+          setMessages(prev => [
+            ...prev,
+            {
+              text: `I've added your glucose reading of ${logInfo.glucoseLevel} mg/dL to your logs.${
+                logInfo.mealContext ? ` Context: ${logInfo.mealContext} meal.` : ''
+              }${
+                logInfo.food ? ` Food: ${logInfo.food}.` : ''
+              }`,
+              type: 'assistant',
+              timestamp: Date.now(),
+              isNew: true
+            }
+          ]);
+          
+          if (mode === 'voice' && playResponseAudio) {
+            playResponseAudio(`I've added your glucose reading of ${logInfo.glucoseLevel} mg/dL to your logs.`);
+          }
+        }, 1000);
+      }
+    }
+  };
+  
+  // Reset log created flag when mode changes
+  useEffect(() => {
+    setLogCreated(false);
+  }, [mode]);
   
   // Add initial system message
   useEffect(() => {
@@ -75,7 +138,8 @@ export const useAssistant = () => {
     handleSend,
     handleSpeechResult,
     scrollToBottom,
-    setShowScrollButton
+    setShowScrollButton,
+    logCreated
   };
 };
 
