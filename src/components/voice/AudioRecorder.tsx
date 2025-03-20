@@ -113,7 +113,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
             }
             
             if (data.text) {
-              console.log("Transcription received:", data.text);
+              console.log("Transcribed text:", data.text);
               // Call the callback with the transcribed text
               onSpeechResult(data.text);
               

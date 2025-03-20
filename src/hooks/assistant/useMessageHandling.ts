@@ -44,7 +44,7 @@ export const useMessageHandling = (
       // Automatically detect food queries
       const foodQuery = detectFoodQuery(message);
       
-      console.log("Calling glucose-assistant function...");
+      console.log("Calling glucose-assistant function with message:", message);
       // Call our Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
         body: { 
@@ -79,7 +79,10 @@ export const useMessageHandling = (
           }
         }
       } else {
-        console.log("Received response from glucose-assistant:", data.response.substring(0, 50) + "...");
+        console.log("Received response from glucose-assistant:", data.response);
+        console.log("Full response data:", data);
+        console.log("Processing assistant response...");
+        
         // Add AI response to messages
         const assistantMessage: Message = { 
           text: data.response, 
@@ -93,7 +96,7 @@ export const useMessageHandling = (
         
         // If in voice mode, play the response using TTS
         if (currentMode === 'voice' && playResponseAudio) {
-          console.log("In voice mode, playing TTS response:", data.response.substring(0, 50) + "...");
+          console.log("In voice mode, playing TTS response:", data.response);
           try {
             console.log("Starting audio playback - isLoading will remain true");
             // Ensure isLoading remains true while audio is playing
