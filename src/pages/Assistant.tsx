@@ -54,6 +54,7 @@ const Assistant = () => {
                 onEndSession={handleEndSession}
                 onTextMode={handleTextMode}
                 onSpeechResult={handleSpeechResult}
+                isPlayingResponse={isPlayingResponse}
               />
             </motion.div>
           ) : (
