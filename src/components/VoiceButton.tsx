@@ -42,7 +42,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   React.useEffect(() => {
     console.log("isPlayingResponse changed:", isPlayingResponse, "current status:", status);
     
-    if (isPlayingResponse && (status === 'processing' || status === 'idle')) {
+    if (isPlayingResponse) {
       console.log("Setting status to speaking because isPlayingResponse is true");
       setStatus('speaking');
     } else if (!isPlayingResponse && status === 'speaking') {
@@ -96,6 +96,16 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     }
   };
 
+  // Render content for the main circle based on the current status
+  const renderCircleContent = () => {
+    if (status === 'processing') {
+      return <Loader size={48} className="text-white animate-spin" />;
+    } else if (status === 'speaking') {
+      return <Mic size={48} className="text-white" />;
+    }
+    return null;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <h1 className="text-3xl font-medium mb-8 text-gray-800">
@@ -118,6 +128,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
           }}
         >
           <PulseAnimation isActive={status === 'listening'} />
+          {renderCircleContent()}
         </motion.div>
         
         {status === 'listening' && (
