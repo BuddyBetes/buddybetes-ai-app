@@ -99,6 +99,12 @@ const Assistant = () => {
   const handleBackToLog = () => {
     navigate('/add-log');
   };
+  
+  // Wrapper for speech result handling that supports Taglish
+  const handleSpeechResultWithTaglish = (text: string, isTaglish?: boolean) => {
+    console.log(`Speech result received${isTaglish ? ' (Taglish mode)' : ''}:`, text);
+    handleSpeechResult(text, isTaglish);
+  };
 
   return (
     <Layout>
@@ -130,7 +136,7 @@ const Assistant = () => {
                 onStartSession={handleStartSession}
                 onEndSession={handleEndSession}
                 onTextMode={handleTextMode}
-                onSpeechResult={handleSpeechResult}
+                onSpeechResult={handleSpeechResultWithTaglish}
                 isPlayingResponse={isPlayingResponse}
                 isLoading={isLoading}
               />

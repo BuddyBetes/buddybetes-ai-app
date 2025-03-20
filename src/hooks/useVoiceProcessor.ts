@@ -1,6 +1,8 @@
 
-import { useState } from 'react';
-import AudioRecorder from '../components/voice/AudioRecorder';
+import { useState, useCallback } from 'react';
+import { useAudioCapture } from './useAudioCapture';
+import { processSpeechFromBlob } from '@/utils/speechProcessing';
+import { toast } from '@/hooks/use-toast';
 
 interface UseVoiceProcessorProps {
   onSpeechResult: (text: string) => void;
@@ -10,11 +12,9 @@ interface UseVoiceProcessorProps {
   setLastUserMessage: (text: string | null) => void;
   onStartSession?: () => void;
   onEndSession?: () => void;
+  language?: string;
 }
 
-/**
- * Hook that manages the voice processing logic
- */
 export const useVoiceProcessor = ({
   onSpeechResult,
   onProcessingStateChange,
@@ -22,65 +22,107 @@ export const useVoiceProcessor = ({
   setStatus,
   setLastUserMessage,
   onStartSession,
-  onEndSession
+  onEndSession,
+  language = "en"
 }: UseVoiceProcessorProps) => {
-  const { isRecording, startRecording, stopRecording } = AudioRecorder({
-    onSpeechResult: (text) => {
-      console.log("Speech recognized:", text);
-      setStatus('processing');
-      setLastUserMessage(text);
-      
-      if (text.trim().length > 0) {
-        onSpeechResult && onSpeechResult(text);
-      } else {
-        console.log("Empty text received from speech recognition");
-        setStatus('idle');
-      }
-    },
-    onProcessingStateChange: (isProcessing) => {
-      console.log("Processing state changed:", isProcessing);
-      onProcessingStateChange(isProcessing);
-    }
-  });
-
-  const handleStartSession = () => {
-    try {
-      startRecording().catch(error => {
-        console.error("Error starting recording:", error);
-        setStatus('idle');
-        return;
+  const [isRecording, setIsRecording] = useState(false);
+  
+  const {
+    startRecording,
+    stopRecording,
+    getAudioBlob,
+    stopMediaTracks
+  } = useAudioCapture();
+  
+  // Process the audio after it's been recorded
+  const processAudio = useCallback(async () => {
+    setStatus('processing');
+    
+    const audioBlob = getAudioBlob();
+    if (!audioBlob || audioBlob.size < 100) {
+      console.log("No audio to process");
+      toast({
+        title: "No Speech Detected",
+        description: "Please try again and speak clearly.",
+        variant: "destructive"
       });
-      
-      setStatus('listening');
-      onStartSession && onStartSession();
-    } catch (error) {
-      console.error("Error in handleStartSession:", error);
       setStatus('idle');
+      onProcessingStateChange(false);
+      return;
     }
-  };
-
-  const handleEndSession = () => {
+    
     try {
-      stopRecording();
-      setStatus('processing');
-      onEndSession && onEndSession();
+      await processSpeechFromBlob(
+        audioBlob, 
+        { 
+          onSpeechResult,
+          onProcessingStateChange,
+          language 
+        }
+      );
     } catch (error) {
-      console.error("Error in handleEndSession:", error);
+      console.error("Error processing speech:", error);
+      toast({
+        title: "Processing Error",
+        description: "An error occurred while processing your speech.",
+        variant: "destructive"
+      });
       setStatus('idle');
+      onProcessingStateChange(false);
     }
-  };
+  }, [getAudioBlob, onProcessingStateChange, onSpeechResult, setStatus, language]);
+  
+  // Start a new listening session
+  const handleStartSession = useCallback(() => {
+    console.log("Starting session, status:", status);
+    
+    if (status === 'listening') {
+      return;
+    }
+    
+    setIsRecording(true);
+    setStatus('listening');
+    startRecording();
+    
+    if (onStartSession) {
+      onStartSession();
+    }
+  }, [status, startRecording, setStatus, onStartSession]);
+  
+  // End the current listening session and process audio
+  const handleEndSession = useCallback(async () => {
+    console.log("Ending session, status:", status);
+    
+    if (status !== 'listening' || !isRecording) {
+      return;
+    }
+    
+    setIsRecording(false);
+    stopRecording();
+    stopMediaTracks();
 
-  const handleStopButton = () => {
-    try {
+    await processAudio();
+    
+    if (onEndSession) {
+      onEndSession();
+    }
+  }, [status, isRecording, stopRecording, stopMediaTracks, processAudio, onEndSession]);
+  
+  // Handle the stop button click (for emergency stop)
+  const handleStopButton = useCallback(() => {
+    console.log("Stop button clicked, status:", status);
+    
+    if (status === 'listening') {
+      setIsRecording(false);
       stopRecording();
-      setStatus('processing');
-      onEndSession && onEndSession();
-    } catch (error) {
-      console.error("Error in handleStopButton:", error);
+      stopMediaTracks();
       setStatus('idle');
+      if (onEndSession) {
+        onEndSession();
+      }
     }
-  };
-
+  }, [status, stopRecording, stopMediaTracks, setStatus, onEndSession]);
+  
   return {
     isRecording,
     handleStartSession,

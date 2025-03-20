@@ -10,6 +10,7 @@ interface VoiceProcessorProps {
   setLastUserMessage: (text: string | null) => void;
   onStartSession?: () => void;
   onEndSession?: () => void;
+  language?: string;
   children: (handlers: {
     isRecording: boolean;
     handleStartSession: () => void;
@@ -29,6 +30,7 @@ const VoiceProcessor: React.FC<VoiceProcessorProps> = ({
   setLastUserMessage,
   onStartSession,
   onEndSession,
+  language = "en",
   children
 }) => {
   const voiceHandlers = useVoiceProcessor({
@@ -38,7 +40,8 @@ const VoiceProcessor: React.FC<VoiceProcessorProps> = ({
     setStatus,
     setLastUserMessage,
     onStartSession,
-    onEndSession
+    onEndSession,
+    language
   });
 
   return <>{children(voiceHandlers)}</>;
