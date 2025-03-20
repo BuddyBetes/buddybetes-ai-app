@@ -52,6 +52,75 @@ export async function convertSpeechToText(base64Audio: string): Promise<{ text: 
 }
 
 /**
+ * Sends audio file directly to speech-to-text function using FormData
+ * @param audioFile - Audio file to convert
+ * @returns Promise with transcription result
+ */
+export async function convertAudioFileToText(audioFile: File): Promise<{ text: string } | null> {
+  if (!audioFile || audioFile.size === 0) {
+    console.error("Invalid audio file");
+    throw new Error("Invalid audio file provided");
+  }
+  
+  console.log("Sending audio file to speech-to-text function...");
+  console.log("Audio file size:", audioFile.size, "type:", audioFile.type);
+  
+  try {
+    // Create form data
+    const formData = new FormData();
+    formData.append('file', audioFile);
+    formData.append('language', 'en');
+    
+    // Get the Supabase URL and key
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase URL or key not configured");
+    }
+    
+    // Make a direct fetch request with FormData
+    const response = await fetch(`${supabaseUrl}/functions/v1/speech-to-text`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Speech-to-text function error:", errorText);
+      throw new Error(`Speech-to-text error: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data) {
+      console.error("No data returned from speech-to-text function");
+      throw new Error("Speech-to-text function returned no data");
+    }
+    
+    if (data.error) {
+      console.error("Speech-to-text function returned an error:", data.error);
+      throw new Error(`Speech-to-text API error: ${data.error}`);
+    }
+    
+    if (!data.text) {
+      console.log("No text returned from speech-to-text");
+      return null;
+    }
+    
+    console.log("Speech transcription result:", data.text);
+    return data;
+  } catch (error) {
+    console.error("Error in convertAudioFileToText:", error);
+    throw error;
+  }
+}
+
+/**
  * Helper function to convert Blob to base64
  * @param blob - Audio blob to convert
  * @returns Promise with base64 string

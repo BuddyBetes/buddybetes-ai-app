@@ -18,9 +18,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   isNew = false
 }) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <motion.div
-        className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'}`}
+        className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'} w-full`}
         initial={isNew ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}

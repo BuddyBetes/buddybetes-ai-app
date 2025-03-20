@@ -58,113 +58,162 @@ serve(async (req) => {
 
   try {
     console.log("📩 Received request to speech-to-text function");
-    const body = await req.json();
-    const { audio } = body;
     
-    if (!audio) {
-      console.error("🚫 No audio data received in request");
-      return new Response(
-        JSON.stringify({ error: 'No audio data provided' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    if (audio.length < 100) {
-      console.error("🚫 Audio data too small, length:", audio.length);
-      return new Response(
-        JSON.stringify({ error: 'Audio data too small or empty' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    console.log("🎤 Received audio data, processing...");
-    console.log("📊 Audio data length:", audio.length);
+    let audioData;
+    let language = 'en';
     
-    try {
-      // Process audio in chunks
-      const binaryAudio = processBase64Chunks(audio);
-      console.log("✅ Audio data processed successfully, size:", binaryAudio.length);
-      
-      if (binaryAudio.length < 100) {
-        console.error("🚫 Processed audio too small");
+    // Check if the request is FormData or JSON
+    const contentType = req.headers.get('content-type') || '';
+    
+    if (contentType.includes('multipart/form-data')) {
+      console.log("📦 Processing multipart/form-data request");
+      // Handle FormData request
+      try {
+        const formData = await req.formData();
+        const audioFile = formData.get('file');
+        language = formData.get('language')?.toString() || 'en';
+        
+        if (!audioFile || !(audioFile instanceof File)) {
+          console.error("🚫 No audio file in form data");
+          return new Response(
+            JSON.stringify({ error: 'No audio file provided' }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+        
+        // Convert the File to ArrayBuffer and then to Uint8Array
+        const arrayBuffer = await audioFile.arrayBuffer();
+        audioData = new Uint8Array(arrayBuffer);
+        
+        console.log("📊 Audio file received, size:", audioData.length, "type:", audioFile.type);
+      } catch (formError) {
+        console.error("🚫 Error processing form data:", formError);
         return new Response(
-          JSON.stringify({ error: 'Processed audio data too small' }),
+          JSON.stringify({ error: `Error processing form data: ${formError.message}` }),
           {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );
       }
+    } else {
+      // Handle JSON request (existing implementation)
+      const body = await req.json();
+      const { audio, language: reqLanguage } = body;
       
-      // Check if we have an OpenAI API key
-      const apiKey = Deno.env.get('OPENAI_API_KEY');
-      if (!apiKey) {
-        console.error("🔑 Missing OpenAI API key");
+      if (reqLanguage) {
+        language = reqLanguage;
+      }
+      
+      if (!audio) {
+        console.error("🚫 No audio data received in request");
         return new Response(
-          JSON.stringify({ error: 'OpenAI API key not configured' }),
+          JSON.stringify({ error: 'No audio data provided' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      if (audio.length < 100) {
+        console.error("🚫 Audio data too small, length:", audio.length);
+        return new Response(
+          JSON.stringify({ error: 'Audio data too small or empty' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      console.log("🎤 Received audio data, processing...");
+      console.log("📊 Audio data length:", audio.length);
+      
+      // Process audio in chunks
+      try {
+        audioData = processBase64Chunks(audio);
+      } catch (processingError) {
+        console.error("💥 Error processing audio data:", processingError);
+        return new Response(
+          JSON.stringify({ error: `Audio processing error: ${processingError.message}` }),
           {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );
       }
-      
-      // Prepare form data - explicitly use webm MIME type which is supported by Whisper API
-      const formData = new FormData();
-      const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-      formData.append('file', blob, 'audio.webm');
-      formData.append('model', 'whisper-1');
-      formData.append('language', 'en');
-
-      console.log("🚀 Sending to OpenAI Whisper API...");
-      console.log("📊 Blob size:", blob.size, "type:", blob.type);
-      
-      // Send to OpenAI
-      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: formData,
-      });
-
-      console.log("📥 OpenAI response status:", response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("⛔ OpenAI API error:", errorText);
-        return new Response(
-          JSON.stringify({ error: `OpenAI API error: ${errorText}` }),
-          {
-            status: response.status,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      const result = await response.json();
-      console.log("✅ Transcription successful:", result.text);
-
+    }
+    
+    console.log("✅ Audio data processed successfully, size:", audioData.length);
+    
+    if (audioData.length < 100) {
+      console.error("🚫 Processed audio too small");
       return new Response(
-        JSON.stringify({ text: result.text }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Processed audio data too small' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
-    } catch (processingError) {
-      console.error("💥 Audio processing error:", processingError);
+    }
+    
+    // Check if we have an OpenAI API key
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!apiKey) {
+      console.error("🔑 Missing OpenAI API key");
       return new Response(
-        JSON.stringify({ error: `Audio processing error: ${processingError.message}` }),
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
+    
+    // Prepare form data - explicitly use webm MIME type which is supported by Whisper API
+    const formData = new FormData();
+    const blob = new Blob([audioData], { type: 'audio/webm' });
+    formData.append('file', blob, 'audio.webm');
+    formData.append('model', 'whisper-1');
+    formData.append('language', language);
+
+    console.log("🚀 Sending to OpenAI Whisper API...");
+    console.log("📊 Blob size:", blob.size, "type:", blob.type);
+    
+    // Send to OpenAI
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    console.log("📥 OpenAI response status:", response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("⛔ OpenAI API error:", errorText);
+      return new Response(
+        JSON.stringify({ error: `OpenAI API error: ${errorText}` }),
+        {
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const result = await response.json();
+    console.log("✅ Transcription successful:", result.text);
+
+    return new Response(
+      JSON.stringify({ text: result.text }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error("❌ Error in speech-to-text function:", error);
     return new Response(
