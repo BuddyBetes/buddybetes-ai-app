@@ -11,19 +11,27 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
   userMessage, 
   assistantMessage 
 }) => {
+  // Function to get the first sentence of a message
+  const getFirstSentence = (message: string): string => {
+    if (!message) return '';
+    
+    // Split by common sentence delimiters and get the first part
+    const sentences = message.split(/(?<=[.!?])\s+/);
+    return sentences[0] || message;
+  };
+
   return (
-    <div className="w-full max-w-md mx-auto mb-6 px-4 space-y-3">
+    <div className="w-full max-w-md mx-auto text-center">
       <AnimatePresence>
-        {userMessage && (
+        {userMessage && !assistantMessage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-gray-100 text-gray-800 p-3 rounded-xl rounded-tr-none ml-auto max-w-[80%] relative"
+            className="inline-block bg-gray-100 text-gray-800 px-4 py-2 rounded-full mt-4 mb-6"
           >
-            <div className="text-sm">{userMessage}</div>
-            <div className="absolute right-0 top-0 w-2 h-2 transform translate-x-2 -translate-y-1/2 bg-gray-100 rotate-45"></div>
+            {getFirstSentence(userMessage)}
           </motion.div>
         )}
       </AnimatePresence>
@@ -34,11 +42,10 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="bg-[#35cab4] text-white p-3 rounded-xl rounded-tl-none mr-auto max-w-[80%] relative"
+            transition={{ duration: 0.3 }}
+            className="inline-block bg-[#35cab4] text-white px-4 py-2 rounded-full mt-4 mb-6"
           >
-            <div className="text-sm">{assistantMessage}</div>
-            <div className="absolute left-0 top-0 w-2 h-2 transform -translate-x-2 -translate-y-1/2 bg-[#35cab4] rotate-45"></div>
+            {getFirstSentence(assistantMessage)}
           </motion.div>
         )}
       </AnimatePresence>

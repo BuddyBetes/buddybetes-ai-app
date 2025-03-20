@@ -93,11 +93,6 @@ const Assistant = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center h-full w-full mx-auto max-w-md"
             >
-              <VoiceSubtitles 
-                userMessage={lastUserMessage}
-                assistantMessage={lastAssistantMessage}
-              />
-
               <VoiceButton 
                 onStartSession={handleStartSession}
                 onEndSession={handleEndSession}

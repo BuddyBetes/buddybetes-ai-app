@@ -157,15 +157,15 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         {getStatusHeading()}
       </h1>
       
-      <VoiceSubtitles 
-        userMessage={lastUserMessage} 
-        assistantMessage={lastAssistantMessage}
-      />
-      
       <VoiceCircle 
         status={status} 
         onStopButtonClick={handleStopButton}
         onClick={status !== 'processing' && status !== 'speaking' ? handleToggle : undefined}
+      />
+      
+      <VoiceSubtitles 
+        userMessage={lastUserMessage} 
+        assistantMessage={lastAssistantMessage}
       />
       
       {errorMsg && (
