@@ -247,45 +247,8 @@ serve(async (req) => {
       );
     }
 
-    // Define supported formats for Whisper API
-    const supportedFormats = ['audio/flac', 'audio/x-flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
-      'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 'audio/wav', 'audio/webm'];
-    
-    // Normalize MIME type
-    let mimeType = detectedMimeType;
-    if (!mimeType || mimeType === '') {
-      mimeType = 'audio/webm'; // Default if none provided
-      console.log("ℹ️ No MIME type detected, using default:", mimeType);
-    } else {
-      console.log("🎵 Using detected MIME type:", mimeType);
-    }
-    
-    // Check if MIME type is supported and normalize if needed
-    let isSupported = false;
-    for (const format of supportedFormats) {
-      if (mimeType.includes(format) || format.includes(mimeType)) {
-        isSupported = true;
-        // Normalize to standard format
-        for (const stdFormat of supportedFormats) {
-          if (mimeType.includes(stdFormat)) {
-            mimeType = stdFormat;
-            break;
-          }
-        }
-        console.log(`✅ Audio format ${mimeType} is supported`);
-        break;
-      }
-    }
-    
-    if (!isSupported) {
-      console.warn(`⚠️ MIME type ${mimeType} may not be supported by Whisper API`);
-      // Use a safe default
-      mimeType = 'audio/webm';
-      console.log(`🔄 Using fallback MIME type: ${mimeType}`);
-    }
-    
-    // Map MIME type to file extension
-    const mimeToExtension: Record<string, string> = {
+    // Define supported formats mapping as suggested
+    const supportedFormats: Record<string, string> = {
       'audio/flac': 'flac',
       'audio/x-flac': 'flac',
       'audio/m4a': 'm4a',
@@ -299,13 +262,38 @@ serve(async (req) => {
       'audio/webm': 'webm'
     };
     
-    const extension = mimeToExtension[mimeType] || 'webm';
-    const filename = `audio.${extension}`;
+    // Determine the best file extension based on MIME type
+    let fileExtension = 'webm'; // Default fallback
     
-    // Prepare form data with explicit MIME type
-    const formData = new FormData();
+    if (detectedMimeType) {
+      // Try to match the detected MIME type with supported formats
+      for (const [mimeType, ext] of Object.entries(supportedFormats)) {
+        if (detectedMimeType.includes(mimeType)) {
+          fileExtension = ext;
+          console.log(`✅ Matched MIME type ${detectedMimeType} to extension ${fileExtension}`);
+          break;
+        }
+      }
+    }
+    
+    if (fileExtension !== supportedFormats[detectedMimeType]) {
+      console.warn(`⚠️ Could not directly match MIME type ${detectedMimeType}, using extension ${fileExtension}`);
+    }
+    
+    // Set the proper MIME type for the Blob
+    const mimeType = `audio/${fileExtension}`;
+    console.log(`🔄 Using MIME type: ${mimeType} for file extension: ${fileExtension}`);
+    
+    // Create filename with proper extension
+    const filename = `audio.${fileExtension}`;
+    console.log(`📄 Using filename: ${filename}`);
+    
+    // Create a blob with the determined MIME type
     const blob = new Blob([audioData], { type: mimeType });
+    console.log(`📏 Blob size: ${blob.size} bytes`);
     
+    // Prepare form data with explicit MIME type and filename
+    const formData = new FormData();
     formData.append('file', blob, filename);
     formData.append('model', 'whisper-1');
     formData.append('language', language);

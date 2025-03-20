@@ -18,6 +18,12 @@ export async function supabaseSpeechToText(payload: {
     mimeType: payload.mimeType || 'not specified'
   });
   
+  // Validate base64 data before sending
+  if (!payload.audio || !/^[A-Za-z0-9+/=]+$/.test(payload.audio)) {
+    console.error("Invalid base64 audio data");
+    throw new Error("Invalid base64 audio format");
+  }
+  
   const { data, error } = await supabase.functions.invoke('speech-to-text', {
     body: payload
   });
@@ -48,6 +54,24 @@ export async function supabaseSpeechToText(payload: {
  */
 export async function supabaseAudioFileToText(audioFile: File): Promise<{ text: string } | null> {
   console.log("Sending audio file to Supabase speech-to-text function...");
+  console.log("Audio file details:", {
+    name: audioFile.name,
+    type: audioFile.type,
+    size: audioFile.size
+  });
+  
+  // Validate audio file before sending
+  const supportedTypes = [
+    'audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
+    'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 
+    'audio/wav', 'audio/webm'
+  ];
+  
+  let fileType = audioFile.type;
+  // If the file type isn't in supported list, use a default
+  if (!supportedTypes.some(type => fileType.includes(type))) {
+    console.warn(`File type ${fileType} may not be supported. Will be normalized by the server.`);
+  }
   
   // Create form data
   const formData = new FormData();

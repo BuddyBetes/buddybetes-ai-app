@@ -30,32 +30,22 @@ export const processSpeechFromBlob = async (
     console.log("Processing audio blob of size:", audioBlob.size, "bytes");
     console.log("Audio blob type:", audioBlob.type);
     
-    // Detailed information about the blob for debugging
-    const audioType = audioBlob.type.split(';')[0]; // Get base MIME type without codec info
-    console.log("Audio base type:", audioType);
+    // Enhanced logging for audio format
+    const originalMimeType = audioBlob.type;
+    console.log("Original MIME type:", originalMimeType);
     
-    // Check if the audio format is supported by Whisper API
-    const supportedFormats = ['audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 'audio/wav', 'audio/webm'];
+    // Check support for Whisper API formats
+    const supportedFormats = [
+      'audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 
+      'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 
+      'audio/wav', 'audio/webm'
+    ];
     
-    // Log detailed information about the audio format
-    if (audioBlob.type.includes('codecs')) {
-      console.log(`Audio format includes codec information: ${audioBlob.type}`);
-    }
+    // Check if format is directly supported
+    const isDirectlySupported = supportedFormats.some(format => 
+      originalMimeType.includes(format));
     
-    let isSupported = false;
-    for (const format of supportedFormats) {
-      if (audioType.includes(format) || format.includes(audioType)) {
-        isSupported = true;
-        console.log(`Audio format ${audioBlob.type} matches supported format ${format}`);
-        break;
-      }
-    }
-    
-    if (!isSupported) {
-      console.warn(`Audio format ${audioBlob.type} may not be supported by Whisper API.`);
-      console.log(`Supported formats: ${supportedFormats.join(', ')}`);
-      // Continue anyway, the edge function will try to normalize the format
-    }
+    console.log("Format directly supported by Whisper API:", isDirectlySupported);
     
     try {
       // Convert blob to base64
@@ -73,12 +63,10 @@ export const processSpeechFromBlob = async (
         return;
       }
       
-      // Check if base64 is valid
+      // Validate base64 format
       const isValidBase64 = /^[A-Za-z0-9+/=]+$/.test(base64Audio);
-      console.log("Is valid base64:", isValidBase64);
-      
       if (!isValidBase64) {
-        console.error("Generated base64 is not valid");
+        console.error("Invalid base64 format");
         toast({
           title: "Processing Error",
           description: "Audio conversion failed. Please try again.",
@@ -88,23 +76,21 @@ export const processSpeechFromBlob = async (
         return;
       }
       
-      // Add explicit information about the mime type if available
-      const payload: any = { 
-        audio: base64Audio,
-        language: 'en'
-      };
+      console.log("✅ Valid base64 data, sending to speech-to-text service");
       
-      // Include original MIME type for the edge function to handle properly
-      if (audioBlob.type) {
-        payload.mimeType = audioBlob.type;
-      }
+      // Add explicit information about the mime type
+      const payload = { 
+        audio: base64Audio,
+        language: 'en',
+        mimeType: originalMimeType
+      };
       
       console.log("Sending to speech-to-text function with payload:", {
         audioLength: payload.audio.length,
-        mimeType: payload.mimeType || 'not specified'
+        mimeType: payload.mimeType
       });
       
-      // Process speech using the API service with enhanced payload
+      // Process speech using the API service
       const result = await convertSpeechToText(base64Audio, payload.mimeType);
       
       if (result && result.text) {
