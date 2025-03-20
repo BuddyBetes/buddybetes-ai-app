@@ -19,11 +19,11 @@ const VoiceControlButton: React.FC<VoiceControlButtonProps> = ({
   const renderButtonContent = () => {
     switch (status) {
       case 'listening':
-        return <span className="text-white font-medium">end session</span>;
+        return <X size={24} className="text-white" />;
       case 'processing':
         return <Loader size={24} className="text-white animate-spin" />;
       case 'speaking':
-        return <span className="text-white font-medium">speaking...</span>;
+        return <Mic size={24} className="text-white" />;
       default:
         return (
           <span className="text-white font-medium">

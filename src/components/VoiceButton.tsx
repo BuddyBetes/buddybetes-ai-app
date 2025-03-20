@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import VoiceCircle from './voice/VoiceCircle';
@@ -6,7 +7,7 @@ import VoiceControlButton from './voice/VoiceControlButton';
 import AudioRecorder from './voice/AudioRecorder';
 import VoiceSubtitles from './voice/VoiceSubtitles';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, Mic } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -33,6 +34,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const [isInitializing, setIsInitializing] = useState(true);
   const isMobile = useIsMobile();
   
+  // Add loading state that resolves after a short delay
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsInitializing(false);
@@ -89,6 +91,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     console.log("Voice button status changed to:", status);
   }, [status]);
 
+  // Listen for messages in the assistant context
   useEffect(() => {
     const handleMessageUpdate = (event: CustomEvent) => {
       if (event.detail?.type === 'assistant' && event.detail?.text) {
@@ -152,19 +155,15 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto">
-      <h1 className="text-2xl font-medium mb-10 text-center text-gray-800">
+      <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-4 md:mb-6 text-gray-800`}>
         {getStatusHeading()}
       </h1>
       
-      <div className="relative mb-16 w-56 h-56">
-        <button 
-          onClick={status !== 'processing' && status !== 'speaking' ? handleToggle : undefined}
-          className="w-full h-full rounded-full bg-[#35cab4] flex items-center justify-center shadow-lg hover:bg-[#2ba999] transition-all"
-          disabled={status === 'processing' || status === 'speaking'}
-        >
-          <Mic size={72} className="text-white" />
-        </button>
-      </div>
+      <VoiceCircle 
+        status={status} 
+        onStopButtonClick={handleStopButton}
+        onClick={status !== 'processing' && status !== 'speaking' ? handleToggle : undefined}
+      />
       
       <VoiceSubtitles 
         userMessage={lastUserMessage} 
@@ -176,22 +175,19 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
       )}
       
-      <button 
+      <SessionModeButtons status={status} />
+      
+      <VoiceControlButton 
+        status={status}
         onClick={handleToggle}
         disabled={status === 'processing' || status === 'speaking'}
-        className={`
-          bg-[#35cab4] hover:bg-[#2ba999] text-white rounded-full px-12 py-4 text-lg font-medium 
-          w-64 flex items-center justify-center transition-all mb-6
-          ${status === 'processing' || status === 'speaking' ? 'opacity-80 cursor-not-allowed' : ''}
-        `}
-      >
-        {status === 'listening' ? 'end session' : (playbackCompleted ? 'continue session' : 'begin session')}
-      </button>
+        playbackCompleted={playbackCompleted}
+      />
       
       <Button
         variant="ghost" 
         onClick={onTextMode}
-        className="text-gray-500 hover:text-gray-700"
+        className="mt-4 text-gray-500"
       >
         Switch to Text Mode
       </Button>
