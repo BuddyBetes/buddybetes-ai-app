@@ -14,7 +14,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
   isLoading = false
 }) => {
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center space-y-4 mb-8 mt-4">
+    <div className="w-full max-w-md mx-auto flex flex-col items-center space-y-3 mb-4">
       <AnimatePresence>
         {userMessage && (
           <motion.div
@@ -22,7 +22,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full bg-gray-100 text-gray-800 px-6 py-4 rounded-lg text-center"
+            className="w-full bg-gray-100 text-gray-800 px-6 py-3 rounded-lg text-center"
           >
             {userMessage}
           </motion.div>
@@ -71,7 +71,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full bg-[#f0f9f7] text-gray-800 px-6 py-4 rounded-lg text-center"
+            className="w-full bg-[#f0f9f7] text-gray-800 px-6 py-3 rounded-lg text-center"
           >
             {assistantMessage}
           </motion.div>

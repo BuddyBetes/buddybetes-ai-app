@@ -18,8 +18,8 @@ const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick, on
       return <Loader size={48} className="text-white animate-spin" />;
     } else if (status === 'speaking') {
       return (
-        <div className="flex justify-center items-center">
-          <div className="flex items-end space-x-1 h-12">
+        <div className="flex justify-center items-center h-full">
+          <div className="flex items-center space-x-1 h-12">
             {[1, 2, 3, 4, 5].map((bar) => (
               <motion.div
                 key={bar}
@@ -48,7 +48,7 @@ const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick, on
   const isInteractive = status !== 'processing' && status !== 'speaking';
   
   return (
-    <div className="relative mb-16">
+    <div className="relative mb-8">
       <motion.div 
         className={`w-48 h-48 rounded-full bg-[#35cab4] flex items-center justify-center relative 
           ${isInteractive ? 'shadow-lg hover:shadow-xl hover:bg-[#2ba999] cursor-pointer transition-all duration-200' : ''}`}
