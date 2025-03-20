@@ -13,6 +13,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
 
   // Effect to propagate processing state changes
@@ -27,32 +28,72 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
     const initializeRecorder = async () => {
       try {
         console.log("Initializing voice recorder...");
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream);
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
+        });
+        
+        const recorder = new MediaRecorder(stream, {
+          mimeType: 'audio/webm;codecs=opus'
+        });
         
         recorder.onstart = () => {
           console.log("Voice recording started");
-          if (mounted) setAudioChunks([]);
+          if (mounted) {
+            setAudioChunks([]);
+            audioChunksRef.current = [];
+          }
         };
         
         recorder.ondataavailable = (e) => {
-          console.log("Voice data chunk received");
-          if (mounted) setAudioChunks(chunks => [...chunks, e.data]);
+          if (e.data.size > 0) {
+            console.log(`Voice data chunk received: ${e.data.size} bytes`);
+            if (mounted) {
+              audioChunksRef.current = [...audioChunksRef.current, e.data];
+              setAudioChunks(prev => [...prev, e.data]);
+            }
+          } else {
+            console.log("Empty data chunk received, ignoring");
+          }
         };
         
         recorder.onstop = async () => {
           console.log("Voice recording stopped");
           if (!mounted) return;
           
-          if (audioChunks.length > 0) {
+          const chunks = audioChunksRef.current;
+          console.log(`Total audio chunks collected: ${chunks.length}`);
+          
+          if (chunks.length > 0) {
             setIsProcessing(true);
-            console.log("Processing audio...");
-            console.log(`Audio chunks: ${audioChunks.length}, total size: ${audioChunks.reduce((acc, chunk) => acc + chunk.size, 0)} bytes`);
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            console.log(`Processing audio... Total size: ${chunks.reduce((acc, chunk) => acc + chunk.size, 0)} bytes`);
+            
+            const audioBlob = new Blob(chunks, { type: 'audio/webm' });
             console.log(`Created audio blob, size: ${audioBlob.size} bytes`);
+            
+            if (audioBlob.size < 100) {
+              console.log("Audio blob too small, likely no speech detected");
+              setIsProcessing(false);
+              toast({
+                title: "No Audio Detected",
+                description: "We couldn't detect any speech. Please try again and speak clearly.",
+                variant: "destructive"
+              });
+              return;
+            }
+            
             await processAudio(audioBlob);
           } else {
             console.log("❌ No audio chunks received, skipping processing");
+            setIsProcessing(false);
+            toast({
+              title: "Recording Failed",
+              description: "No audio was captured. Please check your microphone and try again.",
+              variant: "destructive"
+            });
           }
         };
         
@@ -80,9 +121,17 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
 
   const startRecording = () => {
     if (mediaRecorder && mediaRecorder.state === 'inactive') {
-      mediaRecorder.start();
+      // Set a timeslice to get data chunks while recording (every 1 second)
+      mediaRecorder.start(1000);
       setIsRecording(true);
       console.log("Started recording audio");
+    } else {
+      console.log("MediaRecorder not ready or already recording", mediaRecorder?.state);
+      toast({
+        title: "Recording Not Available",
+        description: "The microphone isn't ready. Please refresh the page and try again.",
+        variant: "warning"
+      });
     }
   };
 
@@ -91,6 +140,8 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
       mediaRecorder.stop();
       setIsRecording(false);
       console.log("Stopped recording audio");
+    } else {
+      console.log("MediaRecorder not recording", mediaRecorder?.state);
     }
   };
 
@@ -103,8 +154,18 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
         reader.onloadend = async () => {
           try {
             const base64Audio = (reader.result as string).split(',')[1];
-            console.log("Audio converted to base64, sending to speech-to-text function...");
-            console.log(`Base64 audio length: ${base64Audio.length} characters`);
+            console.log(`Audio converted to base64, length: ${base64Audio.length} characters`);
+            
+            if (!base64Audio || base64Audio.length < 100) {
+              console.log("Base64 audio data too small or empty");
+              setIsProcessing(false);
+              toast({
+                title: "Recording Too Short",
+                description: "The recording was too short. Please try again and speak longer.",
+                variant: "destructive"
+              });
+              return resolve(false);
+            }
             
             // Send to speech-to-text function
             console.log("📤 SENDING AUDIO to speech-to-text function");
@@ -117,12 +178,16 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
             if (error) {
               console.error("❌ Speech-to-text error:", error);
               setIsProcessing(false);
-              throw new Error(error.message);
+              toast({
+                title: "Processing Error",
+                description: error.message || "Failed to process speech",
+                variant: "destructive"
+              });
+              return resolve(false);
             }
             
             if (data && data.text) {
               console.log("🎯 TRANSCRIBED TEXT:", data.text);
-              console.log("Speech recognition successful, passing text to handler...");
               // Call the callback with the transcribed text
               onSpeechResult(data.text);
               
@@ -130,6 +195,7 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
               setTimeout(() => {
                 setIsProcessing(false);
               }, 500);
+              return resolve(true);
             } else {
               console.log("❌ No transcription received from speech-to-text function");
               console.log("Raw response data:", JSON.stringify(data));
@@ -139,9 +205,8 @@ const AudioRecorder = ({ onSpeechResult, onProcessingStateChange }: AudioRecorde
                 description: "We couldn't detect any speech in your recording.",
                 variant: "destructive"
               });
+              return resolve(false);
             }
-            
-            resolve(true);
           } catch (error) {
             console.error("❌ Processing error:", error);
             setIsProcessing(false);

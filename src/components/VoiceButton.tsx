@@ -22,13 +22,21 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   isPlayingResponse
 }) => {
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   // Initialize the audio recorder
   const { isRecording, startRecording, stopRecording } = AudioRecorder({
     onSpeechResult: (text) => {
       console.log("Speech recognized:", text);
       setStatus('processing');
-      onSpeechResult && onSpeechResult(text);
+      setErrorMsg(null);
+      if (text.trim().length > 0) {
+        onSpeechResult && onSpeechResult(text);
+      } else {
+        // Handle empty text
+        console.log("Empty text received from speech recognition");
+        setStatus('idle');
+      }
     },
     onProcessingStateChange: (isProcessing) => {
       if (!isProcessing && status === 'processing') {
@@ -57,6 +65,13 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     }
   }, [isPlayingResponse, status]);
 
+  // Reset error message when status changes
+  React.useEffect(() => {
+    if (status !== 'idle') {
+      setErrorMsg(null);
+    }
+  }, [status]);
+
   // Debugging effect to monitor status changes
   React.useEffect(() => {
     console.log("Voice button status changed to:", status);
@@ -73,6 +88,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const handleStartSession = () => {
     startRecording();
     setStatus('listening');
+    setErrorMsg(null);
     onStartSession && onStartSession();
   };
 
@@ -148,6 +164,10 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
           </motion.button>
         )}
       </div>
+      
+      {errorMsg && (
+        <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
+      )}
       
       <div className="flex space-x-4 mb-6">
         <Button 
