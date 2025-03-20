@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import CameraCapture from '@/components/camera/CameraCapture';
@@ -105,7 +106,7 @@ const CameraModal: React.FC<CameraModalProps> = ({
   }, []);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleCloseCamera}>
       <SheetContent side="bottom" className="h-[100dvh] p-0">
         <CameraCapture 
           mode={scanMode} 

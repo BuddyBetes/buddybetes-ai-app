@@ -1,13 +1,10 @@
 
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 export interface SpeechProcessingOptions {
   onSpeechResult: (text: string) => void;
   onProcessingStateChange: (isProcessing: boolean) => void;
 }
-
-// Fix: Move toast outside the function to prevent hooks inside regular functions
-const { toast } = useToast();
 
 export const processSpeechFromBlob = async (
   audioBlob: Blob, 

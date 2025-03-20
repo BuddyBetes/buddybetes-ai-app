@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useAudioCapture } from '@/hooks/useAudioCapture';
 import { processSpeechFromBlob } from '@/utils/speechProcessing';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 // Defining clear interfaces for the component props
 interface AudioRecorderProps {
@@ -18,7 +18,6 @@ const useAudioRecorder = ({
   onProcessingStateChange 
 }: AudioRecorderProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
   
   const {
     isRecording,
