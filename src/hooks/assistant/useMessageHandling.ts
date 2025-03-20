@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
@@ -19,7 +18,7 @@ export const useMessageHandling = (
   const handleUserMessage = async (message: string) => {
     if (!message.trim() || isLoading) return;
     
-    console.log("Processing user message:", message);
+    console.log("🔄 Processing user message:", message);
     
     // Add sound feedback
     const audio = new Audio('/message-sent.mp3');
@@ -44,7 +43,7 @@ export const useMessageHandling = (
       // Automatically detect food queries
       const foodQuery = detectFoodQuery(message);
       
-      console.log("Calling glucose-assistant function with message:", message);
+      console.log("📤 Sending to glucose-assistant function with message:", message);
       // Call our Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
         body: { 
@@ -55,7 +54,7 @@ export const useMessageHandling = (
       });
       
       if (error) {
-        console.error('Error calling assistant function:', error);
+        console.error('❌ Error calling assistant function:', error);
         toast({
           title: "Error",
           description: "There was a problem connecting to the assistant. Please try again.",
@@ -79,9 +78,10 @@ export const useMessageHandling = (
           }
         }
       } else {
-        console.log("Received response from glucose-assistant:", data.response);
-        console.log("Full response data:", data);
-        console.log("Processing assistant response...");
+        console.log("📥 Received response from glucose-assistant!");
+        console.log("🗣️ ASSISTANT RESPONSE:", data.response);
+        console.log("📊 Full response data:", data);
+        console.log("🔄 Processing assistant response...");
         
         // Add AI response to messages
         const assistantMessage: Message = { 
@@ -96,14 +96,14 @@ export const useMessageHandling = (
         
         // If in voice mode, play the response using TTS
         if (currentMode === 'voice' && playResponseAudio) {
-          console.log("In voice mode, playing TTS response:", data.response);
+          console.log("🔊 In voice mode, playing TTS response");
           try {
-            console.log("Starting audio playback - isLoading will remain true");
+            console.log("▶️ Starting audio playback - isLoading will remain true");
             // Ensure isLoading remains true while audio is playing
             await playResponseAudio(data.response);
-            console.log("Audio playback completed");
+            console.log("✅ Audio playback completed");
           } catch (playbackError) {
-            console.error("Error playing response audio:", playbackError);
+            console.error("❌ Error playing response audio:", playbackError);
             toast({
               title: "Audio Playback Error",
               description: "Could not play the response as audio. Please try again.",
@@ -113,7 +113,7 @@ export const useMessageHandling = (
         }
       }
     } catch (err) {
-      console.error('Error in handleUserMessage:', err);
+      console.error('❌ Error in handleUserMessage:', err);
       const fallbackMessage = "I'm sorry, I encountered an error. Please try again.";
       setMessages(prev => [...prev, { 
         text: fallbackMessage, 
@@ -132,7 +132,7 @@ export const useMessageHandling = (
         }
       }
     } finally {
-      console.log("Completing message handling and setting isLoading to false");
+      console.log("✅ Completing message handling and setting isLoading to false");
       setIsLoading(false);
       setInput('');
     }
