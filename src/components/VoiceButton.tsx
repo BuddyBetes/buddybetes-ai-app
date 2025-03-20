@@ -15,6 +15,7 @@ interface VoiceButtonProps {
   onTextMode?: () => void;
   onSpeechResult?: (text: string) => void;
   isPlayingResponse: boolean;
+  isLoading?: boolean;
 }
 
 const VoiceButton: React.FC<VoiceButtonProps> = ({ 
@@ -22,7 +23,8 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   onEndSession,
   onTextMode,
   onSpeechResult,
-  isPlayingResponse
+  isPlayingResponse,
+  isLoading = false
 }) => {
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -166,6 +168,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       <VoiceSubtitles 
         userMessage={lastUserMessage} 
         assistantMessage={lastAssistantMessage}
+        isLoading={status === 'processing' && !isPlayingResponse}
       />
       
       {errorMsg && (

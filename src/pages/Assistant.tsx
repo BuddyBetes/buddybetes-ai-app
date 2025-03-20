@@ -100,6 +100,7 @@ const Assistant = () => {
                 onTextMode={handleTextMode}
                 onSpeechResult={handleSpeechResult}
                 isPlayingResponse={isPlayingResponse}
+                isLoading={isLoading}
               />
             </motion.div>
           ) : (
