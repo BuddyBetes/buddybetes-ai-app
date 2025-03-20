@@ -32,21 +32,26 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     },
     onProcessingStateChange: (isProcessing) => {
       if (!isProcessing && status === 'processing') {
-        // Only set to speaking if we're not already in that state
-        if (status !== 'speaking') {
-          setStatus('speaking');
-        }
+        console.log("Processing complete, ready for speaking state");
+        // Don't automatically transition to speaking - this will be controlled by isPlayingResponse
       }
     }
   });
 
   // Effect to handle state changes based on external isPlayingResponse prop
   React.useEffect(() => {
-    if (isPlayingResponse && status === 'processing') {
+    console.log("isPlayingResponse changed:", isPlayingResponse, "current status:", status);
+    
+    if (isPlayingResponse && (status === 'processing' || status === 'idle')) {
+      console.log("Setting status to speaking because isPlayingResponse is true");
       setStatus('speaking');
     } else if (!isPlayingResponse && status === 'speaking') {
+      console.log("Response finished playing, setting status to idle after delay");
       // Reset to idle after response is done playing
-      const timer = setTimeout(() => setStatus('idle'), 500);
+      const timer = setTimeout(() => {
+        console.log("Timeout executed, setting status to idle");
+        setStatus('idle');
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [isPlayingResponse, status]);
