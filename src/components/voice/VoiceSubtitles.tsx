@@ -22,7 +22,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full bg-gray-100 text-gray-800 px-6 py-3 rounded-lg text-center"
+            className="w-full bg-gray-100 text-gray-800 px-6 py-3 rounded-lg text-center text-sm"
           >
             {userMessage}
           </motion.div>
@@ -36,7 +36,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="inline-flex space-x-1 items-center bg-[#35cab4] text-white px-4 py-2 rounded-full"
+            className="inline-flex space-x-1 items-center bg-[#35cab4] text-white px-4 py-2 rounded-full text-sm"
           >
             <span>Thinking</span>
             <motion.span
@@ -71,7 +71,7 @@ const VoiceSubtitles: React.FC<VoiceSubtitlesProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full bg-[#f0f9f7] text-gray-800 px-6 py-3 rounded-lg text-center"
+            className="w-full bg-[#f0f9f7] text-gray-800 px-6 py-3 rounded-lg text-center text-sm"
           >
             {assistantMessage}
           </motion.div>

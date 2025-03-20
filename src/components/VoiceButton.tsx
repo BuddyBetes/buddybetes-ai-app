@@ -145,7 +145,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   if (isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full">
-        <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center h-full pt-16">
           <div className="w-48 h-48 rounded-full bg-[#f0f9f7] flex items-center justify-center">
             <Loader2 size={64} className="text-[#35cab4] animate-spin" />
           </div>
@@ -156,8 +156,8 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto">
-      <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-4 md:mb-6 text-gray-800`}>
+    <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto pt-10">
+      <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-6 md:mb-8 text-gray-800`}>
         {getStatusHeading()}
       </h1>
       
