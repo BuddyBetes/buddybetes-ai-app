@@ -33,12 +33,16 @@ const Assistant = () => {
 
   const isMobile = useIsMobile();
 
-  // Debug logs for voice state
+  // Create a custom event for message updates
   React.useEffect(() => {
-    if (mode === 'voice') {
-      console.log("In voice mode, isPlayingResponse:", isPlayingResponse);
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && mode === 'voice') {
+      const messageEvent = new CustomEvent('new-message', { 
+        detail: lastMessage 
+      });
+      window.dispatchEvent(messageEvent);
     }
-  }, [mode, isPlayingResponse]);
+  }, [messages, mode]);
 
   return (
     <Layout>
@@ -50,7 +54,7 @@ const Assistant = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full"
+              className="flex flex-col items-center justify-center h-full w-full"
             >
               <VoiceButton 
                 onStartSession={handleStartSession}

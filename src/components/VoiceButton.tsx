@@ -1,10 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import VoiceCircle from './voice/VoiceCircle';
 import SessionModeButtons from './voice/SessionModeButtons';
 import VoiceControlButton from './voice/VoiceControlButton';
 import AudioRecorder from './voice/AudioRecorder';
+import VoiceSubtitles from './voice/VoiceSubtitles';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Loader2 } from 'lucide-react';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -24,13 +27,26 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [playbackCompleted, setPlaybackCompleted] = useState(false);
+  const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
+  const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const isMobile = useIsMobile();
+  
+  // Add loading state that resolves after a short delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
   
   const { isRecording, startRecording, stopRecording } = AudioRecorder({
     onSpeechResult: (text) => {
       console.log("Speech recognized:", text);
       setStatus('processing');
       setErrorMsg(null);
+      setLastUserMessage(text);
+      
       if (text.trim().length > 0) {
         onSpeechResult && onSpeechResult(text);
       } else {
@@ -73,6 +89,20 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     console.log("Voice button status changed to:", status);
   }, [status]);
 
+  // Listen for messages in the assistant context
+  useEffect(() => {
+    const handleMessageUpdate = (event: CustomEvent) => {
+      if (event.detail?.type === 'assistant' && event.detail?.text) {
+        setLastAssistantMessage(event.detail.text);
+      }
+    };
+
+    window.addEventListener('new-message' as any, handleMessageUpdate);
+    return () => {
+      window.removeEventListener('new-message' as any, handleMessageUpdate);
+    };
+  }, []);
+
   const handleToggle = () => {
     if (status === 'listening') {
       handleEndSession();
@@ -110,11 +140,27 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto">
+        <div className="w-48 h-48 rounded-full bg-[#35cab4]/30 flex items-center justify-center">
+          <Loader2 size={64} className="text-[#35cab4] animate-spin" />
+        </div>
+        <h2 className="mt-8 text-xl font-medium text-gray-700">Initializing voice...</h2>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto">
-      <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-6 md:mb-8 text-gray-800`}>
+      <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-4 md:mb-6 text-gray-800`}>
         {getStatusHeading()}
       </h1>
+      
+      <VoiceSubtitles 
+        userMessage={lastUserMessage} 
+        assistantMessage={lastAssistantMessage}
+      />
       
       <VoiceCircle 
         status={status} 
