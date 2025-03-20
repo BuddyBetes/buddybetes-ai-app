@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import VoiceCircle from './voice/VoiceCircle';
 import SessionModeButtons from './voice/SessionModeButtons';
-import VoiceControlButton from './voice/VoiceControlButton';
 import AudioRecorder from './voice/AudioRecorder';
 import VoiceSubtitles from './voice/VoiceSubtitles';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2 } from 'lucide-react';
+import VoiceInitializing from './voice/VoiceInitializing';
+import VoiceStatusHeading from './voice/VoiceStatusHeading';
+import VoiceButtonFooter from './voice/VoiceButtonFooter';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -32,7 +31,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
-  const isMobile = useIsMobile();
   
   // Add loading state that resolves after a short delay
   useEffect(() => {
@@ -133,33 +131,13 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     onEndSession && onEndSession();
   };
 
-  const getStatusHeading = () => {
-    switch(status) {
-      case 'idle': return "Any questions?";
-      case 'listening': return "I'm listening...";
-      case 'processing': return "Processing...";
-      case 'speaking': return "Speaking...";
-    }
-  };
-
   if (isInitializing) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full w-full">
-        <div className="flex flex-col items-center justify-center h-full pt-16">
-          <div className="w-48 h-48 rounded-full bg-[#f0f9f7] flex items-center justify-center">
-            <Loader2 size={64} className="text-[#35cab4] animate-spin" />
-          </div>
-          <h2 className="mt-8 text-xl font-medium text-gray-700">Initializing voice...</h2>
-        </div>
-      </div>
-    );
+    return <VoiceInitializing />;
   }
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto pt-10">
-      <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-6 md:mb-8 text-gray-800`}>
-        {getStatusHeading()}
-      </h1>
+      <VoiceStatusHeading status={status} />
       
       <VoiceCircle 
         status={status} 
@@ -179,20 +157,12 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       
       <SessionModeButtons status={status} />
       
-      <VoiceControlButton 
+      <VoiceButtonFooter 
         status={status}
-        onClick={handleToggle}
-        disabled={status === 'processing' || status === 'speaking'}
+        onToggle={handleToggle}
+        onTextMode={onTextMode || (() => {})}
         playbackCompleted={playbackCompleted}
       />
-      
-      <Button
-        variant="ghost" 
-        onClick={onTextMode}
-        className="mt-4 text-gray-500"
-      >
-        Switch to Text Mode
-      </Button>
     </div>
   );
 };
