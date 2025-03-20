@@ -47,25 +47,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     isPlayingResponse
   });
 
-  // Set up voice processing logic
-  const {
-    handleStartSession,
-    handleEndSession,
-    handleStopButton
-  } = VoiceProcessor({
-    onSpeechResult: onSpeechResult || (() => {}),
-    onProcessingStateChange: (isProcessing) => {
-      if (!isProcessing && status === 'processing') {
-        console.log("Processing complete, ready for speaking state");
-      }
-    },
-    status,
-    setStatus,
-    setLastUserMessage,
-    onStartSession,
-    onEndSession
-  });
-  
   // Add loading state that resolves after a short delay
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -73,14 +54,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     }, 800);
     return () => clearTimeout(timer);
   }, []);
-  
-  const handleToggle = () => {
-    if (status === 'listening') {
-      handleEndSession();
-    } else {
-      handleStartSession();
-    }
-  };
 
   if (isInitializing) {
     return <VoiceInitializing />;
@@ -90,30 +63,61 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto pt-10">
       <VoiceStatusHeading status={status} />
       
-      <VoiceCircle 
-        status={status} 
-        onStopButtonClick={handleStopButton}
-        onClick={status !== 'processing' && status !== 'speaking' ? handleToggle : undefined}
-      />
-      
-      <VoiceSubtitles 
-        userMessage={lastUserMessage} 
-        assistantMessage={lastAssistantMessage}
-        isLoading={status === 'processing' && !isPlayingResponse}
-      />
-      
-      {errorMsg && (
-        <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
-      )}
-      
-      <SessionModeButtons status={status} />
-      
-      <VoiceButtonFooter 
+      <VoiceProcessor
+        onSpeechResult={onSpeechResult || (() => {})}
+        onProcessingStateChange={(isProcessing) => {
+          if (!isProcessing && status === 'processing') {
+            console.log("Processing complete, ready for speaking state");
+          }
+        }}
         status={status}
-        onToggle={handleToggle}
-        onTextMode={onTextMode || (() => {})}
-        playbackCompleted={playbackCompleted}
-      />
+        setStatus={setStatus}
+        setLastUserMessage={setLastUserMessage}
+        onStartSession={onStartSession}
+        onEndSession={onEndSession}
+      >
+        {({ isRecording, handleStartSession, handleEndSession, handleStopButton }) => (
+          <>
+            <VoiceCircle 
+              status={status} 
+              onStopButtonClick={handleStopButton}
+              onClick={status !== 'processing' && status !== 'speaking' ? 
+                () => {
+                  if (status === 'listening') {
+                    handleEndSession();
+                  } else {
+                    handleStartSession();
+                  }
+                } : undefined}
+            />
+            
+            <VoiceSubtitles 
+              userMessage={lastUserMessage} 
+              assistantMessage={lastAssistantMessage}
+              isLoading={status === 'processing' && !isPlayingResponse}
+            />
+            
+            {errorMsg && (
+              <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
+            )}
+            
+            <SessionModeButtons status={status} />
+            
+            <VoiceButtonFooter 
+              status={status}
+              onToggle={() => {
+                if (status === 'listening') {
+                  handleEndSession();
+                } else {
+                  handleStartSession();
+                }
+              }}
+              onTextMode={onTextMode || (() => {})}
+              playbackCompleted={playbackCompleted}
+            />
+          </>
+        )}
+      </VoiceProcessor>
     </div>
   );
 };

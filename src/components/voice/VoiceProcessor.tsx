@@ -1,6 +1,6 @@
 
 import React from 'react';
-import AudioRecorder from './AudioRecorder';
+import { useVoiceProcessor } from '../../hooks/useVoiceProcessor';
 
 interface VoiceProcessorProps {
   onSpeechResult: (text: string) => void;
@@ -10,8 +10,17 @@ interface VoiceProcessorProps {
   setLastUserMessage: (text: string | null) => void;
   onStartSession?: () => void;
   onEndSession?: () => void;
+  children: (handlers: {
+    isRecording: boolean;
+    handleStartSession: () => void;
+    handleEndSession: () => void;
+    handleStopButton: () => void;
+  }) => React.ReactNode;
 }
 
+/**
+ * Component that processes voice input and provides handlers to the children
+ */
 const VoiceProcessor: React.FC<VoiceProcessorProps> = ({
   onSpeechResult,
   onProcessingStateChange,
@@ -19,71 +28,20 @@ const VoiceProcessor: React.FC<VoiceProcessorProps> = ({
   setStatus,
   setLastUserMessage,
   onStartSession,
-  onEndSession
+  onEndSession,
+  children
 }) => {
-  const { isRecording, startRecording, stopRecording } = AudioRecorder({
-    onSpeechResult: (text) => {
-      console.log("Speech recognized:", text);
-      setStatus('processing');
-      setLastUserMessage(text);
-      
-      if (text.trim().length > 0) {
-        onSpeechResult && onSpeechResult(text);
-      } else {
-        console.log("Empty text received from speech recognition");
-        setStatus('idle');
-      }
-    },
-    onProcessingStateChange: (isProcessing) => {
-      console.log("Processing state changed:", isProcessing);
-      onProcessingStateChange(isProcessing);
-    }
+  const voiceHandlers = useVoiceProcessor({
+    onSpeechResult,
+    onProcessingStateChange,
+    status,
+    setStatus,
+    setLastUserMessage,
+    onStartSession,
+    onEndSession
   });
 
-  const handleStartSession = () => {
-    try {
-      startRecording().catch(error => {
-        console.error("Error starting recording:", error);
-        setStatus('idle');
-        return;
-      });
-      
-      setStatus('listening');
-      onStartSession && onStartSession();
-    } catch (error) {
-      console.error("Error in handleStartSession:", error);
-      setStatus('idle');
-    }
-  };
-
-  const handleEndSession = () => {
-    try {
-      stopRecording();
-      setStatus('processing');
-      onEndSession && onEndSession();
-    } catch (error) {
-      console.error("Error in handleEndSession:", error);
-      setStatus('idle');
-    }
-  };
-
-  const handleStopButton = () => {
-    try {
-      stopRecording();
-      setStatus('processing');
-      onEndSession && onEndSession();
-    } catch (error) {
-      console.error("Error in handleStopButton:", error);
-      setStatus('idle');
-    }
-  };
-
-  return {
-    isRecording,
-    handleStartSession,
-    handleEndSession,
-    handleStopButton
-  };
+  return <>{children(voiceHandlers)}</>;
 };
 
 export default VoiceProcessor;
