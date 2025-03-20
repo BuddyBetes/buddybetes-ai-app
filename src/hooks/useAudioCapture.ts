@@ -25,6 +25,9 @@ export interface AudioCaptureControls {
   stopMediaTracks: () => void;
 }
 
+/**
+ * Hook for managing audio recording from microphone
+ */
 export const useAudioCapture = (): AudioCaptureControls => {
   const [isRecording, setIsRecording] = useState(false);
   const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
@@ -40,6 +43,9 @@ export const useAudioCapture = (): AudioCaptureControls => {
     };
   }, []);
 
+  /**
+   * Stops all active media tracks and cleans up resources
+   */
   const stopMediaTracks = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -47,6 +53,9 @@ export const useAudioCapture = (): AudioCaptureControls => {
     }
   };
 
+  /**
+   * Request microphone access and initialize media stream
+   */
   const initializeMicrophone = async (): Promise<MediaStream> => {
     try {
       // Request microphone access
@@ -59,6 +68,9 @@ export const useAudioCapture = (): AudioCaptureControls => {
     }
   };
 
+  /**
+   * Create and configure a MediaRecorder for the given stream
+   */
   const initializeMediaRecorder = (stream: MediaStream): MediaRecorder => {
     // Create media recorder
     const mediaRecorder = new MediaRecorder(stream);
@@ -77,6 +89,9 @@ export const useAudioCapture = (): AudioCaptureControls => {
     return mediaRecorder;
   };
 
+  /**
+   * Begins audio recording from the microphone
+   */
   const startRecording = async () => {
     try {
       console.log("Starting recording...");
@@ -104,6 +119,9 @@ export const useAudioCapture = (): AudioCaptureControls => {
     }
   };
 
+  /**
+   * Stops the current recording session
+   */
   const stopRecording = () => {
     console.log("Stopping recording...");
     
@@ -116,6 +134,9 @@ export const useAudioCapture = (): AudioCaptureControls => {
     }
   };
 
+  /**
+   * Returns the recorded audio as a Blob
+   */
   const getAudioBlob = (): Blob | null => {
     if (audioChunks.length > 0 && hasRecordingStarted) {
       return new Blob(audioChunks, { type: 'audio/webm' });

@@ -15,7 +15,9 @@ interface AudioRecorderState {
   stopRecording: () => Promise<void>;
 }
 
-// Main hook that combines audio capture with speech processing
+/**
+ * Hook that combines audio capture with speech processing
+ */
 const useAudioRecorder = ({ 
   onSpeechResult, 
   onProcessingStateChange 
@@ -59,7 +61,9 @@ const useAudioRecorder = ({
   };
 };
 
-// Main component that exports the hook functionality
+/**
+ * Main component that exports the hook functionality
+ */
 const AudioRecorder = (props: AudioRecorderProps) => {
   return useAudioRecorder(props);
 };
