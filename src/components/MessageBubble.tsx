@@ -26,11 +26,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         transition={{ duration: 0.3 }}
       >
         {type === 'assistant' && (
-          <div className="w-8 h-8 rounded-full bg-[#FFD872] mr-2 flex-shrink-0 self-end"></div>
+          <div className="w-8 h-8 rounded-full bg-[#FFD872] mr-2 flex-shrink-0 self-end flex items-center justify-center">
+            <span className="text-xs font-bold">GB</span>
+          </div>
         )}
         
         <div
-          className={`max-w-[80%] rounded-3xl py-3 px-4 ${
+          className={`max-w-[80%] rounded-3xl py-2.5 px-3.5 ${
             type === 'user'
               ? 'bg-[#35cab4] text-white'
               : 'bg-gray-100 text-gray-800'

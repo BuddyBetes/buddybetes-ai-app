@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, glucoseHistory, foodQuery } = await req.json();
+    const { message, glucoseHistory, foodQuery, makeBrief } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const FATSECRET_API_KEY = Deno.env.get("FATSECRET_API_KEY");
 
@@ -67,6 +67,7 @@ serve(async (req) => {
       - Answering questions about diabetes management
       - Being supportive and encouraging
       
+      ${makeBrief ? "VERY IMPORTANT: Keep your responses extremely brief and to the point (1-2 sentences). Use short words and phrases when possible." : ""}
       You should be friendly, empathetic, and focused on helping the user manage their health.
       If you don't know something, acknowledge it and suggest consulting a healthcare professional.
       Never provide medical advice that could be harmful.
@@ -120,7 +121,7 @@ serve(async (req) => {
         model: "gpt-4o-mini",
         messages: messagesPayload,
         temperature: 0.7,
-        max_tokens: 500
+        max_tokens: makeBrief ? 120 : 500
       })
     });
 

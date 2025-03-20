@@ -51,7 +51,8 @@ export const useMessageHandling = (
         body: { 
           message: message,
           glucoseHistory: recentLogs,
-          foodQuery: foodQuery
+          foodQuery: foodQuery,
+          makeBrief: true // Tell the assistant to keep responses brief
         }
       });
       
@@ -59,10 +60,10 @@ export const useMessageHandling = (
         console.error('❌ Error calling assistant function:', error);
         toast({
           title: "Error",
-          description: "There was a problem connecting to the assistant. Please try again.",
+          description: "Connection problem. Please try again.",
           variant: "destructive"
         });
-        const errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
+        const errorMessage = "Sorry, having trouble connecting. Try again soon.";
         setMessages(prev => [...prev, { 
           text: errorMessage, 
           type: 'assistant',
@@ -107,8 +108,8 @@ export const useMessageHandling = (
           } catch (playbackError) {
             console.error("❌ Error playing response audio:", playbackError);
             toast({
-              title: "Audio Playback Error",
-              description: "Could not play the response as audio. Please try again.",
+              title: "Audio Error",
+              description: "Could not play response audio.",
               variant: "destructive"
             });
           }
@@ -116,7 +117,7 @@ export const useMessageHandling = (
       }
     } catch (err) {
       console.error('❌ Error in handleUserMessage:', err);
-      const fallbackMessage = "I'm sorry, I encountered an error. Please try again.";
+      const fallbackMessage = "Sorry, I encountered an error. Please try again.";
       setMessages(prev => [...prev, { 
         text: fallbackMessage, 
         type: 'assistant',

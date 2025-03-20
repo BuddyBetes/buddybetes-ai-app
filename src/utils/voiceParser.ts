@@ -17,16 +17,33 @@ export const extractGlucoseInfo = (text: string): ExtractedLogInfo | null => {
   
   const result: ExtractedLogInfo = {};
   
-  // Try to extract glucose level
-  const glucoseMatch = text.match(/(\d{2,3})\s*(mg\/dl|mg|points|point|level)/i);
-  if (glucoseMatch) {
-    result.glucoseLevel = parseInt(glucoseMatch[1], 10);
+  // Try to extract glucose level with various patterns
+  const glucosePatterns = [
+    /(\d{2,3})\s*(mg\/dl|mg|points|point|level)/i,
+    /glucose(?:\s+is|\s+was|\s+of|\s+reading|\s+level)?\s+(\d{2,3})/i,
+    /blood\s+sugar(?:\s+is|\s+was|\s+of|\s+reading|\s+level)?\s+(\d{2,3})/i,
+    /reading(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
+    /level(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
+    /(\d{2,3})(?:\s+mg\/dl|\s+mg|\s+points|\s+point|\s+level)/i,
+    /my\s+(?:glucose|sugar|reading)\s+(?:is|was)\s+(\d{2,3})/i
+  ];
+  
+  for (const pattern of glucosePatterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      const level = parseInt(match[1], 10);
+      if (!isNaN(level) && level > 30 && level < 600) { // Reasonable glucose range
+        result.glucoseLevel = level;
+        break;
+      }
+    }
   }
   
   // Extract food information
   const foodMatches = [
     /(?:ate|had|consumed|eating|eat|having)\s+(.*?)(?:before|after|for|and|with|when|\.|\,|\!|\?|$)/i,
-    /(?:my meal was|food was|food is|meal is)\s+(.*?)(?:\.|\,|\!|\?|$)/i
+    /(?:my meal was|food was|food is|meal is)\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /(?:after eating|food|ate)\s+(.*?)(?:\.|\,|\!|\?|and my|my glucose|my reading|my level|$)/i
   ];
   
   for (const pattern of foodMatches) {
@@ -69,7 +86,10 @@ export const isGlucoseLogIntent = (text: string): boolean => {
     /my level/i,
     /(\d{2,3})\s*(mg\/dl|mg)/i,
     /log my/i,
-    /add (a|new) (reading|log|entry)/i
+    /add (a|new) (reading|log|entry)/i,
+    /glucose(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
+    /blood\s+sugar(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
+    /reading(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i
   ];
   
   return logPatterns.some(pattern => pattern.test(text));

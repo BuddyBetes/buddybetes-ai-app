@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import VoiceButton from '../components/VoiceButton';
@@ -7,6 +7,7 @@ import MessageList from '../components/assistant/MessageList';
 import MessageInput from '../components/assistant/MessageInput';
 import { useAssistant, TIME_GROUPS } from '../hooks/assistant/useAssistant';
 import { useIsMobile } from '@/hooks/use-mobile';
+import VoiceSubtitles from '@/components/voice/VoiceSubtitles';
 
 const Assistant = () => {
   const {
@@ -32,6 +33,8 @@ const Assistant = () => {
   } = useAssistant();
 
   const isMobile = useIsMobile();
+  const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
+  const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
 
   // Create a custom event for message updates
   React.useEffect(() => {
@@ -44,6 +47,40 @@ const Assistant = () => {
     }
   }, [messages, mode]);
 
+  // Track last messages for subtitles
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Find last user and assistant messages
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg.type === 'user' && !lastUserMessage) {
+          setLastUserMessage(msg.text);
+        }
+        if (msg.type === 'assistant' && !lastAssistantMessage) {
+          setLastAssistantMessage(msg.text);
+        }
+        if (lastUserMessage && lastAssistantMessage) break;
+      }
+    }
+  }, [messages]);
+
+  // Reset last messages when changing mode
+  useEffect(() => {
+    if (mode === 'voice') {
+      // Look for the two most recent messages when entering voice mode
+      let foundUser = false;
+      let foundAssistant = false;
+      const userMsg = messages.slice().reverse().find(m => m.type === 'user' && !foundUser && (foundUser = true));
+      const assistantMsg = messages.slice().reverse().find(m => m.type === 'assistant' && !foundAssistant && (foundAssistant = true));
+      
+      setLastUserMessage(userMsg?.text || null);
+      setLastAssistantMessage(assistantMsg?.text || null);
+    } else {
+      setLastUserMessage(null);
+      setLastAssistantMessage(null);
+    }
+  }, [mode, messages]);
+
   return (
     <Layout>
       <div className={`mx-auto h-full flex flex-col ${isMobile ? 'w-full' : 'max-w-3xl'}`}>
@@ -54,8 +91,13 @@ const Assistant = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full w-full"
+              className="flex flex-col items-center justify-center h-full w-full mx-auto max-w-md"
             >
+              <VoiceSubtitles 
+                userMessage={lastUserMessage}
+                assistantMessage={lastAssistantMessage}
+              />
+
               <VoiceButton 
                 onStartSession={handleStartSession}
                 onEndSession={handleEndSession}
@@ -72,7 +114,7 @@ const Assistant = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto pb-16">
                 <MessageList 
                   messages={messages}
                   isLoading={isLoading}
@@ -84,15 +126,17 @@ const Assistant = () => {
                 />
               </div>
               
-              <div className="sticky bottom-0 z-10 bg-white">
-                <MessageInput 
-                  input={input}
-                  isLoading={isLoading || isPlayingResponse}
-                  onInputChange={handleInputChange}
-                  onSend={handleSend}
-                  onSuggestionSelect={handleSuggestionSelect}
-                  onVoiceMode={handleVoiceMode}
-                />
+              <div className="fixed bottom-0 left-0 right-0 z-20 bg-white pb-1 pt-2 border-t border-gray-100">
+                <div className={isMobile ? "w-full px-2" : "max-w-3xl mx-auto px-2"}>
+                  <MessageInput 
+                    input={input}
+                    isLoading={isLoading || isPlayingResponse}
+                    onInputChange={handleInputChange}
+                    onSend={handleSend}
+                    onSuggestionSelect={handleSuggestionSelect}
+                    onVoiceMode={handleVoiceMode}
+                  />
+                </div>
               </div>
             </motion.div>
           )}

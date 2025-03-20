@@ -24,7 +24,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onVoiceMode,
 }) => {
   return (
-    <div className="sticky bottom-0 left-0 right-0 bg-white pt-2 pb-4 border-t border-gray-100 z-20">
+    <div className="w-full">
       <SuggestionChips onSelectSuggestion={onSuggestionSelect} />
       
       <div className="flex items-center gap-2 bg-gray-50 rounded-full p-2 border border-gray-200">
@@ -32,7 +32,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           type="button"
           variant="ghost" 
           size="icon"
-          className="rounded-full text-gray-500"
+          className="rounded-full text-gray-500 flex-shrink-0"
           onClick={onVoiceMode}
         >
           <Mic size={20} />
@@ -42,12 +42,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
           placeholder={isLoading ? "Assistant is responding..." : "Type your message..."}
-          className="resize-none border-none bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-2 h-10 min-h-10 max-h-32 overflow-y-auto"
+          className="resize-none border-none bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-2 h-10 min-h-10 max-h-32 overflow-y-auto flex-grow"
           disabled={isLoading}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              onSend();
+              if (input.trim()) {
+                onSend();
+              }
             }
           }}
         />
@@ -57,7 +59,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             onClick={onSend}
             variant="ghost"
             size="icon"
-            className="rounded-full bg-[#35cab4] text-white hover:bg-[#29A493]"
+            className="rounded-full bg-[#35cab4] text-white hover:bg-[#29A493] flex-shrink-0"
             disabled={isLoading || !input.trim()}
           >
             <motion.div
@@ -68,6 +70,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="w-5 h-5"
                 >
                   <svg className="w-5 h-5 text-white" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -80,15 +83,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
             </motion.div>
           </Button>
         ) : (
-          <Button 
-            onClick={() => onInputChange('')}
-            variant="ghost"
-            size="icon"
-            className="rounded-full text-gray-500"
-            disabled={!input.trim()}
-          >
-            <X size={18} />
-          </Button>
+          input ? (
+            <Button 
+              onClick={() => onInputChange('')}
+              variant="ghost"
+              size="icon"
+              className="rounded-full text-gray-500 flex-shrink-0"
+            >
+              <X size={18} />
+            </Button>
+          ) : null
         )}
       </div>
     </div>
