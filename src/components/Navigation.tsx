@@ -8,11 +8,13 @@ import {
   Mic, 
   UserCircle 
 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
+  const isMobile = useIsMobile();
   
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
@@ -45,9 +47,9 @@ const Navigation: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className={`nav-item ${isActive ? 'active' : 'inactive'}`}>
-                <item.icon size={20} />
-                <span className="mt-1">{item.name}</span>
+              <div className={`nav-item ${isActive ? 'active' : 'inactive'} ${isMobile ? 'text-[10px]' : ''}`}>
+                <item.icon size={isMobile ? 18 : 20} />
+                <span className={`mt-1 ${isMobile ? 'text-[10px]' : ''}`}>{item.name}</span>
                 {isActive && (
                   <div className="absolute bottom-0 w-8 h-1 bg-buddy-500 rounded-t-md" />
                 )}

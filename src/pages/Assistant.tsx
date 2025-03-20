@@ -6,6 +6,7 @@ import VoiceButton from '../components/VoiceButton';
 import MessageList from '../components/assistant/MessageList';
 import MessageInput from '../components/assistant/MessageInput';
 import { useAssistant, TIME_GROUPS } from '../hooks/assistant/useAssistant';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Assistant = () => {
   const {
@@ -30,6 +31,8 @@ const Assistant = () => {
     isPlayingResponse
   } = useAssistant();
 
+  const isMobile = useIsMobile();
+
   // Debug logs for voice state
   React.useEffect(() => {
     if (mode === 'voice') {
@@ -38,8 +41,8 @@ const Assistant = () => {
   }, [mode, isPlayingResponse]);
 
   return (
-    <Layout title="Assistant">
-      <div className="max-w-3xl mx-auto h-full">
+    <Layout>
+      <div className={`mx-auto h-full ${isMobile ? 'w-full' : 'max-w-3xl'}`}>
         <AnimatePresence mode="wait">
           {mode === 'voice' ? (
             <motion.div

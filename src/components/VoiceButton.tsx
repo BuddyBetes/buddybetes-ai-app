@@ -5,6 +5,7 @@ import VoiceCircle from './voice/VoiceCircle';
 import SessionModeButtons from './voice/SessionModeButtons';
 import VoiceControlButton from './voice/VoiceControlButton';
 import AudioRecorder from './voice/AudioRecorder';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface VoiceButtonProps {
   onStartSession?: () => void;
@@ -23,6 +24,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
 }) => {
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   
   // Initialize the audio recorder
   const { isRecording, startRecording, stopRecording } = AudioRecorder({
@@ -103,7 +105,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
 
   const getStatusHeading = () => {
     switch(status) {
-      case 'idle': return "still up? same!";
+      case 'idle': return "Any questions?";
       case 'listening': return "I'm listening...";
       case 'processing': return "Processing...";
       case 'speaking': return "Speaking...";
@@ -111,8 +113,8 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <h1 className="text-3xl font-medium mb-8 text-gray-800">
+    <div className="flex flex-col items-center justify-center h-full w-full px-4">
+      <h1 className={`text-2xl ${isMobile ? 'text-xl' : 'text-3xl'} font-medium mb-6 md:mb-8 text-gray-800`}>
         {getStatusHeading()}
       </h1>
       
@@ -125,6 +127,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         <div className="mb-4 text-red-500 text-center">{errorMsg}</div>
       )}
       
+      {/* SessionModeButtons still included but it returns null now */}
       <SessionModeButtons status={status} />
       
       <VoiceControlButton 
