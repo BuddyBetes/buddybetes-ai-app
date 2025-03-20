@@ -30,6 +30,17 @@ export const processSpeechFromBlob = async (
     console.log("Processing audio blob of size:", audioBlob.size, "bytes");
     console.log("Audio blob type:", audioBlob.type);
     
+    // Log detailed information about the blob for debugging
+    try {
+      const slice = await audioBlob.slice(0, Math.min(100, audioBlob.size)).text();
+      console.log("Audio blob sample (first 100 bytes):", slice);
+      if (slice.includes("data:")) {
+        console.log("Audio blob appears to contain a data URL prefix");
+      }
+    } catch (error) {
+      console.log("Could not get blob sample:", error);
+    }
+    
     // Check if the audio format is supported by Whisper API
     const supportedFormats = ['audio/flac', 'audio/m4a', 'audio/mp3', 'audio/mp4', 'audio/mpeg', 'audio/mpga', 'audio/oga', 'audio/ogg', 'audio/wav', 'audio/webm'];
     const audioType = audioBlob.type.split(';')[0]; // Get base MIME type without codec info
@@ -51,6 +62,7 @@ export const processSpeechFromBlob = async (
     if (!isSupported) {
       console.warn(`Audio format ${audioBlob.type} may not be supported by Whisper API.`);
       console.log(`Supported formats: ${supportedFormats.join(', ')}`);
+      // Continue anyway, the edge function will try to normalize the format
     }
     
     try {
@@ -63,6 +75,21 @@ export const processSpeechFromBlob = async (
         toast({
           title: "Processing Error",
           description: "Failed to process audio. Please try again.",
+          variant: "destructive"
+        });
+        onProcessingStateChange(false);
+        return;
+      }
+      
+      // Check if base64 is valid
+      const isValidBase64 = /^[A-Za-z0-9+/=]+$/.test(base64Audio);
+      console.log("Is valid base64:", isValidBase64);
+      
+      if (!isValidBase64) {
+        console.error("Generated base64 is not valid");
+        toast({
+          title: "Processing Error",
+          description: "Audio conversion failed. Please try again.",
           variant: "destructive"
         });
         onProcessingStateChange(false);

@@ -50,6 +50,16 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
   }
 }
 
+// Validate if a string is valid base64
+function isValidBase64(str: string): boolean {
+  if (!str) return false;
+  // Remove data URL prefix if present
+  if (str.startsWith('data:')) {
+    str = str.split(',')[1] || '';
+  }
+  return /^[A-Za-z0-9+/=]+$/.test(str);
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -58,19 +68,21 @@ serve(async (req) => {
 
   try {
     console.log("📩 Received request to speech-to-text function");
+    const contentType = req.headers.get('content-type') || '';
+    console.log("📥 Received Content-Type:", contentType);
     
     let audioData;
     let language = 'en';
     let detectedMimeType = '';
     
     // Check if the request is FormData or JSON
-    const contentType = req.headers.get('content-type') || '';
-    
     if (contentType.includes('multipart/form-data')) {
       console.log("📦 Processing multipart/form-data request");
-      // Handle FormData request
+      
       try {
         const formData = await req.formData();
+        console.log("📊 FormData entries:", [...formData.entries()].map(e => e[0]));
+        
         const audioFile = formData.get('file');
         language = formData.get('language')?.toString() || 'en';
         
@@ -101,66 +113,175 @@ serve(async (req) => {
           }
         );
       }
-    } else {
-      // Handle JSON request (existing implementation)
-      const body = await req.json();
-      const { audio, language: reqLanguage } = body;
+    } else if (contentType.includes('application/json')) {
+      console.log("📜 Processing JSON request");
       
-      if (reqLanguage) {
-        language = reqLanguage;
-      }
-      
-      if (!audio) {
-        console.error("🚫 No audio data received in request");
-        return new Response(
-          JSON.stringify({ error: 'No audio data provided' }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      if (audio.length < 100) {
-        console.error("🚫 Audio data too small, length:", audio.length);
-        return new Response(
-          JSON.stringify({ error: 'Audio data too small or empty' }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      console.log("🎤 Received audio data, processing...");
-      console.log("📊 Audio data length:", audio.length);
-      
-      // Try to detect MIME type from base64 prefix
-      if (audio.startsWith("data:")) {
-        const mimeMatch = audio.match(/^data:([^;]+);base64,/);
-        if (mimeMatch && mimeMatch[1]) {
-          detectedMimeType = mimeMatch[1];
-          console.log("🔍 Detected MIME type from prefix:", detectedMimeType);
-        }
-      } else {
-        // If no MIME type detected, use a default supported format
-        detectedMimeType = 'audio/webm';
-        console.log("⚠️ No MIME type detected from prefix, using default:", detectedMimeType);
-      }
-      
-      // Process audio in chunks
+      // Handle JSON request
       try {
-        audioData = processBase64Chunks(audio);
-      } catch (processingError) {
-        console.error("💥 Error processing audio data:", processingError);
+        const body = await req.json();
+        console.log("📊 JSON body keys:", Object.keys(body));
+        
+        const { audio, language: reqLanguage } = body;
+        
+        if (reqLanguage) {
+          language = reqLanguage;
+        }
+        
+        if (!audio) {
+          console.error("🚫 No audio data received in request");
+          return new Response(
+            JSON.stringify({ error: 'No audio data provided' }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        // Validate base64
+        if (!isValidBase64(audio)) {
+          console.error("🚫 Invalid base64 data received");
+          return new Response(
+            JSON.stringify({ error: 'Invalid base64 audio data' }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        if (audio.length < 100) {
+          console.error("🚫 Audio data too small, length:", audio.length);
+          return new Response(
+            JSON.stringify({ error: 'Audio data too small or empty' }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        console.log("🎤 Received audio data, processing...");
+        console.log("📊 Audio data length:", audio.length);
+        
+        // Clean base64 data if it includes a data URL prefix
+        let cleanBase64 = audio;
+        if (audio.startsWith("data:")) {
+          const mimeMatch = audio.match(/^data:([^;]+);base64,/);
+          if (mimeMatch && mimeMatch[1]) {
+            detectedMimeType = mimeMatch[1];
+            console.log("🔍 Detected MIME type from prefix:", detectedMimeType);
+            cleanBase64 = audio.split(',')[1];
+          }
+        }
+        
+        if (!detectedMimeType || detectedMimeType === '') {
+          // If no MIME type detected, use a default supported format
+          detectedMimeType = 'audio/webm';
+          console.log("⚠️ No MIME type detected, using default:", detectedMimeType);
+        }
+        
+        // Process audio in chunks
+        try {
+          audioData = processBase64Chunks(cleanBase64);
+        } catch (processingError) {
+          console.error("💥 Error processing audio data:", processingError);
+          return new Response(
+            JSON.stringify({ error: `Audio processing error: ${processingError.message}` }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      } catch (jsonError) {
+        console.error("🚫 Error parsing JSON:", jsonError);
         return new Response(
-          JSON.stringify({ error: `Audio processing error: ${processingError.message}` }),
+          JSON.stringify({ error: `Invalid JSON: ${jsonError.message}` }),
           {
-            status: 500,
+            status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           }
         );
       }
+    } else {
+      console.warn("⚠️ Unknown Content-Type. Defaulting to JSON parsing.");
+      
+      try {
+        const text = await req.text();
+        console.log("📝 Request body text length:", text.length);
+        
+        try {
+          const body = JSON.parse(text);
+          const { audio, language: reqLanguage } = body;
+          
+          if (reqLanguage) {
+            language = reqLanguage;
+          }
+          
+          if (!audio) {
+            console.error("🚫 No audio data in parsed text");
+            return new Response(
+              JSON.stringify({ error: 'No audio data provided' }),
+              {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              }
+            );
+          }
+          
+          // Process as JSON...
+          // Clean base64 data if it includes a data URL prefix
+          let cleanBase64 = audio;
+          if (audio.startsWith("data:")) {
+            const mimeMatch = audio.match(/^data:([^;]+);base64,/);
+            if (mimeMatch && mimeMatch[1]) {
+              detectedMimeType = mimeMatch[1];
+              console.log("🔍 Detected MIME type from prefix:", detectedMimeType);
+              cleanBase64 = audio.split(',')[1];
+            }
+          }
+          
+          if (!detectedMimeType || detectedMimeType === '') {
+            // If no MIME type detected, use a default supported format
+            detectedMimeType = 'audio/webm';
+            console.log("⚠️ No MIME type detected, using default:", detectedMimeType);
+          }
+          
+          // Process audio in chunks
+          audioData = processBase64Chunks(cleanBase64);
+          
+        } catch (parseError) {
+          console.error("🚫 Error parsing request body as JSON:", parseError);
+          return new Response(
+            JSON.stringify({ error: `Failed to parse request: ${parseError.message}` }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      } catch (readError) {
+        console.error("🚫 Error reading request body:", readError);
+        return new Response(
+          JSON.stringify({ error: `Failed to read request: ${readError.message}` }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+    
+    if (!audioData || audioData.length === 0) {
+      console.error("🚫 No audio data after processing");
+      return new Response(
+        JSON.stringify({ error: 'No valid audio data could be extracted' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
     
     console.log("✅ Audio data processed successfully, size:", audioData.length);
@@ -207,6 +328,8 @@ serve(async (req) => {
         mimeType = 'audio/wav';
       } else if (mimeType.includes('ogg')) {
         mimeType = 'audio/ogg';
+      } else if (mimeType.includes('flac')) {
+        mimeType = 'audio/flac';
       } else {
         // Default to webm as last resort
         mimeType = 'audio/webm';
@@ -228,6 +351,8 @@ serve(async (req) => {
       filename = 'audio.ogg';
     } else if (mimeType.includes('flac')) {
       filename = 'audio.flac';
+    } else if (mimeType.includes('m4a')) {
+      filename = 'audio.m4a';
     }
     
     formData.append('file', blob, filename);
