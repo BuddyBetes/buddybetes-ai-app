@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import VoiceButton from '../components/VoiceButton';
 import MessageList from '../components/assistant/MessageList';
 import MessageInput from '../components/assistant/MessageInput';
-import { useAssistant, TIME_GROUPS } from '../hooks/useAssistant';
+import { useAssistant, TIME_GROUPS } from '../hooks/assistant/useAssistant';
 
 const Assistant = () => {
   const {
