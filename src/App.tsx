@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LogProvider } from "./context/LogContext";
-import { AnimatePresence } from "framer-motion";
 
 // Pages
 import Index from "./pages/Index";
@@ -25,17 +24,15 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/logs" element={<Logs />} />
-              <Route path="/add-log" element={<AddLog />} />
-              <Route path="/assistant" element={<Assistant />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AnimatePresence>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/logs" element={<Logs />} />
+            <Route path="/add-log" element={<AddLog />} />
+            <Route path="/assistant" element={<Assistant />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
       </LogProvider>
     </TooltipProvider>
