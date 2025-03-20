@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Mic, X, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AudioRecorder from './voice/AudioRecorder';
-import AudioPlayer from './voice/AudioPlayer';
+import { useSpeechSynthesis } from '@/hooks/assistant/useSpeechSynthesis';
 import PulseAnimation from './voice/PulseAnimation';
 
 interface VoiceButtonProps {
@@ -21,7 +21,10 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   onSpeechResult
 }) => {
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Use the speech synthesis hook directly
+  const { isPlayingResponse, playResponseAudio } = useSpeechSynthesis();
   
   // Initialize the audio recorder
   const { isRecording, startRecording, stopRecording } = AudioRecorder({
@@ -32,17 +35,33 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     },
     onProcessingStateChange: (isProcessing) => {
       if (!isProcessing && status === 'processing') {
+        // Set status to speaking, which will trigger audio playback in the useEffect below
         setStatus('speaking');
       }
     }
   });
 
-  // Initialize the audio player
-  const { playResponseAudio } = AudioPlayer({
-    onPlaybackStateChange: (isPlaying) => {
-      setStatus(isPlaying ? 'speaking' : 'idle');
+  // Effect to handle audio response when status changes to speaking
+  React.useEffect(() => {
+    if (status === 'speaking' && !isPlayingResponse) {
+      // Play a default response if we don't have a real one yet
+      const demoResponse = "I've processed your request. Is there anything else you'd like me to help you with?";
+      console.log("Playing audio response");
+      playResponseAudio(demoResponse).catch(error => {
+        console.error("Failed to play audio response:", error);
+      });
     }
-  });
+  }, [status, isPlayingResponse, playResponseAudio]);
+
+  // When audio finishes playing, reset status to idle
+  React.useEffect(() => {
+    if (!isPlayingResponse && status === 'speaking') {
+      console.log("Audio playback finished, setting status to idle");
+      // Add a slight delay before setting to idle to avoid UI flickering
+      const timer = setTimeout(() => setStatus('idle'), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isPlayingResponse, status]);
 
   const handleToggle = () => {
     if (status === 'listening') {
@@ -139,8 +158,8 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       
       <Button 
         onClick={handleToggle}
-        disabled={status === 'processing'}
-        className={`bg-[#35cab4] hover:bg-[#2ba999] text-white rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' ? 'opacity-80' : ''}`}
+        disabled={status === 'processing' || status === 'speaking'}
+        className={`bg-[#35cab4] hover:bg-[#2ba999] text-white rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' || status === 'speaking' ? 'opacity-80' : ''}`}
       >
         {renderButtonContent()}
       </Button>

@@ -30,6 +30,13 @@ const Assistant = () => {
     isPlayingResponse
   } = useAssistant();
 
+  // Debug logs for voice state
+  React.useEffect(() => {
+    if (mode === 'voice') {
+      console.log("In voice mode, isPlayingResponse:", isPlayingResponse);
+    }
+  }, [mode, isPlayingResponse]);
+
   return (
     <Layout title="Assistant">
       <div className="max-w-3xl mx-auto h-full">

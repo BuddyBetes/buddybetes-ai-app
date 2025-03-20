@@ -61,12 +61,23 @@ export const useMessageHandling = (
           description: "There was a problem connecting to the assistant. Please try again.",
           variant: "destructive"
         });
+        const errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
         setMessages(prev => [...prev, { 
-          text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.", 
+          text: errorMessage, 
           type: 'assistant',
           timestamp: Date.now(),
           isNew: true
         }]);
+        
+        // Even in error case, if in voice mode, play the error message
+        if (currentMode === 'voice' && playResponseAudio) {
+          console.log("Playing error message as audio");
+          try {
+            await playResponseAudio(errorMessage);
+          } catch (playbackError) {
+            console.error("Error playing error message:", playbackError);
+          }
+        }
       } else {
         console.log("Received response from glucose-assistant:", data.response.substring(0, 50) + "...");
         // Add AI response to messages
@@ -82,18 +93,38 @@ export const useMessageHandling = (
         
         // If in voice mode, play the response using TTS
         if (currentMode === 'voice' && playResponseAudio) {
-          console.log("In voice mode, playing TTS response");
-          await playResponseAudio(data.response);
+          console.log("In voice mode, playing TTS response:", data.response.substring(0, 50) + "...");
+          try {
+            await playResponseAudio(data.response);
+          } catch (playbackError) {
+            console.error("Error playing response audio:", playbackError);
+            toast({
+              title: "Audio Playback Error",
+              description: "Could not play the response as audio. Please try again.",
+              variant: "destructive"
+            });
+          }
         }
       }
     } catch (err) {
       console.error('Error in handleUserMessage:', err);
+      const fallbackMessage = "I'm sorry, I encountered an error. Please try again.";
       setMessages(prev => [...prev, { 
-        text: "I'm sorry, I encountered an error. Please try again.", 
+        text: fallbackMessage, 
         type: 'assistant',
         timestamp: Date.now(),
         isNew: true
       }]);
+      
+      // Even in error case, if in voice mode, play the fallback message
+      if (currentMode === 'voice' && playResponseAudio) {
+        console.log("Playing fallback message as audio");
+        try {
+          await playResponseAudio(fallbackMessage);
+        } catch (playbackError) {
+          console.error("Error playing fallback message:", playbackError);
+        }
+      }
     } finally {
       setIsLoading(false);
       setInput('');
