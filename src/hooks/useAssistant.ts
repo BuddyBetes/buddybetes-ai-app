@@ -21,11 +21,25 @@ export const useAssistant = () => {
   
   // Initialize audio element for TTS
   useEffect(() => {
+    console.log("Initializing audio player for TTS");
     audioRef.current = new Audio();
-    audioRef.current.onended = () => setIsPlayingResponse(false);
+    audioRef.current.onended = () => {
+      console.log("TTS audio playback finished");
+      setIsPlayingResponse(false);
+    };
+    audioRef.current.onerror = (e) => {
+      console.error("TTS audio playback error:", e);
+      setIsPlayingResponse(false);
+      toast({
+        title: "Audio Playback Error",
+        description: "Failed to play assistant's response",
+        variant: "destructive"
+      });
+    };
     
     return () => {
       if (audioRef.current) {
+        console.log("Cleaning up audio player");
         audioRef.current.pause();
         audioRef.current = null;
       }
@@ -68,18 +82,20 @@ export const useAssistant = () => {
   
   const handleStartSession = () => {
     // Preserve messages when switching to voice mode
-    console.log('Starting voice session...');
+    console.log("Starting voice session...");
   };
   
   const handleEndSession = () => {
-    console.log('Ending voice session...');
+    console.log("Ending voice session...");
   };
   
   const handleTextMode = () => {
+    console.log("Switching to text mode");
     setMode('text');
   };
   
   const handleVoiceMode = () => {
+    console.log("Switching to voice mode");
     setMode('voice');
   };
   
@@ -96,6 +112,7 @@ export const useAssistant = () => {
   };
   
   const handleSpeechResult = async (text: string) => {
+    console.log("Speech result received:", text);
     if (!text.trim()) return;
     
     // Process the speech result as a user message
@@ -104,6 +121,8 @@ export const useAssistant = () => {
   
   const handleUserMessage = async (message: string) => {
     if (!message.trim() || isLoading) return;
+    
+    console.log("Processing user message:", message);
     
     // Add sound feedback
     const audio = new Audio('/message-sent.mp3');
@@ -128,6 +147,7 @@ export const useAssistant = () => {
       // Automatically detect food queries
       const foodQuery = detectFoodQuery(message);
       
+      console.log("Calling glucose-assistant function...");
       // Call our Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
         body: { 
@@ -151,6 +171,7 @@ export const useAssistant = () => {
           isNew: true
         }]);
       } else {
+        console.log("Received response from glucose-assistant:", data.response.substring(0, 50) + "...");
         // Add AI response to messages
         const assistantMessage: Message = { 
           text: data.response, 
@@ -164,7 +185,8 @@ export const useAssistant = () => {
         
         // If in voice mode, play the response using TTS
         if (mode === 'voice') {
-          playResponseAudio(data.response);
+          console.log("In voice mode, playing TTS response");
+          await playResponseAudio(data.response);
         }
       }
     } catch (err) {
@@ -187,6 +209,7 @@ export const useAssistant = () => {
   
   const playResponseAudio = async (text: string) => {
     try {
+      console.log("Playing response as audio:", text.substring(0, 50) + "...");
       setIsPlayingResponse(true);
       
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
@@ -194,16 +217,36 @@ export const useAssistant = () => {
       });
       
       if (error) {
+        console.error("Text-to-speech error:", error);
         throw new Error(error.message);
       }
       
       if (data.audioContent && audioRef.current) {
+        console.log("Received audio content, playing...");
         // Create audio from base64
         const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
         audioRef.current.src = audioSrc;
         
-        await audioRef.current.play();
+        try {
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error("Audio play error:", error);
+              setIsPlayingResponse(false);
+              toast({
+                title: "Audio Playback Error",
+                description: "Browser blocked autoplay. Try again or click to enable audio.",
+                variant: "destructive"
+              });
+            });
+          }
+        } catch (error) {
+          console.error("Audio play method error:", error);
+          setIsPlayingResponse(false);
+          throw error;
+        }
       } else {
+        console.log("No audio content received or audio reference is null");
         setIsPlayingResponse(false);
       }
     } catch (error) {

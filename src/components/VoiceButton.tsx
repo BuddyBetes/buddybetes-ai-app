@@ -33,28 +33,34 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
     
     const initializeRecorder = async () => {
       try {
+        console.log("Initializing voice recorder...");
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const recorder = new MediaRecorder(stream);
         
         recorder.onstart = () => {
+          console.log("Voice recording started");
           if (mounted) setAudioChunks([]);
         };
         
         recorder.ondataavailable = (e) => {
+          console.log("Voice data chunk received");
           if (mounted) setAudioChunks(chunks => [...chunks, e.data]);
         };
         
         recorder.onstop = async () => {
+          console.log("Voice recording stopped");
           if (!mounted) return;
           
           if (audioChunks.length > 0) {
             setIsProcessing(true);
+            console.log("Processing audio...");
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             await processAudio(audioBlob);
           }
         };
         
         if (mounted) setMediaRecorder(recorder);
+        console.log("Voice recorder initialized successfully");
       } catch (err) {
         console.error('Error accessing microphone:', err);
         toast({
@@ -89,6 +95,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       setIsListening(true);
       setIsPulsing(true);
       onStartSession && onStartSession();
+      console.log("Started listening for voice input");
     }
   };
 
@@ -98,17 +105,20 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       setIsListening(false);
       setIsPulsing(false);
       onEndSession && onEndSession();
+      console.log("Stopped listening for voice input");
     }
   };
 
   const processAudio = async (audioBlob: Blob) => {
     try {
+      console.log("Converting audio blob to base64...");
       // Convert blob to base64
       const reader = new FileReader();
       return new Promise((resolve, reject) => {
         reader.onloadend = async () => {
           try {
             const base64Audio = (reader.result as string).split(',')[1];
+            console.log("Audio converted to base64, sending to speech-to-text function...");
             
             // Send to speech-to-text function
             const { data, error } = await supabase.functions.invoke('speech-to-text', {
@@ -116,21 +126,35 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
             });
             
             if (error) {
+              console.error("Speech-to-text error:", error);
               throw new Error(error.message);
             }
             
             if (data.text) {
+              console.log("Transcription received:", data.text);
               // Call the callback with the transcribed text
               onSpeechResult && onSpeechResult(data.text);
               
-              // Wait for response and then convert it to speech
+              // Show transcription toast
               toast({
                 title: "Transcription",
                 description: data.text,
               });
+
+              // Wait for AI response and then convert it to speech
+              console.log("Waiting for AI response...");
+              setIsProcessing(false);
+              setIsSpeaking(true);
+            } else {
+              console.log("No transcription received from speech-to-text function");
+              setIsProcessing(false);
+              toast({
+                title: "No Speech Detected",
+                description: "We couldn't detect any speech in your recording.",
+                variant: "destructive"
+              });
             }
             
-            setIsProcessing(false);
             resolve(true);
           } catch (error) {
             console.error("Processing error:", error);
@@ -145,6 +169,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
         };
         
         reader.onerror = (error) => {
+          console.error("File reader error:", error);
           setIsProcessing(false);
           reject(error);
         };
@@ -165,6 +190,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   // Play the AI's response as audio
   const playResponseAudio = async (text: string) => {
     try {
+      console.log("Converting AI response to speech:", text.substring(0, 50) + "...");
       setIsSpeaking(true);
       
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
@@ -172,20 +198,60 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
       });
       
       if (error) {
+        console.error("Text-to-speech error:", error);
         throw new Error(error.message);
       }
       
       if (data.audioContent) {
+        console.log("Text-to-speech response received, playing audio...");
         // Create audio from base64
         const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
         
         if (audioRef.current) {
           audioRef.current.src = audioSrc;
-          audioRef.current.onended = () => setIsSpeaking(false);
-          audioRef.current.play();
+          audioRef.current.onended = () => {
+            console.log("Audio playback finished");
+            setIsSpeaking(false);
+          };
+          audioRef.current.onerror = (e) => {
+            console.error("Audio playback error:", e);
+            setIsSpeaking(false);
+            toast({
+              title: "Audio Playback Error",
+              description: "Failed to play audio response",
+              variant: "destructive"
+            });
+          };
+          
+          try {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                console.error("Audio play error:", error);
+                setIsSpeaking(false);
+                toast({
+                  title: "Audio Playback Error",
+                  description: "Browser blocked autoplay. Click to try again.",
+                  variant: "destructive"
+                });
+              });
+            }
+          } catch (error) {
+            console.error("Play method error:", error);
+            setIsSpeaking(false);
+          }
+        } else {
+          console.error("Audio reference is null");
+          setIsSpeaking(false);
         }
       } else {
+        console.log("No audio content received from text-to-speech function");
         setIsSpeaking(false);
+        toast({
+          title: "Text-to-Speech Error",
+          description: "Failed to generate audio from text",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("TTS error:", error);
@@ -266,6 +332,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
             exit={{ scale: 0, opacity: 0 }}
             className="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md"
             onClick={() => {
+              console.log("Cancelling current voice operation");
               setIsListening(false);
               setIsPulsing(false);
               setIsProcessing(false);
