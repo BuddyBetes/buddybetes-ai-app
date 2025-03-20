@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import PulseAnimation from './voice/PulseAnimation';
-import StatusButton from './voice/StatusButton';
-import CancelButton from './voice/CancelButton';
-import LanguageToggle from './voice/LanguageToggle';
+import { motion } from 'framer-motion';
+import { Mic, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import ActionButtons from './voice/ActionButtons';
 import AudioRecorder from './voice/AudioRecorder';
 import AudioPlayer from './voice/AudioPlayer';
@@ -22,7 +21,6 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   onSpeechResult
 }) => {
   const [status, setStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
-  const [isPulsing, setIsPulsing] = useState(false);
   
   // Initialize the audio recorder
   const { isRecording, startRecording, stopRecording } = AudioRecorder({
@@ -52,66 +50,81 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   const handleStartSession = () => {
     startRecording();
     setStatus('listening');
-    setIsPulsing(true);
     onStartSession && onStartSession();
-    console.log("Started listening for voice input");
   };
 
   const handleEndSession = () => {
     stopRecording();
     setStatus('idle');
-    setIsPulsing(false);
     onEndSession && onEndSession();
-    console.log("Stopped listening for voice input");
-  };
-
-  const handleCancel = () => {
-    console.log("Cancelling current voice operation");
-    setStatus('idle');
-    setIsPulsing(false);
-    stopRecording();
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    onEndSession && onEndSession();
-  };
-
-  // Get the background color class based on current status
-  const getBackgroundColorClass = () => {
-    switch (status) {
-      case 'listening': return 'bg-red-500/10';
-      case 'processing': return 'bg-yellow-500/10';
-      case 'speaking': return 'bg-green-500/10';
-      default: return 'bg-buddy-500/10';
-    }
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center justify-center h-full">
       <audio ref={audioRef} className="hidden" />
       
-      <div className={`relative w-32 h-32 rounded-full flex items-center justify-center mb-8 ${getBackgroundColorClass()}`}>
-        <PulseAnimation isActive={isPulsing} />
-        
-        <StatusButton 
-          status={status}
-          onClick={handleToggle}
-        />
-        
-        {(status !== 'idle') && (
-          <CancelButton onClick={handleCancel} />
+      <h1 className="text-3xl font-medium mb-8 text-gray-800">
+        {status === 'idle' ? "still up? same!" : "I'm listening..."}
+      </h1>
+      
+      <motion.div 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="w-48 h-48 rounded-full bg-[#FFD872] mb-16 relative flex items-center justify-center"
+      >
+        {status === 'listening' && (
+          <motion.div
+            className="absolute inset-0 rounded-full bg-[#FFD872] opacity-70"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ 
+              duration: 2, 
+              repeat: Infinity, 
+              repeatType: "loop" 
+            }}
+          />
         )}
+        
+        {status === 'listening' && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="absolute -top-2 -right-2 bg-white rounded-full p-2 shadow-md z-10"
+            onClick={handleEndSession}
+          >
+            <X size={18} className="text-gray-600" />
+          </motion.button>
+        )}
+      </motion.div>
+      
+      <div className="flex space-x-4 mb-6">
+        <Button 
+          variant="outline" 
+          className={`rounded-full px-8 py-2 ${status === 'idle' ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-white border-gray-200 text-gray-400'}`}
+        >
+          classic
+        </Button>
+        <Button 
+          variant="outline" 
+          className="rounded-full px-8 py-2 bg-white border-gray-200 text-gray-400"
+        >
+          guided
+        </Button>
       </div>
       
-      <div className="flex flex-col items-center space-y-4">
-        <LanguageToggle />
-        
-        <ActionButtons 
-          status={status}
-          onStartEndSession={handleToggle}
-          onTextMode={onTextMode || (() => {})}
-        />
-      </div>
+      <Button 
+        onClick={handleToggle}
+        className="bg-[#FFD872] hover:bg-[#E5C267] text-gray-800 rounded-full px-12 py-6 text-lg font-medium w-64"
+      >
+        {status === 'listening' ? "end session" : "begin session"}
+      </Button>
+      
+      <Button
+        variant="ghost" 
+        onClick={onTextMode}
+        className="mt-4 text-gray-500"
+      >
+        Switch to Text Mode
+      </Button>
     </div>
   );
 };

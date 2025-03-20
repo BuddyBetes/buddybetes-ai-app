@@ -31,52 +31,54 @@ const Assistant = () => {
   } = useAssistant();
 
   return (
-    <Layout title="Glucose Buddy Assistant">
-      <AnimatePresence mode="wait">
-        {mode === 'voice' ? (
-          <motion.div
-            key="voice-mode"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center h-full"
-          >
-            <VoiceButton 
-              onStartSession={handleStartSession}
-              onEndSession={handleEndSession}
-              onTextMode={handleTextMode}
-              onSpeechResult={handleSpeechResult}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="text-mode"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col h-full"
-          >
-            <MessageList 
-              messages={messages}
-              isLoading={isLoading}
-              showWelcome={showWelcome}
-              showScrollButton={showScrollButton}
-              timeGroups={TIME_GROUPS}
-              onDismissWelcome={handleDismissWelcome}
-              onScrollToBottom={scrollToBottom}
-            />
-            
-            <MessageInput 
-              input={input}
-              isLoading={isLoading || isPlayingResponse}
-              onInputChange={handleInputChange}
-              onSend={handleSend}
-              onSuggestionSelect={handleSuggestionSelect}
-              onVoiceMode={handleVoiceMode}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <Layout title="Assistant">
+      <div className="max-w-3xl mx-auto h-full">
+        <AnimatePresence mode="wait">
+          {mode === 'voice' ? (
+            <motion.div
+              key="voice-mode"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center h-full"
+            >
+              <VoiceButton 
+                onStartSession={handleStartSession}
+                onEndSession={handleEndSession}
+                onTextMode={handleTextMode}
+                onSpeechResult={handleSpeechResult}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="text-mode"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col h-full"
+            >
+              <MessageList 
+                messages={messages}
+                isLoading={isLoading}
+                showWelcome={showWelcome}
+                showScrollButton={showScrollButton}
+                timeGroups={TIME_GROUPS}
+                onDismissWelcome={handleDismissWelcome}
+                onScrollToBottom={scrollToBottom}
+              />
+              
+              <MessageInput 
+                input={input}
+                isLoading={isLoading || isPlayingResponse}
+                onInputChange={handleInputChange}
+                onSend={handleSend}
+                onSuggestionSelect={handleSuggestionSelect}
+                onVoiceMode={handleVoiceMode}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </Layout>
   );
 };

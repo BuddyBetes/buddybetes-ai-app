@@ -29,7 +29,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({ onSelectSuggestion })
           <Button
             variant="outline"
             size="sm"
-            className="whitespace-nowrap border-buddy-300 hover:bg-buddy-100 hover:text-buddy-700 text-buddy-600"
+            className="whitespace-nowrap rounded-full border-gray-200 hover:bg-gray-50 text-gray-700 px-4"
             onClick={() => onSelectSuggestion(suggestion)}
           >
             {suggestion}

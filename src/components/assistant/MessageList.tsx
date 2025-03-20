@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { Message } from '@/types';
 import MessageBubble from '../MessageBubble';
 import TypingIndicator from '../TypingIndicator';
@@ -78,7 +78,7 @@ const MessageList: React.FC<MessageListProps> = ({
   return (
     <div 
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto mb-4 space-y-6 pb-2 relative"
+      className="flex-1 overflow-y-auto pb-2 relative px-2"
     >
       <AnimatePresence>
         {showWelcome && (
@@ -86,27 +86,29 @@ const MessageList: React.FC<MessageListProps> = ({
         )}
       </AnimatePresence>
       
-      {Object.entries(groupedMessages()).map(([timeGroup, groupMessages]) => (
-        groupMessages.length > 0 && (
-          <div key={timeGroup} className="space-y-4">
-            <div className="flex justify-center">
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                {timeGroup}
-              </span>
+      <div className="space-y-6 pt-4">
+        {Object.entries(groupedMessages()).map(([timeGroup, groupMessages]) => (
+          groupMessages.length > 0 && (
+            <div key={timeGroup} className="space-y-6">
+              <div className="flex justify-center">
+                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  {timeGroup}
+                </span>
+              </div>
+              
+              {groupMessages.map((message, index) => (
+                <MessageBubble
+                  key={`${timeGroup}-${index}`}
+                  text={message.text}
+                  type={message.type}
+                  nutritionalInfo={message.nutritionalInfo}
+                  isNew={message.isNew}
+                />
+              ))}
             </div>
-            
-            {groupMessages.map((message, index) => (
-              <MessageBubble
-                key={`${timeGroup}-${index}`}
-                text={message.text}
-                type={message.type}
-                nutritionalInfo={message.nutritionalInfo}
-                isNew={message.isNew}
-              />
-            ))}
-          </div>
-        )
-      ))}
+          )
+        ))}
+      </div>
       
       {isLoading && <TypingIndicator />}
       
@@ -118,10 +120,10 @@ const MessageList: React.FC<MessageListProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-2 right-2 p-2 bg-buddy-500 text-white rounded-full shadow-md"
+            className="absolute bottom-4 right-4 p-3 bg-[#35cab4] text-white rounded-full shadow-md"
             onClick={onScrollToBottom}
           >
-            <ArrowDown size={16} />
+            <ArrowUp size={18} />
           </motion.button>
         )}
       </AnimatePresence>

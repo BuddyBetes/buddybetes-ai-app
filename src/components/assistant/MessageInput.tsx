@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, MessageCircle, Volume2 } from 'lucide-react';
+import { Send, Mic, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import SuggestionChips from '../SuggestionChips';
@@ -24,15 +24,25 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onVoiceMode,
 }) => {
   return (
-    <div className="sticky bottom-0 bg-white pb-4 space-y-2">
+    <div className="sticky bottom-0 bg-white pt-2 pb-4 border-t border-gray-100">
       <SuggestionChips onSelectSuggestion={onSuggestionSelect} />
       
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2 bg-gray-50 rounded-full p-2 border border-gray-200">
+        <Button
+          type="button"
+          variant="ghost" 
+          size="icon"
+          className="rounded-full text-gray-500"
+          onClick={onVoiceMode}
+        >
+          <Mic size={20} />
+        </Button>
+        
         <Textarea
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
-          placeholder={isLoading ? "Assistant is responding..." : "Ask your health assistant..."}
-          className="resize-none"
+          placeholder={isLoading ? "Assistant is responding..." : "Type your message..."}
+          className="resize-none border-none bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-2 h-10 min-h-10 max-h-32 overflow-y-auto"
           disabled={isLoading}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -41,13 +51,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
             }
           }}
         />
-        <div className="flex flex-col gap-2">
+
+        {input.trim() ? (
           <Button 
             onClick={onSend}
-            className="bg-buddy-500 hover:bg-buddy-600 transition-all duration-200"
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-[#35cab4] text-white hover:bg-[#29A493]"
             disabled={isLoading || !input.trim()}
           >
-            <motion.span
+            <motion.div
               whileTap={{ scale: 0.9 }}
               transition={{ duration: 0.1 }}
             >
@@ -55,35 +68,28 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-5 h-5"
                 >
-                  <svg className="w-full h-full text-white" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                 </motion.div>
-              ) : "Send"}
-            </motion.span>
+              ) : (
+                <Send size={18} />
+              )}
+            </motion.div>
           </Button>
-          <Button
-            variant="outline"
+        ) : (
+          <Button 
+            onClick={() => onInputChange('')}
+            variant="ghost"
             size="icon"
-            className="border-buddy-300"
+            className="rounded-full text-gray-500"
+            disabled={!input.trim()}
           >
-            <Search size={16} />
+            <X size={18} />
           </Button>
-        </div>
-      </div>
-      
-      <div className="flex justify-center mt-4">
-        <Button
-          variant="outline"
-          onClick={onVoiceMode}
-          className="flex items-center gap-2"
-        >
-          <Volume2 size={16} className="text-buddy-500" />
-          Switch to Voice Mode
-        </Button>
+        )}
       </div>
     </div>
   );
