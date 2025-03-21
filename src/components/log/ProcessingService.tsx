@@ -34,7 +34,7 @@ const ProcessingService: React.FC<ProcessingServiceProps> = ({
       });
       
       // Simulate food recognition (in a real app, this would call an API)
-      processingTimeoutRef.current = setTimeout(() => {
+      processingTimeoutRef.current = setTimeout(async () => {
         setProcessingImage(false);
         
         toast({
@@ -43,7 +43,7 @@ const ProcessingService: React.FC<ProcessingServiceProps> = ({
         });
         
         // Add food data to logs - fixed to match GlucoseLog type
-        addLog({
+        await addLog({
           timestamp: new Date(),
           glucoseLevel: 0, // Setting a default value since it's required by the type
           food: "Apple",
@@ -59,7 +59,7 @@ const ProcessingService: React.FC<ProcessingServiceProps> = ({
       });
       
       // Simulate OCR for glucose reading (in a real app, this would call an API)
-      processingTimeoutRef.current = setTimeout(() => {
+      processingTimeoutRef.current = setTimeout(async () => {
         setProcessingImage(false);
         
         // Detected glucose value
@@ -71,7 +71,7 @@ const ProcessingService: React.FC<ProcessingServiceProps> = ({
         });
         
         // Add the glucose reading to logs
-        addLog({
+        await addLog({
           timestamp: new Date(),
           glucoseLevel: glucoseValue,
           mealContext: 'fasting',

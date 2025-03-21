@@ -9,6 +9,98 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assistant_conversations: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      assistant_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          id: string
+          message_type: string
+          nutritional_info: Json | null
+          timestamp: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          id?: string
+          message_type: string
+          nutritional_info?: Json | null
+          timestamp?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          id?: string
+          message_type?: string
+          nutritional_info?: Json | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      glucose_logs: {
+        Row: {
+          created_at: string
+          food: string | null
+          glucose_level: number
+          id: string
+          meal_context: string | null
+          notes: string | null
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          food?: string | null
+          glucose_level: number
+          id?: string
+          meal_context?: string | null
+          notes?: string | null
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          food?: string | null
+          glucose_level?: number
+          id?: string
+          meal_context?: string | null
+          notes?: string | null
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_data: {
         Row: {
           age: string | null

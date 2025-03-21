@@ -1,5 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export interface GlucoseLog {
   id: string;
@@ -14,9 +17,10 @@ export interface GlucoseLog {
 
 interface LogContextType {
   logs: GlucoseLog[];
-  addLog: (log: Omit<GlucoseLog, 'id'>) => void;
+  addLog: (log: Omit<GlucoseLog, 'id'>) => Promise<void>;
   getRecentLogs: (count: number) => GlucoseLog[];
   getAverageGlucose: () => number;
+  isLoading: boolean;
 }
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
@@ -35,63 +39,124 @@ interface LogProviderProps {
 
 export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
   const [logs, setLogs] = useState<GlucoseLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  // Load sample data on first render
+  // Fetch logs from Supabase
   useEffect(() => {
-    // Sample data
-    const sampleLogs: GlucoseLog[] = [
-      {
-        id: '1',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        glucoseLevel: 120,
-        food: 'Oatmeal with berries',
-        mealContext: 'after',
-      },
-      {
-        id: '2',
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-        glucoseLevel: 95,
-        food: 'Chicken salad',
-        mealContext: 'before',
-      },
-      {
-        id: '3',
-        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-        glucoseLevel: 145,
-        food: 'Turkey sandwich',
-        mealContext: 'after',
-      },
-      {
-        id: '4',
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        glucoseLevel: 110,
-        food: 'Apple with almond butter',
-        mealContext: 'before',
-      },
-      {
-        id: '5',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        glucoseLevel: 130,
-        food: 'Grilled salmon with vegetables',
-        mealContext: 'after',
-      },
-    ];
-    
-    setLogs(sampleLogs);
-  }, []);
+    const fetchLogs = async () => {
+      if (!user) {
+        setLogs([]);
+        setIsLoading(false);
+        return;
+      }
 
-  const addLog = (log: Omit<GlucoseLog, 'id'>) => {
-    const newLog = {
-      ...log,
-      id: Math.random().toString(36).substring(2, 9), // Simple ID generation
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('glucose_logs')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('timestamp', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching glucose logs:', error);
+          toast({
+            title: "Error fetching logs",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else if (data) {
+          // Convert Supabase data to GlucoseLog objects
+          const glucoseLogs: GlucoseLog[] = data.map(row => ({
+            id: row.id,
+            timestamp: new Date(row.timestamp),
+            glucoseLevel: row.glucose_level,
+            food: row.food,
+            mealContext: row.meal_context as 'before' | 'after' | 'fasting' | undefined,
+            notes: row.notes
+          }));
+          setLogs(glucoseLogs);
+        }
+      } catch (error) {
+        console.error('Error fetching logs:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setLogs([...logs, newLog]);
+
+    fetchLogs();
+  }, [user, toast]);
+
+  const addLog = async (log: Omit<GlucoseLog, 'id'>) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to add logs",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Prepare data for Supabase
+      const logData = {
+        user_id: user.id,
+        timestamp: log.timestamp.toISOString(),
+        glucose_level: log.glucoseLevel,
+        meal_context: log.mealContext,
+        food: log.food,
+        notes: log.notes
+      };
+
+      const { data, error } = await supabase
+        .from('glucose_logs')
+        .insert(logData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding log:', error);
+        toast({
+          title: "Error adding log",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else if (data) {
+        // Convert back to GlucoseLog and add to state
+        const newLog: GlucoseLog = {
+          id: data.id,
+          timestamp: new Date(data.timestamp),
+          glucoseLevel: data.glucose_level,
+          food: data.food,
+          mealContext: data.meal_context,
+          notes: data.notes
+        };
+        
+        setLogs(prev => [newLog, ...prev]);
+        
+        toast({
+          title: "Log added successfully",
+          description: `Glucose level: ${log.glucoseLevel} added to your logs`,
+        });
+      }
+    } catch (error) {
+      console.error('Error adding log:', error);
+      toast({
+        title: "Error adding log",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getRecentLogs = (count: number) => {
-    return [...logs]
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, count);
+    return [...logs].slice(0, count);
   };
 
   const getAverageGlucose = () => {
@@ -101,7 +166,7 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
   };
 
   return (
-    <LogContext.Provider value={{ logs, addLog, getRecentLogs, getAverageGlucose }}>
+    <LogContext.Provider value={{ logs, addLog, getRecentLogs, getAverageGlucose, isLoading }}>
       {children}
     </LogContext.Provider>
   );

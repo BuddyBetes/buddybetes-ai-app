@@ -1,18 +1,15 @@
+
 import React from 'react';
 import Layout from '../components/Layout';
 import { useLogContext, GlucoseLog } from '../context/LogContext';
 import { motion } from 'framer-motion';
-import { ChevronRight, Dot } from 'lucide-react';
+import { ChevronRight, Dot, Loader2 } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 
 const Logs = () => {
-  const { logs } = useLogContext();
+  const { logs, isLoading } = useLogContext();
 
-  // Sort logs by timestamp in descending order
-  const sortedLogs = [...logs].sort((a, b) => 
-    b.timestamp.getTime() - a.timestamp.getTime()
-  );
-
+  // Format date and time
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, { 
       month: 'short', 
@@ -51,13 +48,25 @@ const Logs = () => {
 
   // Group logs by date
   const groupedLogs: Record<string, GlucoseLog[]> = {};
-  sortedLogs.forEach(log => {
+  logs.forEach(log => {
     const dateStr = formatDate(log.timestamp);
     if (!groupedLogs[dateStr]) {
       groupedLogs[dateStr] = [];
     }
     groupedLogs[dateStr].push(log);
   });
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <AppHeader />
+        <div className="flex flex-col items-center justify-center h-full py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-buddy-500" />
+          <p className="mt-4 text-gray-500">Loading your glucose logs...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

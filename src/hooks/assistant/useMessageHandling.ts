@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types';
 import { detectFoodQuery } from '@/utils/foodDetection';
+import { useAuth } from '@/context/AuthContext';
 
 export const useMessageHandling = (
   playResponseAudio?: (text: string) => Promise<void>,
@@ -13,11 +14,143 @@ export const useMessageHandling = (
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState('');
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const { getRecentLogs } = useLogContext();
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Load existing conversation or create a new one
+  useEffect(() => {
+    const loadConversation = async () => {
+      if (!user) return;
+      
+      try {
+        // Try to find an existing conversation
+        const { data: conversationData, error: conversationError } = await supabase
+          .from('assistant_conversations')
+          .select('id, conversation_id')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+          
+        if (conversationError) {
+          console.error('Error fetching conversation:', conversationError);
+          return;
+        }
+        
+        let currentConversationId: string;
+        
+        if (conversationData && conversationData.length > 0) {
+          // Use existing conversation
+          currentConversationId = conversationData[0].id;
+          setConversationId(currentConversationId);
+          
+          // Load messages for this conversation
+          const { data: messageData, error: messageError } = await supabase
+            .from('assistant_messages')
+            .select('*')
+            .eq('conversation_id', currentConversationId)
+            .order('timestamp', { ascending: true });
+            
+          if (messageError) {
+            console.error('Error fetching messages:', messageError);
+            return;
+          }
+          
+          if (messageData && messageData.length > 0) {
+            const loadedMessages: Message[] = messageData.map(msg => ({
+              text: msg.content,
+              type: msg.message_type as 'user' | 'assistant',
+              timestamp: new Date(msg.timestamp).getTime(),
+              nutritionalInfo: msg.nutritional_info
+            }));
+            
+            setMessages(loadedMessages);
+          } else {
+            // No messages in conversation yet, add a welcome message
+            const welcomeMessage: Message = {
+              text: "Hi! I'm BuddyBetes. How can I help?",
+              type: 'assistant',
+              timestamp: Date.now()
+            };
+            setMessages([welcomeMessage]);
+            
+            // Save welcome message
+            await saveMessageToSupabase(welcomeMessage, currentConversationId);
+          }
+        } else {
+          // Create a new conversation
+          const newConversationId = `conv-${Date.now()}`;
+          const { data: newConv, error: createError } = await supabase
+            .from('assistant_conversations')
+            .insert({
+              user_id: user.id,
+              conversation_id: newConversationId
+            })
+            .select('id')
+            .single();
+            
+          if (createError) {
+            console.error('Error creating conversation:', createError);
+            return;
+          }
+          
+          currentConversationId = newConv.id;
+          setConversationId(currentConversationId);
+          
+          // Create welcome message
+          const welcomeMessage: Message = {
+            text: "Hi! I'm BuddyBetes. How can I help?",
+            type: 'assistant',
+            timestamp: Date.now()
+          };
+          setMessages([welcomeMessage]);
+          
+          // Save welcome message
+          await saveMessageToSupabase(welcomeMessage, currentConversationId);
+        }
+      } catch (error) {
+        console.error('Error in loadConversation:', error);
+      }
+    };
+    
+    loadConversation();
+  }, [user]);
+  
+  // Function to save a message to Supabase
+  const saveMessageToSupabase = async (message: Message, convId: string) => {
+    if (!user || !convId) return;
+    
+    try {
+      const messageData = {
+        conversation_id: convId,
+        message_type: message.type,
+        content: message.text,
+        nutritional_info: message.nutritionalInfo || null,
+        timestamp: new Date(message.timestamp).toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('assistant_messages')
+        .insert(messageData);
+        
+      if (error) {
+        console.error('Error saving message:', error);
+      }
+      
+      // Also update the conversation's updated_at timestamp
+      await supabase
+        .from('assistant_conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', convId);
+        
+    } catch (error) {
+      console.error('Error saving message to Supabase:', error);
+    }
+  };
   
   const handleUserMessage = async (message: string) => {
-    if (!message.trim() || isLoading) return;
+    if (!message.trim() || isLoading || !user) return;
     
     console.log("🔄 Processing user message:", message);
     console.log(`🎙️ Current mode: ${currentMode || 'text'}`);
@@ -37,6 +170,11 @@ export const useMessageHandling = (
     
     setMessages(prev => [...prev, newMessage]);
     setIsLoading(true);
+    
+    // Save user message if we have a conversation
+    if (conversationId) {
+      await saveMessageToSupabase(newMessage, conversationId);
+    }
     
     try {
       // Get recent glucose logs to provide context
@@ -64,12 +202,19 @@ export const useMessageHandling = (
           variant: "destructive"
         });
         const errorMessage = "Sorry, having trouble connecting. Try again soon.";
-        setMessages(prev => [...prev, { 
+        const assistantErrorMsg: Message = { 
           text: errorMessage, 
           type: 'assistant',
           timestamp: Date.now(),
           isNew: true
-        }]);
+        };
+        
+        setMessages(prev => [...prev, assistantErrorMsg]);
+        
+        // Save error message
+        if (conversationId) {
+          await saveMessageToSupabase(assistantErrorMsg, conversationId);
+        }
         
         // Even in error case, if in voice mode, play the error message
         if (currentMode === 'voice' && playResponseAudio) {
@@ -97,6 +242,11 @@ export const useMessageHandling = (
         
         setMessages(prev => [...prev, assistantMessage]);
         
+        // Save assistant message
+        if (conversationId) {
+          await saveMessageToSupabase(assistantMessage, conversationId);
+        }
+        
         // If in voice mode, play the response using TTS
         if (currentMode === 'voice' && playResponseAudio) {
           console.log("🔊 In voice mode, playing TTS response");
@@ -118,12 +268,19 @@ export const useMessageHandling = (
     } catch (err) {
       console.error('❌ Error in handleUserMessage:', err);
       const fallbackMessage = "Sorry, I encountered an error. Please try again.";
-      setMessages(prev => [...prev, { 
+      const errorMsg: Message = { 
         text: fallbackMessage, 
         type: 'assistant',
         timestamp: Date.now(),
         isNew: true
-      }]);
+      };
+      
+      setMessages(prev => [...prev, errorMsg]);
+      
+      // Save error message
+      if (conversationId) {
+        await saveMessageToSupabase(errorMsg, conversationId);
+      }
       
       // Even in error case, if in voice mode, play the fallback message
       if (currentMode === 'voice' && playResponseAudio) {

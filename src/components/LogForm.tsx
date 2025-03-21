@@ -8,16 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const LogForm: React.FC = () => {
-  const { addLog } = useLogContext();
+  const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
   const [glucoseLevel, setGlucoseLevel] = useState('');
   const [food, setFood] = useState('');
   const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
   const [notes, setNotes] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!glucoseLevel || isNaN(Number(glucoseLevel))) {
@@ -37,18 +38,13 @@ const LogForm: React.FC = () => {
       notes: notes.trim() || undefined,
     };
     
-    addLog(newLog);
+    await addLog(newLog);
     
     // Reset form
     setGlucoseLevel('');
     setFood('');
     setMealContext('before');
     setNotes('');
-    
-    toast({
-      title: "Log added successfully",
-      description: `Glucose level: ${glucoseLevel} added to your logs`,
-    });
   };
 
   const inputVariants = {
@@ -70,6 +66,7 @@ const LogForm: React.FC = () => {
             placeholder="Enter your glucose reading"
             className="h-12 text-lg"
             required
+            disabled={isLoading}
           />
         </motion.div>
       </div>
@@ -82,6 +79,7 @@ const LogForm: React.FC = () => {
           value={mealContext} 
           onValueChange={(value) => setMealContext(value as 'before' | 'after' | 'fasting')}
           className="flex space-x-4"
+          disabled={isLoading}
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="before" id="before" />
@@ -109,6 +107,7 @@ const LogForm: React.FC = () => {
             onChange={(e) => setFood(e.target.value)}
             placeholder="What did you eat?"
             className="h-12"
+            disabled={isLoading}
           />
         </motion.div>
       </div>
@@ -124,19 +123,28 @@ const LogForm: React.FC = () => {
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add any additional notes"
             className="min-h-24"
+            disabled={isLoading}
           />
         </motion.div>
       </div>
       
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: isLoading ? 1 : 1.02 }}
+        whileTap={{ scale: isLoading ? 1 : 0.98 }}
       >
         <Button 
           type="submit" 
           className="w-full h-12 text-lg bg-buddy-500 hover:bg-buddy-600"
+          disabled={isLoading}
         >
-          Save Log
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save Log'
+          )}
         </Button>
       </motion.div>
     </form>
