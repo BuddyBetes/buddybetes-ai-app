@@ -69,31 +69,31 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
     <div className="space-y-6">
       <h3 className="text-xl font-semibold mb-4">Health Information</h3>
       
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <Label className="mb-2 block">Gender</Label>
+          <Label className="mb-2 block text-gray-700 font-medium">Gender</Label>
           <RadioGroup 
             value={healthData.gender} 
             onValueChange={(value) => setHealthData({...healthData, gender: value})}
-            className="flex flex-col space-y-2"
+            className="flex flex-col space-y-2 mt-2"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="male" id="male" />
-              <Label htmlFor="male">Male</Label>
+              <Label htmlFor="male" className="font-normal">Male</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="female" id="female" />
-              <Label htmlFor="female">Female</Label>
+              <Label htmlFor="female" className="font-normal">Female</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="other" id="other" />
-              <Label htmlFor="other">Other</Label>
+              <Label htmlFor="other" className="font-normal">Other</Label>
             </div>
           </RadioGroup>
         </div>
 
         <div>
-          <Label className="mb-2 block">Date of Birth</Label>
+          <Label className="mb-2 block text-gray-700 font-medium">Date of Birth</Label>
           <div className="space-y-2">
             <Input
               type="date"
@@ -101,7 +101,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
               onChange={handleDateInputChange}
               max={format(maxDate, 'yyyy-MM-dd')}
               min={format(minDate, 'yyyy-MM-dd')}
-              className="w-full"
+              className="w-full h-12 rounded-xl"
             />
             <p className="text-xs text-gray-500">Or select from calendar:</p>
             <Popover>
@@ -109,7 +109,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full h-12 justify-start text-left font-normal rounded-xl",
                     !healthData.birthdate && "text-muted-foreground"
                   )}
                 >
@@ -143,23 +143,23 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
           </div>
         </div>
 
-        <div className="flex space-x-3">
-          <div className="flex-1">
-            <Label htmlFor="height" className="mb-2 block">Height</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="height" className="mb-2 block text-gray-700 font-medium">Height</Label>
             <div className="flex space-x-2">
               <Input 
                 id="height" 
                 type="number" 
                 value={healthData.height} 
                 onChange={(e) => setHealthData({...healthData, height: e.target.value})}
-                className="flex-1"
-                placeholder="Enter your height"
+                className="flex-1 h-12 rounded-xl"
+                placeholder="Enter height"
               />
               <Select 
                 value={healthData.heightUnit} 
                 onValueChange={(value) => setHealthData({...healthData, heightUnit: value})}
               >
-                <SelectTrigger className="w-24">
+                <SelectTrigger className="w-24 h-12 rounded-xl">
                   <SelectValue placeholder="Unit" />
                 </SelectTrigger>
                 <SelectContent>
@@ -170,22 +170,22 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
             </div>
           </div>
           
-          <div className="flex-1">
-            <Label htmlFor="weight" className="mb-2 block">Weight</Label>
+          <div>
+            <Label htmlFor="weight" className="mb-2 block text-gray-700 font-medium">Weight</Label>
             <div className="flex space-x-2">
               <Input 
                 id="weight" 
                 type="number" 
                 value={healthData.weight} 
                 onChange={(e) => setHealthData({...healthData, weight: e.target.value})}
-                className="flex-1"
-                placeholder="Enter your weight"
+                className="flex-1 h-12 rounded-xl"
+                placeholder="Enter weight"
               />
               <Select 
                 value={healthData.weightUnit} 
                 onValueChange={(value) => setHealthData({...healthData, weightUnit: value})}
               >
-                <SelectTrigger className="w-24">
+                <SelectTrigger className="w-24 h-12 rounded-xl">
                   <SelectValue placeholder="Unit" />
                 </SelectTrigger>
                 <SelectContent>
@@ -198,12 +198,12 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
         </div>
 
         <div>
-          <Label htmlFor="diabetesType" className="mb-2 block">Diabetes Type</Label>
+          <Label htmlFor="diabetesType" className="mb-2 block text-gray-700 font-medium">Diabetes Type</Label>
           <Select 
             value={healthData.diabetesType} 
             onValueChange={(value) => setHealthData({...healthData, diabetesType: value})}
           >
-            <SelectTrigger className="w-full" id="diabetesType">
+            <SelectTrigger className="w-full h-12 rounded-xl" id="diabetesType">
               <SelectValue placeholder="Select your diabetes type" />
             </SelectTrigger>
             <SelectContent>

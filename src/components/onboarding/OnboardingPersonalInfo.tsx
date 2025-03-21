@@ -63,12 +63,12 @@ const OnboardingPersonalInfo: React.FC<OnboardingPersonalInfoProps> = ({
       </div>
       
       <Form {...form}>
-        <form className="space-y-5">
+        <form className="space-y-6">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="mb-6">
                 <FormLabel className="text-gray-700 font-medium">First Name</FormLabel>
                 <FormControl>
                   <Input 
@@ -77,7 +77,7 @@ const OnboardingPersonalInfo: React.FC<OnboardingPersonalInfoProps> = ({
                     className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
                   />
                 </FormControl>
-                <FormMessage className="text-red-500" />
+                <FormMessage className="text-red-500 text-sm" />
               </FormItem>
             )}
           />
@@ -95,7 +95,7 @@ const OnboardingPersonalInfo: React.FC<OnboardingPersonalInfoProps> = ({
                     className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
                   />
                 </FormControl>
-                <FormMessage className="text-red-500" />
+                <FormMessage className="text-red-500 text-sm" />
               </FormItem>
             )}
           />

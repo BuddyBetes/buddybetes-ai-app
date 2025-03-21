@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface HealthDataEditProps {
   healthData: {
@@ -94,36 +96,42 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
           Make changes to your health profile here.
         </SheetDescription>
       </SheetHeader>
-      <div className="grid gap-4 py-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <label htmlFor="gender" className="text-right">
+      <div className="space-y-5 py-4">
+        <div>
+          <Label htmlFor="gender" className="block mb-2">
             Gender
-          </label>
-          <Select 
+          </Label>
+          <RadioGroup 
             value={localHealthData.gender} 
             onValueChange={(value) => handleHealthDataChange('gender', value)}
+            className="flex flex-col space-y-2"
           >
-            <SelectTrigger className="col-span-3">
-              <SelectValue placeholder="Select gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Female">Female</SelectItem>
-              <SelectItem value="Male">Male</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
-            </SelectContent>
-          </Select>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="Female" id="female-edit" />
+              <Label htmlFor="female-edit" className="font-normal">Female</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="Male" id="male-edit" />
+              <Label htmlFor="male-edit" className="font-normal">Male</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="Other" id="other-edit" />
+              <Label htmlFor="other-edit" className="font-normal">Other</Label>
+            </div>
+          </RadioGroup>
         </div>
         
-        <div className="grid grid-cols-4 items-center gap-4">
-          <label htmlFor="birthdate" className="text-right">
+        <div>
+          <Label htmlFor="birthdate" className="block mb-2">
             Date of Birth
-          </label>
-          <div className="col-span-3">
+          </Label>
+          <div className="space-y-2">
             <Input
+              id="birthdate"
               type="date"
               value={dateInputValue}
               onChange={handleDateInputChange}
-              className="mb-2"
+              className="w-full"
             />
             <Popover>
               <PopoverTrigger asChild>
@@ -163,65 +171,69 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-4 items-center gap-4">
-          <label htmlFor="height" className="text-right">
-            Height
-          </label>
-          <div className="col-span-3 grid grid-cols-2 gap-2">
-            <Input
-              id="height"
-              value={localHealthData.height}
-              onChange={(e) => handleHealthDataChange('height', e.target.value)}
-            />
-            <Select 
-              value={localHealthData.heightUnit} 
-              onValueChange={(value) => handleHealthDataChange('heightUnit', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Unit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cm">cm</SelectItem>
-                <SelectItem value="in">in</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="height" className="block mb-2">
+              Height
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="height"
+                value={localHealthData.height}
+                onChange={(e) => handleHealthDataChange('height', e.target.value)}
+                className="flex-1"
+              />
+              <Select 
+                value={localHealthData.heightUnit} 
+                onValueChange={(value) => handleHealthDataChange('heightUnit', value)}
+              >
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cm">cm</SelectItem>
+                  <SelectItem value="in">in</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="weight" className="block mb-2">
+              Weight
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="weight"
+                value={localHealthData.weight}
+                onChange={(e) => handleHealthDataChange('weight', e.target.value)}
+                className="flex-1"
+              />
+              <Select 
+                value={localHealthData.weightUnit} 
+                onValueChange={(value) => handleHealthDataChange('weightUnit', value)}
+              >
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">kg</SelectItem>
+                  <SelectItem value="lbs">lbs</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         
-        <div className="grid grid-cols-4 items-center gap-4">
-          <label htmlFor="weight" className="text-right">
-            Weight
-          </label>
-          <div className="col-span-3 grid grid-cols-2 gap-2">
-            <Input
-              id="weight"
-              value={localHealthData.weight}
-              onChange={(e) => handleHealthDataChange('weight', e.target.value)}
-            />
-            <Select 
-              value={localHealthData.weightUnit} 
-              onValueChange={(value) => handleHealthDataChange('weightUnit', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Unit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kg">kg</SelectItem>
-                <SelectItem value="lbs">lbs</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-4 items-center gap-4">
-          <label htmlFor="diabetesType" className="text-right">
+        <div>
+          <Label htmlFor="diabetesType" className="block mb-2">
             Diabetes Type
-          </label>
+          </Label>
           <Select 
             value={localHealthData.diabetesType} 
             onValueChange={(value) => handleHealthDataChange('diabetesType', value)}
           >
-            <SelectTrigger className="col-span-3">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select diabetes type" />
             </SelectTrigger>
             <SelectContent>

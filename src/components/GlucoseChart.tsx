@@ -80,8 +80,8 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
       
       {chartData.length > 0 ? (
         <>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex space-x-2">
+          <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
+            <div className="flex flex-wrap gap-2">
               <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Avg: </span>
                 <span className="text-xs font-medium">{stats.avg} mg/dL</span>

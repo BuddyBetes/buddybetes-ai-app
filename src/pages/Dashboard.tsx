@@ -130,7 +130,7 @@ const Dashboard = () => {
           transition={{ delay: 0.3 }}
           className="bg-white rounded-xl shadow-sm p-4"
         >
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-800">Glucose Trend</h3>
             <button 
               className="text-buddy-600 text-sm font-medium flex items-center"
