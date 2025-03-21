@@ -31,6 +31,7 @@ const HealthData = () => {
 
       try {
         setLoading(true);
+        // Updated the query to handle the renamed database field (weight_unit)
         const { data, error } = await supabase
           .from('health_data')
           .select('gender, age, height, weight, weight_unit, diabetes_type')
