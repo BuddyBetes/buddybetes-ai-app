@@ -4,8 +4,9 @@ import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
 import { motion } from 'framer-motion';
-import { Activity, Calendar, Clock, ArrowUpRight } from 'lucide-react';
+import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Dashboard = () => {
   const { logs, getRecentLogs, getAverageGlucose } = useLogContext();
@@ -120,6 +121,14 @@ const Dashboard = () => {
           className="p-5 rounded-xl bg-white shadow-sm"
         >
           <h3 className="text-lg font-semibold mb-4 text-gray-800">AI Insights</h3>
+          
+          <Alert variant="default" className="mb-4 bg-gray-50 border-gray-200">
+            <AlertCircle className="h-4 w-4 text-gray-500 mr-2" />
+            <AlertDescription className="text-xs text-gray-600">
+              The AI is still learning and currently provides estimated insights. Accuracy will improve after at least 100 logs have been recorded.
+            </AlertDescription>
+          </Alert>
+          
           <div className="space-y-4">
             <div className="flex space-x-3 bg-gray-50 p-3 rounded-lg">
               <div className="pt-1">
