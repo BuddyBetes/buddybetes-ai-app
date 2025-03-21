@@ -40,6 +40,7 @@ export function useCameraInitialization({
 
   /**
    * Initialize video stream with the provided MediaStream
+   * Enhanced with more reliable video element handling
    */
   const initializeVideoStream = useCallback((mediaStream: MediaStream) => {
     console.log('Camera access granted successfully');
@@ -67,25 +68,44 @@ export function useCameraInitialization({
     }
     
     try {
-      videoRef.current.setAttribute('autoplay', 'true');
-      videoRef.current.setAttribute('playsinline', 'true');
-      videoRef.current.setAttribute('muted', 'true');
+      // Save current stream reference first to ensure we don't lose track of it
+      setStream(mediaStream);
       
-      videoRef.current.srcObject = mediaStream;
-      videoRef.current.muted = true;
+      // Apply video element attributes
+      const videoElement = videoRef.current;
+      videoElement.setAttribute('autoplay', 'true');
+      videoElement.setAttribute('playsinline', 'true');
+      videoElement.setAttribute('muted', 'true');
       
-      videoRef.current.onloadedmetadata = () => {
+      // Set srcObject and muted state
+      videoElement.srcObject = mediaStream;
+      videoElement.muted = true;
+      
+      // Handle video metadata loading
+      const onMetadataLoaded = () => {
         console.log('Video metadata loaded, playing video...');
+        
         if (videoRef.current) {
-          videoRef.current.play().catch(e => {
-            console.error('Error playing video:', e);
-            const playbackError = createPlaybackError('Could not play camera feed. Please try again or check browser settings.');
-            setErrorState(playbackError);
-          });
+          videoRef.current.play()
+            .catch(e => {
+              console.error('Error playing video:', e);
+              const playbackError = createPlaybackError('Could not play camera feed. Please try again or check browser settings.');
+              setErrorState(playbackError);
+            });
         }
       };
       
-      setStream(mediaStream);
+      // Remove any existing event listener to prevent duplicates
+      videoElement.removeEventListener('loadedmetadata', onMetadataLoaded);
+      
+      // Add event listener for metadata loading
+      videoElement.addEventListener('loadedmetadata', onMetadataLoaded);
+      
+      // If video already has metadata, trigger play immediately
+      if (videoElement.readyState >= 2) {
+        console.log('Video already has metadata, playing directly');
+        onMetadataLoaded();
+      }
     } catch (err) {
       console.error('Error setting up video element:', err);
       const setupError = {

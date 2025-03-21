@@ -36,6 +36,9 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
   const isMobile = useIsMobile();
   const constraints = useCameraConstraints();
   
+  // Added initialization lock to prevent multiple simultaneous init attempts
+  const initializationLock = useRef<boolean>(false);
+  
   // Use the refactored hooks
   const {
     stream, 
@@ -107,9 +110,18 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     }
   }, [videoElementReady]);
 
-  // Definition of initCamera
+  // Definition of initCamera with lock mechanism
   const initCamera = useCallback(async (errorTypeHint?: string) => {
+    // Prevent multiple simultaneous initialization attempts
+    if (initializationLock.current) {
+      console.log('Camera initialization already in progress, skipping');
+      return;
+    }
+    
     try {
+      // Set initialization lock
+      initializationLock.current = true;
+      
       console.log(`Starting camera initialization... ${errorTypeHint ? `After ${errorTypeHint} error` : ''} (Attempt ${retryAttempts + 1})`);
       setIsInitializing(true);
       
@@ -169,7 +181,7 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
             };
             setErrorState(videoMissingError);
           }
-        }, 100);
+        }, 300); // Increased delay to ensure DOM is ready
       } catch (err: any) {
         if (retryAttempts === 0 && !isRetrying && constraintsToUse === constraints.optimal) {
           console.log('Optimal constraints failed, trying fallback:', err);
@@ -185,7 +197,7 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
                 console.error("Video reference null during fallback initialization");
                 throw new Error("Video element not available");
               }
-            }, 100);
+            }, 300); // Increased delay for fallback
             return;
           } catch (fallbackErr) {
             console.error('Fallback camera access also failed:', fallbackErr);
@@ -201,7 +213,7 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
                   console.error("Video reference null during minimal initialization");
                   throw new Error("Video element not available");
                 }
-              }, 100);
+              }, 300); // Increased delay for minimal
               return;
             } catch (minimalErr) {
               console.error('All constraint options failed:', minimalErr);
@@ -218,6 +230,10 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
       setErrorState(cameraError);
     } finally {
       setIsInitializing(false);
+      // Release initialization lock with a short delay to prevent rapid successive calls
+      setTimeout(() => {
+        initializationLock.current = false;
+      }, 500);
     }
   }, [
     retryAttempts, 
@@ -238,8 +254,14 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
   // Store the current initCamera in the ref
   initCameraRef.current = initCamera;
 
-  // Function for manual retry
+  // Function for manual retry with debounce
   const manualRetry = useCallback(async () => {
+    // Prevent retry if initialization is already in progress
+    if (initializationLock.current) {
+      console.log('Manual camera retry skipped - initialization already in progress');
+      return;
+    }
+    
     console.log('Manual camera retry initiated');
     
     cleanupRetryTimeout();
@@ -249,13 +271,19 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     return initCamera();
   }, [initCamera, cleanupRetryTimeout, resetErrorState]);
 
-  // Effect to initialize camera when enabled
+  // Effect to initialize camera when enabled, with improved lifecycle management
   useEffect(() => {
+    let isActive = true; // Flag to track if this effect is still active
+    let checkInterval: number | null = null;
+    let timeoutTimer: number | null = null;
+    
     if (enabled) {
       console.log('Camera is enabled, initializing...');
       
       // Add a slight delay before initialization to ensure everything is ready
-      const timer = setTimeout(() => {
+      timeoutTimer = window.setTimeout(() => {
+        if (!isActive) return; // Check if component is still mounted
+        
         // Check if the video element is available before trying to initialize
         if (videoRef.current) {
           console.log('Video element is ready, proceeding with initialization');
@@ -263,17 +291,35 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
         } else {
           console.log('Video element not ready yet, waiting...');
           // Set up a polling mechanism to check for video element
-          const checkInterval = setInterval(() => {
+          checkInterval = window.setInterval(() => {
+            if (!isActive) {
+              // Clean up if component unmounted
+              if (checkInterval !== null) {
+                clearInterval(checkInterval);
+                checkInterval = null;
+              }
+              return;
+            }
+            
             if (videoRef.current) {
               console.log('Video element now available, initializing camera');
-              clearInterval(checkInterval);
+              if (checkInterval !== null) {
+                clearInterval(checkInterval);
+                checkInterval = null;
+              }
               initCamera();
             }
           }, 100);
           
           // Clean up interval after a reasonable timeout
-          setTimeout(() => {
-            clearInterval(checkInterval);
+          timeoutTimer = window.setTimeout(() => {
+            if (!isActive) return;
+            
+            if (checkInterval !== null) {
+              clearInterval(checkInterval);
+              checkInterval = null;
+            }
+            
             if (!videoRef.current) {
               console.error('Video element still not available after timeout');
               const timeoutError = {
@@ -288,19 +334,52 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
               setErrorState(timeoutError);
             }
           }, 5000);
-          
-          return () => {
-            clearInterval(checkInterval);
-          };
         }
       }, 300);
       
-      return () => clearTimeout(timer);
+      return () => {
+        // Mark effect as inactive to prevent state updates after unmount
+        isActive = false;
+        
+        // Clear all timers and intervals
+        if (timeoutTimer !== null) {
+          clearTimeout(timeoutTimer);
+          timeoutTimer = null;
+        }
+        
+        if (checkInterval !== null) {
+          clearInterval(checkInterval);
+          checkInterval = null;
+        }
+        
+        // Clean up resources
+        cleanupStream();
+        cleanupRetryTimeout();
+        
+        // Reset initialization lock on unmount
+        initializationLock.current = false;
+      };
     }
 
     return () => {
+      // Mark effect as inactive
+      isActive = false;
+      
+      // Clean up resources
       cleanupStream();
       cleanupRetryTimeout();
+      
+      // Clear timers
+      if (timeoutTimer !== null) {
+        clearTimeout(timeoutTimer);
+      }
+      
+      if (checkInterval !== null) {
+        clearInterval(checkInterval);
+      }
+      
+      // Reset initialization lock
+      initializationLock.current = false;
     };
   }, [enabled, isMobile, initCamera, cleanupStream, cleanupRetryTimeout, setErrorState]);
 
@@ -309,6 +388,7 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     return () => {
       cleanupStream();
       cleanupRetryTimeout();
+      initializationLock.current = false;
     };
   }, []);
 

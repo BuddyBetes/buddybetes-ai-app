@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useCamera } from '@/hooks/use-camera';
 import { useToast } from '@/hooks/use-toast';
 import CaptureButton from './CaptureButton';
@@ -23,6 +23,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   capturedImage = null
 }) => {
   const { toast } = useToast();
+  const componentMounted = useRef(true);
   
   const {
     videoRef,
@@ -43,13 +44,17 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   // Log when component mounts and unmounts for debugging
   useEffect(() => {
     console.log('CameraCapture component mounted');
+    componentMounted.current = true;
     
     return () => {
       console.log('CameraCapture component unmounted, cleaning up resources');
+      componentMounted.current = false;
     };
   }, []);
 
   const handleCaptureImage = () => {
+    if (!componentMounted.current) return;
+    
     const imageDataUrl = captureImage();
     if (imageDataUrl) {
       onCapture(imageDataUrl);
