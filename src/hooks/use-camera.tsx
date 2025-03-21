@@ -3,6 +3,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from './use-mobile';
 import { useToast } from './use-toast';
 import { useCameraConstraints, CameraConstraints } from '@/utils/cameraConstraints';
+import { 
+  CameraError, 
+  parseCameraError, 
+  handleCameraError, 
+  createCaptureError, 
+  createPlaybackError 
+} from '@/utils/cameraErrorHandler';
 
 interface UseCameraProps {
   enabled: boolean;
@@ -85,10 +92,22 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
         throw err;
       }
     } catch (err: any) {
-      handleCameraError(err);
+      const cameraError = parseCameraError(err);
+      setErrorState(cameraError);
     } finally {
       setIsInitializing(false);
     }
+  };
+
+  // Helper function to set error state from a camera error
+  const setErrorState = (cameraError: CameraError) => {
+    setError(cameraError.message);
+    
+    if (cameraError.isPermissionIssue) {
+      setPermissionDenied(true);
+    }
+    
+    handleCameraError(cameraError);
   };
 
   // Helper function to request camera access
@@ -117,7 +136,8 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
         if (videoRef.current) {
           videoRef.current.play().catch(e => {
             console.error('Error playing video:', e);
-            setError('Could not play camera feed. Please try again or check browser settings.');
+            const playbackError = createPlaybackError('Could not play camera feed. Please try again or check browser settings.');
+            setErrorState(playbackError);
           });
         }
       };
@@ -125,34 +145,13 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
       setStream(mediaStream);
     } else {
       console.error('Video reference is null');
-      setError('Camera initialization failed. Please reload the page and try again.');
-    }
-  };
-  
-  // Helper function to handle camera errors
-  const handleCameraError = (err: any) => {
-    console.error('Error accessing camera:', err);
-    
-    if (err instanceof DOMException && 
-        (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
-      setPermissionDenied(true);
-      setError('Camera access denied. Please allow camera access in your browser settings.');
-      toast({
-        title: "Camera access denied",
-        description: "Please allow camera access in your browser settings.",
-        variant: "destructive",
-      });
-    } else if (err instanceof DOMException && err.name === 'NotReadableError') {
-      setError('Camera is already in use by another application or tab. Please close other apps using your camera.');
-    } else if (err instanceof DOMException && err.name === 'OverconstrainedError') {
-      setError('Your device does not support the requested camera resolution or facing mode. Please try again with different settings.');
-    } else {
-      setError(`Could not access camera. ${err.message || 'Please try again with a different browser.'}`);
-      toast({
-        title: "Camera error",
-        description: "Could not access camera. Try reloading the page or using a different browser.",
-        variant: "destructive",
-      });
+      const initError = {
+        type: 'initialization' as const,
+        message: 'Camera initialization failed. Please reload the page and try again.',
+        isPermissionIssue: false,
+        suggestedAction: 'Reload the page and try again.'
+      };
+      setErrorState(initError);
     }
   };
 
@@ -190,11 +189,8 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
         return imageDataUrl;
       } catch (err) {
         console.error('Error capturing image:', err);
-        toast({
-          title: "Capture failed",
-          description: "Failed to capture image. Please try again.",
-          variant: "destructive",
-        });
+        const captureError = createCaptureError('Failed to capture image. Please try again.');
+        setErrorState(captureError);
       }
     }
     return null;
