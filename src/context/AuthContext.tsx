@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (countError) {
         console.error("Error checking health data count:", countError);
-        throw countError;
+        return false;
       }
       
       // If no records exist, onboarding is not completed
@@ -57,11 +56,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error getting most recent health data:", error);
-        throw error;
+        return false;
       }
       
       console.log("Found health data:", healthData);
@@ -73,26 +72,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && currentSession?.user) {
-          await checkOnboardingStatus(currentSession.user.id);
-        } else if (event === 'SIGNED_OUT') {
-          setHasCompletedOnboarding(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    const getInitialSession = async () => {
+    const initAuth = async () => {
       try {
+        console.log("Initializing authentication state");
         setLoading(true);
         setIsCheckingData(true);
+        
+        // FIRST set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, currentSession) => {
+            console.log("Auth state changed:", event);
+            
+            setSession(currentSession);
+            setUser(currentSession?.user ?? null);
+            
+            if (event === 'SIGNED_IN' && currentSession?.user) {
+              const onboardingStatus = await checkOnboardingStatus(currentSession.user.id);
+              setHasCompletedOnboarding(onboardingStatus);
+              setIsCheckingData(false);
+            } else if (event === 'SIGNED_OUT') {
+              setHasCompletedOnboarding(false);
+              setIsCheckingData(false);
+            }
+          }
+        );
+
+        // THEN check for existing session
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log("Initial session check:", initialSession ? "Session found" : "No session");
         
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
@@ -101,25 +108,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const onboardingStatus = await checkOnboardingStatus(initialSession.user.id);
           setHasCompletedOnboarding(onboardingStatus);
         }
+        
+        // Make sure we set loading to false even if there's no session
+        setLoading(false);
+        setIsCheckingData(false);
+        
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('Error initializing auth:', error);
         toast({
           title: "Error",
-          description: "Failed to retrieve your session. Please try again.",
+          description: "Failed to initialize authentication. Please refresh the page.",
           variant: "destructive",
         });
-      } finally {
+        
+        // Ensure we set loading to false even if there's an error
         setLoading(false);
         setIsCheckingData(false);
       }
     };
 
-    getInitialSession();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [toast]);
+    initAuth();
+  }, [toast]); // Only run once on component mount
 
   // Update the onboarding status in the database
   const updateOnboardingStatus = async (value: boolean) => {
