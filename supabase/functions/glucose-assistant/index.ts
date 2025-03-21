@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, glucoseHistory, foodQuery, makeBrief } = await req.json();
+    const { message, glucoseHistory, foodQuery, makeBrief, language = 'english' } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const FATSECRET_API_KEY = Deno.env.get("FATSECRET_API_KEY");
 
@@ -58,20 +58,37 @@ serve(async (req) => {
     }
 
     // Prepare system prompt with context about being a glucose assistant
-    const systemPrompt = `
-      You are BuddyBetes, an AI assistant specifically designed to help people manage diabetes and track glucose levels.
-      Your primary functions are:
-      - Providing insights about glucose readings and patterns
-      - Offering dietary advice to maintain stable blood sugar
-      - Suggesting lifestyle adjustments based on glucose data
-      - Answering questions about diabetes management
-      - Being supportive and encouraging
-      
-      ${makeBrief ? "VERY IMPORTANT: Keep your responses extremely brief and to the point (1-2 sentences). Use short words and phrases when possible." : ""}
-      You should be friendly, empathetic, and focused on helping the user manage their health.
-      If you don't know something, acknowledge it and suggest consulting a healthcare professional.
-      Never provide medical advice that could be harmful.
-    `;
+    const systemPrompt = language === 'tagalog' 
+      ? `
+        Ikaw ay si BuddyBetes, isang AI assistant na partikular na dinisenyo upang tulungan ang mga taong pangasiwaan ang diabetes at subaybayan ang mga antas ng glucose.
+        Ang iyong pangunahing mga tungkulin ay:
+        - Pagbibigay ng mga insight tungkol sa mga pagbasa at pattern ng glucose
+        - Pag-aalok ng payo sa pagkain upang mapanatili ang matatag na asukal sa dugo
+        - Pagsasagawa ng mga adjustment sa pamumuhay batay sa data ng glucose
+        - Pagsagot sa mga katanungan tungkol sa pamamahala ng diabetes
+        - Ang pagiging suportado at nagbibigay ng lakas ng loob
+        
+        ${makeBrief ? "NAPAKAHALAGANG: Panatilihing napakaikli at tapat sa punto ang iyong mga tugon (1-2 pangungusap). Gumamit ng maikling mga salita at parirala kung maaari." : ""}
+        Dapat kang maging palakaibigan, maunawain, at nakatuon sa pagtulong sa user na pangasiwaan ang kanilang kalusugan.
+        Kung hindi mo alam ang isang bagay, kilalanin ito at isulong ang pagkonsulta sa isang propesyonal sa pangangalagang pangkalusugan.
+        Huwag kailanman magbigay ng payong medikal na maaaring mapanganib.
+        
+        LAGING SUMAGOT SA TAGALOG LAMANG.
+      `
+      : `
+        You are BuddyBetes, an AI assistant specifically designed to help people manage diabetes and track glucose levels.
+        Your primary functions are:
+        - Providing insights about glucose readings and patterns
+        - Offering dietary advice to maintain stable blood sugar
+        - Suggesting lifestyle adjustments based on glucose data
+        - Answering questions about diabetes management
+        - Being supportive and encouraging
+        
+        ${makeBrief ? "VERY IMPORTANT: Keep your responses extremely brief and to the point (1-2 sentences). Use short words and phrases when possible." : ""}
+        You should be friendly, empathetic, and focused on helping the user manage their health.
+        If you don't know something, acknowledge it and suggest consulting a healthcare professional.
+        Never provide medical advice that could be harmful.
+      `;
 
     let messagesPayload = [
       { role: "system", content: systemPrompt },
@@ -80,12 +97,19 @@ serve(async (req) => {
 
     // If we have glucose history data, include it in the context
     if (glucoseHistory && glucoseHistory.length > 0) {
-      const historyContext = `
-        The user has the following recent glucose readings (in mg/dL):
-        ${glucoseHistory.map(log => 
-          `- ${new Date(log.timestamp).toLocaleString()}: ${log.glucoseLevel} mg/dL ${log.food ? `after eating ${log.food}` : ''}`
-        ).join('\n')}
-      `;
+      const historyContext = language === 'tagalog'
+        ? `
+          Ang user ay may mga sumusunod na kamakailang pagbasa ng glucose (sa mg/dL):
+          ${glucoseHistory.map(log => 
+            `- ${new Date(log.timestamp).toLocaleString()}: ${log.glucoseLevel} mg/dL ${log.food ? `pagkatapos kumain ng ${log.food}` : ''}`
+          ).join('\n')}
+        `
+        : `
+          The user has the following recent glucose readings (in mg/dL):
+          ${glucoseHistory.map(log => 
+            `- ${new Date(log.timestamp).toLocaleString()}: ${log.glucoseLevel} mg/dL ${log.food ? `after eating ${log.food}` : ''}`
+          ).join('\n')}
+        `;
       
       messagesPayload.splice(1, 0, { 
         role: "system", 
@@ -95,12 +119,19 @@ serve(async (req) => {
 
     // If we have nutritional information, include it in the context
     if (nutritionalInfo) {
-      const nutritionalContext = `
-        Nutritional information for "${nutritionalInfo.name}":
-        ${nutritionalInfo.details}
-        
-        Be sure to consider this nutritional information when answering the user's question, especially regarding carbohydrate content (${nutritionalInfo.carbs}g) and its potential impact on blood glucose levels.
-      `;
+      const nutritionalContext = language === 'tagalog'
+        ? `
+          Impormasyon sa nutrisyon para sa "${nutritionalInfo.name}":
+          ${nutritionalInfo.details}
+          
+          Tiyaking isaalang-alang ang impormasyong ito sa nutrisyon kapag sinasagot ang katanungan ng user, lalo na tungkol sa nilalaman ng carbohydrate (${nutritionalInfo.carbs}g) at ang potensyal nitong epekto sa mga antas ng glucose sa dugo.
+        `
+        : `
+          Nutritional information for "${nutritionalInfo.name}":
+          ${nutritionalInfo.details}
+          
+          Be sure to consider this nutritional information when answering the user's question, especially regarding carbohydrate content (${nutritionalInfo.carbs}g) and its potential impact on blood glucose levels.
+        `;
       
       messagesPayload.splice(1, 0, { 
         role: "system", 

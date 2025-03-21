@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Languages } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -11,6 +11,14 @@ const AIPreferences = () => {
   const { toast } = useToast();
   const { refreshInsights } = useGlucoseInsights();
   
+  // Initialize state from localStorage on component mount
+  useEffect(() => {
+    const storedPreference = localStorage.getItem('preferTagalog');
+    if (storedPreference === 'true') {
+      setIsTagalogEnabled(true);
+    }
+  }, []);
+
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
     visible: (i: number) => ({
@@ -33,8 +41,8 @@ const AIPreferences = () => {
     
     // Show confirmation toast
     toast({
-      title: checked ? "Language Changed" : "Language Changed",
-      description: checked ? "Insights will now be in Tagalog" : "Insights will now be in English",
+      title: checked ? "Nagbago ang Wika" : "Language Changed",
+      description: checked ? "Ang mga insights ay ibibigay na sa Tagalog" : "Insights will now be in English",
       variant: "default"
     });
   };
