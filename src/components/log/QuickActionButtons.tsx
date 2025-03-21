@@ -1,35 +1,40 @@
 
 import React from 'react';
-import { Plus, BarChart2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import ReminderButton from './ReminderButton';
+import { PlusCircle, Camera, Clock } from 'lucide-react';
 
-const QuickActionButtons = () => {
-  const navigate = useNavigate();
+interface QuickActionButtonsProps {
+  onScanFood: () => void;
+  onScanMeter: () => void;
+}
 
+const QuickActionButtons: React.FC<QuickActionButtonsProps> = ({ 
+  onScanFood,
+  onScanMeter
+}) => {
   return (
-    <div className="flex items-center gap-2 py-2">
-      <Button 
-        onClick={() => navigate('/add-log')}
-        size="sm" 
-        className="flex items-center gap-1.5"
+    <div className="grid grid-cols-3 gap-4">
+      <button
+        onClick={onScanFood}
+        className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm"
       >
-        <Plus size={16} />
-        <span>New Log</span>
-      </Button>
+        <Camera className="h-8 w-8 text-buddy-500 mb-2" />
+        <span className="text-sm font-medium">Scan Food</span>
+      </button>
       
-      <ReminderButton />
-      
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="flex items-center gap-1.5 ml-auto"
-        onClick={() => navigate('/dashboard')}
+      <button
+        onClick={onScanMeter}
+        className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm"
       >
-        <BarChart2 size={16} />
-        <span>Dashboard</span>
-      </Button>
+        <PlusCircle className="h-8 w-8 text-buddy-500 mb-2" />
+        <span className="text-sm font-medium">Scan Meter</span>
+      </button>
+      
+      <button
+        className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-sm"
+      >
+        <Clock className="h-8 w-8 text-buddy-500 mb-2" />
+        <span className="text-sm font-medium">Schedule</span>
+      </button>
     </div>
   );
 };
