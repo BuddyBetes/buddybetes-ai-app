@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LogProvider } from './context/LogContext';
 import Dashboard from './pages/Dashboard';
 import AddLog from './pages/AddLog';
+import Logs from './pages/Logs';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import Onboarding from './pages/Onboarding';
@@ -19,6 +20,8 @@ import ResetPassword from './pages/auth/ResetPassword';
 import EmailConfirmed from './pages/auth/EmailConfirmed';
 import Profile from './pages/Profile';
 import Assistant from './pages/Assistant';
+import Settings from './pages/settings/Settings';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const PageTransition: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -80,11 +83,21 @@ const AppContent: React.FC = () => {
         }
       />
       <Route
-        path="/addlog"
+        path="/add-log"
         element={
           <ProtectedRoute>
             <PageTransition>
               <AddLog />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/logs"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <Logs />
             </PageTransition>
           </ProtectedRoute>
         }
@@ -102,7 +115,7 @@ const AppContent: React.FC = () => {
       <Route
         path="/onboarding"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requireOnboarding={false}>
             <PageTransition>
               <Onboarding />
             </PageTransition>
@@ -115,6 +128,16 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <PageTransition>
               <Profile />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <Settings />
             </PageTransition>
           </ProtectedRoute>
         }
@@ -152,8 +175,11 @@ const AppContent: React.FC = () => {
   );
 };
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute: React.FC<{ children: React.ReactNode; requireOnboarding?: boolean }> = ({ 
+  children,
+  requireOnboarding = true,
+}) => {
+  const { isAuthenticated, loading, hasCompletedOnboarding } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -162,6 +188,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!isAuthenticated) {
     return <Navigate to="/signin" state={{ from: location }} replace />;
+  }
+  
+  // Only enforce onboarding if explicitly required
+  if (requireOnboarding && !hasCompletedOnboarding) {
+    return <Navigate to="/onboarding" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
