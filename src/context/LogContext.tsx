@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface GlucoseLog {
   id: string;
   timestamp: Date;
-  glucoseLevel: number;
+  glucoseLevel: number | undefined;
   food?: string;
   mealContext?: 'before' | 'after' | 'fasting';
   medication?: string;
@@ -149,7 +149,7 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
         
         toast({
           title: "Log added successfully",
-          description: `Glucose level: ${log.glucoseLevel} added to your logs`,
+          description: log.glucoseLevel ? `Glucose level: ${log.glucoseLevel} added to your logs` : `Food log added successfully`,
         });
       }
     } catch (error) {

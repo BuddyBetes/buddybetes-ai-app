@@ -81,10 +81,10 @@ const ProcessingService: React.FC<ProcessingServiceProps> = ({
           duration: 5000,
         });
         
-        // Add food data to logs
+        // Add food data to logs with undefined glucose level instead of 0
         await addLog({
           timestamp: new Date(),
-          glucoseLevel: 0, // Default value since it's required
+          glucoseLevel: undefined, // Changed from 0 to undefined
           food: foodItem.name,
           notes: `Estimated: ${foodItem.carbs}g carbs, ${foodItem.calories} calories`
         });
@@ -131,7 +131,7 @@ const ProcessingService: React.FC<ProcessingServiceProps> = ({
         
         await addLog({
           timestamp: new Date(),
-          glucoseLevel: 0, // Default value since it's required
+          glucoseLevel: undefined, // Changed from 0 to undefined
           food: randomFood.name,
           notes: `Estimated: ${randomFood.carbs}g carbs, ${randomFood.calories} calories`
         });

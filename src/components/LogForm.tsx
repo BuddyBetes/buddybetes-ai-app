@@ -21,7 +21,16 @@ const LogForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!glucoseLevel || isNaN(Number(glucoseLevel))) {
+    if (!glucoseLevel && !food.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter either a glucose level or food information",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (glucoseLevel && isNaN(Number(glucoseLevel))) {
       toast({
         title: "Invalid glucose level",
         description: "Please enter a valid number for glucose level",
@@ -32,7 +41,7 @@ const LogForm: React.FC = () => {
     
     const newLog = {
       timestamp: new Date(),
-      glucoseLevel: Number(glucoseLevel),
+      glucoseLevel: glucoseLevel ? Number(glucoseLevel) : undefined,
       food: food.trim() || undefined,
       mealContext,
       notes: notes.trim() || undefined,
