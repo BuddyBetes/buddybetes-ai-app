@@ -129,7 +129,24 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         setError('Camera is already in use by another application or tab. Please close other apps using your camera.');
       } else if (err instanceof DOMException && err.name === 'OverconstrainedError') {
         // If 'exact: environment' fails, try without 'exact' constraint
-        if (isMobile && JSON.stringify(constraints).includes('exact')) {
+        // We need to define the current constraints within this scope for the check below
+        const currentConstraints = isMobile ? {
+          audio: false,
+          video: { 
+            facingMode: { exact: 'environment' },
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 }
+          }
+        } : {
+          audio: false,
+          video: { 
+            facingMode: 'user',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        };
+        
+        if (isMobile && JSON.stringify(currentConstraints).includes('exact')) {
           console.log('Retrying with less strict constraints...');
           const fallbackConstraints = {
             audio: false,
