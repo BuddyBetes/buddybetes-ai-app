@@ -1,5 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 import CaptureButton from './CaptureButton';
 import CaptureInstructions from './CaptureInstructions';
 import CameraView from './CameraView';
@@ -27,6 +29,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [flashEffect, setFlashEffect] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   // Initialize camera
   useEffect(() => {
@@ -34,28 +38,35 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       try {
         setIsInitializing(true);
         
-        // Request camera permission
+        // Request camera permission with appropriate constraints for mobile
         const constraints = {
           video: { 
             facingMode: 'environment', 
-            width: { ideal: 1920 }, 
-            height: { ideal: 1080 } 
+            width: { ideal: isMobile ? 1280 : 1920 }, 
+            height: { ideal: isMobile ? 720 : 1080 }
           },
           audio: false
         };
         
-        console.log('Requesting camera access...');
+        console.log('Requesting camera access with constraints:', constraints);
         const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         console.log('Camera access granted');
         
         if (videoRef.current) {
+          console.log('Setting video source object');
           videoRef.current.srcObject = mediaStream;
+          
+          // Ensure video plays after metadata is loaded
           videoRef.current.onloadedmetadata = () => {
-            videoRef.current?.play().catch(e => {
-              console.error('Error playing video:', e);
-              setError('Could not play camera feed. Please check your browser settings.');
-            });
+            console.log('Video metadata loaded, playing video');
+            if (videoRef.current) {
+              videoRef.current.play().catch(e => {
+                console.error('Error playing video:', e);
+                setError('Could not play camera feed. Please check your browser settings.');
+              });
+            }
           };
+          
           setStream(mediaStream);
         }
         
@@ -67,8 +78,18 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
           setPermissionDenied(true);
           setError('Camera access denied. Please allow camera access in your browser settings.');
+          toast({
+            title: "Camera access denied",
+            description: "Please allow camera access in your browser settings.",
+            variant: "destructive",
+          });
         } else {
-          setError('Could not access camera. Please check if another app is using your camera.');
+          setError('Could not access camera. Please check if another app is using your camera or try a different browser.');
+          toast({
+            title: "Camera error",
+            description: "Could not access camera. Try reloading the page or using a different browser.",
+            variant: "destructive",
+          });
         }
         
         setIsInitializing(false);
@@ -88,7 +109,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         });
       }
     };
-  }, [capturedImage]);
+  }, [capturedImage, isMobile, toast]);
 
   const captureImage = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -114,8 +135,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     if (context) {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Get image data URL
-      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      // Get image data URL with improved quality
+      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
       console.log('Image captured successfully');
       onCapture(imageDataUrl);
     }
@@ -145,6 +166,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         error={error}
         flashEffect={flashEffect}
         permissionDenied={permissionDenied}
+        isMobile={isMobile}
       />
       
       {/* Controls */}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera } from 'lucide-react';
+import { X, Camera, RefreshCw } from 'lucide-react';
 import CaptureOverlay from './CaptureOverlay';
 
 interface CameraViewProps {
@@ -14,6 +14,7 @@ interface CameraViewProps {
   error: string | null;
   flashEffect: boolean;
   permissionDenied?: boolean;
+  isMobile?: boolean;
 }
 
 const CameraView: React.FC<CameraViewProps> = ({ 
@@ -25,8 +26,14 @@ const CameraView: React.FC<CameraViewProps> = ({
   isInitializing,
   error,
   flashEffect,
-  permissionDenied = false
+  permissionDenied = false,
+  isMobile = false
 }) => {
+  // Function to refresh the page
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="relative flex-1 flex items-center justify-center overflow-hidden">
       {isInitializing ? (
@@ -41,11 +48,30 @@ const CameraView: React.FC<CameraViewProps> = ({
             <p className="text-white/80">{error}</p>
           </div>
           
-          {permissionDenied && (
+          {permissionDenied ? (
             <div className="mt-4">
               <p className="text-white/80 mb-4">
                 You need to allow camera access in your browser settings to use this feature.
               </p>
+              <Button 
+                variant="outline" 
+                className="bg-white/10 text-white border-white/30"
+                onClick={onClose}
+              >
+                Close Camera
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-col items-center space-y-4">
+              <Button 
+                variant="outline" 
+                className="bg-white/10 text-white border-white/30"
+                onClick={handleRefresh}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry Camera
+              </Button>
+              
               <Button 
                 variant="outline" 
                 className="bg-white/10 text-white border-white/30"
@@ -63,7 +89,8 @@ const CameraView: React.FC<CameraViewProps> = ({
             autoPlay
             playsInline
             muted
-            className="absolute inset-0 w-full h-full object-cover"
+            className={`absolute inset-0 w-full h-full ${isMobile ? 'object-cover' : 'object-contain'}`}
+            style={{ transform: isMobile ? 'scaleX(1)' : 'none' }}
           />
           <CaptureOverlay mode={mode} />
           <canvas ref={canvasRef} className="hidden" />
