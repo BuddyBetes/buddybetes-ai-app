@@ -13,6 +13,8 @@ export type CameraErrorType =
   | 'initialization'
   | 'playback'
   | 'capture'
+  | 'https_required'
+  | 'insecure_context'
   | 'unknown';
 
 // Camera error details
@@ -33,6 +35,18 @@ export interface CameraError {
  */
 export function parseCameraError(err: any): CameraError {
   console.error('Camera error:', err);
+  
+  // Check for secure context
+  if (window.isSecureContext === false) {
+    return {
+      type: 'insecure_context',
+      message: 'Camera requires a secure context (HTTPS). Please load this site using HTTPS.',
+      technicalDetails: 'Security error: window.isSecureContext is false',
+      isPermissionIssue: false,
+      suggestedAction: 'Load the site using HTTPS.',
+      isRetryable: false
+    };
+  }
   
   // Handle DOM exceptions
   if (err instanceof DOMException) {
@@ -80,6 +94,39 @@ export function parseCameraError(err: any): CameraError {
           isRetryable: true,
           retryDelay: 2000 // Retry after 2 seconds
         };
+        
+      case 'AbortError':
+        return {
+          type: 'device_in_use',
+          message: 'Camera access was aborted. This may be because the camera is already in use.',
+          technicalDetails: `${err.name}: ${err.message}`,
+          isPermissionIssue: false,
+          suggestedAction: 'Close other applications using your camera and try again.',
+          isRetryable: true,
+          retryDelay: 3000
+        };
+        
+      case 'SecurityError':
+        return {
+          type: 'https_required',
+          message: 'Camera access requires a secure connection (HTTPS).',
+          technicalDetails: `${err.name}: ${err.message}`,
+          isPermissionIssue: false,
+          suggestedAction: 'Use the application on a secure connection (HTTPS).',
+          isRetryable: false
+        };
+        
+      case 'TypeError':
+        // This can happen if constraints are invalid
+        return {
+          type: 'initialization',
+          message: 'Invalid camera settings. Please try again with different settings.',
+          technicalDetails: `${err.name}: ${err.message}`,
+          isPermissionIssue: false,
+          suggestedAction: 'Reload the page and try again with default settings.',
+          isRetryable: true,
+          retryDelay: 1000
+        };
     }
   }
   
@@ -91,6 +138,18 @@ export function parseCameraError(err: any): CameraError {
       technicalDetails: err.message,
       isPermissionIssue: false,
       suggestedAction: 'Try using a modern browser like Chrome, Firefox, or Safari.',
+      isRetryable: false
+    };
+  }
+  
+  // Check for https specifically
+  if (err?.message?.includes('secure origin') || (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost')) {
+    return {
+      type: 'https_required',
+      message: 'Camera access requires HTTPS. Please use a secure connection.',
+      technicalDetails: err?.message || 'Non-secure context detected',
+      isPermissionIssue: false,
+      suggestedAction: 'Load the application using HTTPS instead of HTTP.',
       isRetryable: false
     };
   }
@@ -149,6 +208,9 @@ function getCameraErrorTitle(errorType: CameraErrorType): string {
       return 'Camera playback error';
     case 'capture':
       return 'Image capture failed';
+    case 'https_required':
+    case 'insecure_context':
+      return 'Secure connection required';
     default:
       return 'Camera error';
   }

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Camera, RefreshCw, Smartphone } from 'lucide-react';
 import CaptureOverlay from './CaptureOverlay';
@@ -36,6 +36,7 @@ const CameraView: React.FC<CameraViewProps> = ({
   isRetrying = false
 }) => {
   const [manualRetryAttempts, setManualRetryAttempts] = useState(0);
+  const [isRetryingManually, setIsRetryingManually] = useState(false);
 
   // Function to refresh the page
   const handleRefresh = () => {
@@ -43,10 +44,27 @@ const CameraView: React.FC<CameraViewProps> = ({
   };
 
   // Function to retry camera connection
-  const handleRetryCamera = () => {
+  const handleRetryCamera = async () => {
     setManualRetryAttempts(prev => prev + 1);
-    onRetryCamera();
+    setIsRetryingManually(true);
+    
+    try {
+      console.log('Attempting manual camera retry...');
+      await onRetryCamera();
+      console.log('Manual camera retry completed');
+    } catch (err) {
+      console.error('Manual camera retry failed:', err);
+    } finally {
+      setIsRetryingManually(false);
+    }
   };
+
+  // Reset retry state if error is cleared
+  useEffect(() => {
+    if (!error) {
+      setManualRetryAttempts(0);
+    }
+  }, [error]);
 
   // Function for iOS-specific camera help
   const showIOSHelp = () => {
@@ -61,6 +79,23 @@ const CameraView: React.FC<CameraViewProps> = ({
           <li>Make sure camera access is enabled in Settings &gt; Safari &gt; Camera</li>
           <li>Try using the main Safari browser (not in-app browsers)</li>
           <li>Ensure iOS is updated to the latest version</li>
+        </ul>
+      </div>
+    );
+  };
+
+  const showAndroidHelp = () => {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    
+    if (!isAndroid) return null;
+    
+    return (
+      <div className="mt-4 p-3 bg-yellow-900/50 rounded-lg text-left">
+        <p className="text-yellow-300 font-semibold mb-1">Android Tips:</p>
+        <ul className="text-white/80 text-sm list-disc pl-4 space-y-1">
+          <li>Make sure camera permissions are granted in your browser settings</li>
+          <li>Try using Chrome or Firefox for better compatibility</li>
+          <li>Check that no other apps are using the camera</li>
         </ul>
       </div>
     );
@@ -98,15 +133,17 @@ const CameraView: React.FC<CameraViewProps> = ({
               </p>
               
               {showIOSHelp()}
+              {showAndroidHelp()}
               
               <div className="flex justify-center space-x-3 mt-4">
                 <Button 
                   variant="outline" 
                   className="bg-white/10 text-white border-white/30"
                   onClick={handleRetryCamera}
+                  disabled={isRetryingManually}
                 >
                   <Camera className="mr-2 h-4 w-4" />
-                  Try Again
+                  {isRetryingManually ? 'Trying...' : 'Try Again'}
                 </Button>
                 
                 <Button 
@@ -124,10 +161,10 @@ const CameraView: React.FC<CameraViewProps> = ({
                 variant="outline" 
                 className="bg-white/10 text-white border-white/30"
                 onClick={handleRetryCamera}
-                disabled={isRetrying}
+                disabled={isRetrying || isRetryingManually}
               >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                {isRetrying ? 'Retrying...' : 'Retry Camera'}
+                <RefreshCw className={`mr-2 h-4 w-4 ${isRetrying || isRetryingManually ? 'animate-spin' : ''}`} />
+                {isRetrying || isRetryingManually ? 'Retrying...' : 'Retry Camera'}
               </Button>
               
               {(manualRetryAttempts >= 2 || retryAttempts >= 2) && (
@@ -142,6 +179,7 @@ const CameraView: React.FC<CameraViewProps> = ({
               )}
               
               {showIOSHelp()}
+              {showAndroidHelp()}
               
               <Button 
                 variant="outline" 

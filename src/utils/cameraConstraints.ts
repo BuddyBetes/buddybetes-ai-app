@@ -8,9 +8,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export interface CameraConstraints {
   audio: boolean;
   video: {
-    facingMode: string | { exact: string };
-    width: { ideal: number; max?: number };
-    height: { ideal: number; max?: number };
+    facingMode: string | { exact?: string };
+    width?: { ideal: number; max?: number };
+    height?: { ideal: number; max?: number };
   };
 }
 
@@ -54,7 +54,7 @@ export function getFallbackConstraints(isMobile: boolean): CameraConstraints {
     return {
       audio: false,
       video: { 
-        facingMode: 'environment',
+        facingMode: 'environment', // Removed the 'exact' constraint
         width: { ideal: 1280 },
         height: { ideal: 720 }
       }
@@ -81,8 +81,8 @@ export function getMinimalConstraints(): CameraConstraints {
     audio: false,
     video: { 
       facingMode: 'environment',
-      width: { ideal: 640 },
-      height: { ideal: 480 }
+      // Some older devices might have issues with explicit width/height constraints
+      // Using truly minimal constraints can help
     }
   };
 }
