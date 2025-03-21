@@ -12,6 +12,7 @@ interface HealthDataEditProps {
     age: string;
     height: string;
     weight: string;
+    weightUnit?: string;
     diabetesType: string;
   };
   setHealthData: React.Dispatch<React.SetStateAction<{
@@ -19,13 +20,17 @@ interface HealthDataEditProps {
     age: string;
     height: string;
     weight: string;
+    weightUnit?: string;
     diabetesType: string;
   }>>;
 }
 
 const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
   const { toast } = useToast();
-  const [localHealthData, setLocalHealthData] = useState({ ...healthData });
+  const [localHealthData, setLocalHealthData] = useState({ 
+    ...healthData,
+    weightUnit: healthData.weightUnit || 'lbs' 
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   const handleHealthDataChange = (field: string, value: string) => {
@@ -104,14 +109,27 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <label htmlFor="weight" className="text-right">
-            Weight (lbs)
+            Weight
           </label>
-          <Input
-            id="weight"
-            value={localHealthData.weight}
-            onChange={(e) => handleHealthDataChange('weight', e.target.value)}
-            className="col-span-3"
-          />
+          <div className="col-span-3 grid grid-cols-2 gap-2">
+            <Input
+              id="weight"
+              value={localHealthData.weight}
+              onChange={(e) => handleHealthDataChange('weight', e.target.value)}
+            />
+            <Select 
+              value={localHealthData.weightUnit} 
+              onValueChange={(value) => handleHealthDataChange('weightUnit', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Unit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lbs">lbs</SelectItem>
+                <SelectItem value="kg">kg</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div className="grid grid-cols-4 items-center gap-4">
           <label htmlFor="diabetesType" className="text-right">

@@ -9,6 +9,7 @@ interface HealthDataType {
   age: string;
   height: string;
   weight: string;
+  weightUnit: string;
   diabetesType: string;
 }
 
@@ -19,6 +20,7 @@ const HealthData = () => {
     age: '',
     height: '',
     weight: '',
+    weightUnit: 'lbs',
     diabetesType: ''
   });
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ const HealthData = () => {
         setLoading(true);
         const { data, error } = await supabase
           .from('health_data')
-          .select('gender, age, height, weight, diabetes_type')
+          .select('gender, age, height, weight, weight_unit, diabetes_type')
           .eq('user_id', user.id)
           .single();
 
@@ -43,6 +45,7 @@ const HealthData = () => {
             age: data.age || '',
             height: data.height || '',
             weight: data.weight || '',
+            weightUnit: data.weight_unit || 'lbs',
             diabetesType: data.diabetes_type || ''
           });
         }
@@ -67,6 +70,7 @@ const HealthData = () => {
           age: newData.age,
           height: newData.height,
           weight: newData.weight,
+          weight_unit: newData.weightUnit,
           diabetes_type: newData.diabetesType,
           updated_at: new Date().toISOString()
         })

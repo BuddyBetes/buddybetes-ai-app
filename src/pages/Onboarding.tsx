@@ -33,6 +33,7 @@ const Onboarding = () => {
     age: '',
     height: '',
     weight: '',
+    weightUnit: 'lbs',
     diabetesType: '',
   });
 
@@ -74,7 +75,7 @@ const Onboarding = () => {
         })
         .eq('id', user.id);
       
-      // Insert health data
+      // Insert health data with weightUnit
       await supabase
         .from('health_data')
         .insert({
@@ -83,6 +84,7 @@ const Onboarding = () => {
           age: healthData.age,
           height: healthData.height,
           weight: healthData.weight,
+          weight_unit: healthData.weightUnit,
           diabetes_type: healthData.diabetesType,
           completed_onboarding: true,
         });

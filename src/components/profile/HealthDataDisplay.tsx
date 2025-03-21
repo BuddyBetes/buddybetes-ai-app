@@ -11,6 +11,7 @@ interface HealthDataDisplayProps {
     age: string;
     height: string;
     weight: string;
+    weightUnit: string;
     diabetesType: string;
   };
   setHealthData: React.Dispatch<React.SetStateAction<{
@@ -18,6 +19,7 @@ interface HealthDataDisplayProps {
     age: string;
     height: string;
     weight: string;
+    weightUnit: string;
     diabetesType: string;
   }>>;
 }
@@ -65,7 +67,7 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
         </div>
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Weight</div>
-          <div className="font-medium">{healthData.weight} lbs</div>
+          <div className="font-medium">{healthData.weight} {healthData.weightUnit}</div>
         </div>
         <div className="col-span-2 p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Diabetes Type</div>

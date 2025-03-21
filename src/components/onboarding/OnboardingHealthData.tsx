@@ -20,6 +20,7 @@ interface HealthData {
   age: string;
   height: string;
   weight: string;
+  weightUnit: string;
   diabetesType: string;
 }
 
@@ -33,6 +34,7 @@ const formSchema = z.object({
   age: z.string().min(1, 'Age is required'),
   height: z.string().min(1, 'Height is required'),
   weight: z.string().min(1, 'Weight is required'),
+  weightUnit: z.string().min(1, 'Please select weight unit'),
   diabetesType: z.string().min(1, 'Please select your diabetes type'),
 });
 
@@ -47,6 +49,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
       age: healthData.age,
       height: healthData.height,
       weight: healthData.weight,
+      weightUnit: healthData.weightUnit || 'lbs',
       diabetesType: healthData.diabetesType,
     },
   });
@@ -59,6 +62,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
         age: value.age || '',
         height: value.height || '',
         weight: value.weight || '',
+        weightUnit: value.weightUnit || 'lbs',
         diabetesType: value.diabetesType || '',
       });
     });
@@ -140,24 +144,51 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
             )}
           />
           
-          <FormField
-            control={form.control}
-            name="weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-700 font-medium">Weight (in lbs)</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g., 150" 
-                    type="number" 
-                    {...field} 
-                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
-                  />
-                </FormControl>
-                <FormMessage className="text-red-500" />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="weight"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 font-medium">Weight</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter weight" 
+                      type="number" 
+                      {...field} 
+                      className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-500" />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="weightUnit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 font-medium">Unit</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="rounded-lg">
+                      <SelectItem value="lbs">lbs</SelectItem>
+                      <SelectItem value="kg">kg</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-red-500" />
+                </FormItem>
+              )}
+            />
+          </div>
           
           <FormField
             control={form.control}
