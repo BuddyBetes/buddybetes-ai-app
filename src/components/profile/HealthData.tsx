@@ -8,6 +8,7 @@ interface HealthDataType {
   gender: string;
   age: string;
   height: string;
+  heightUnit: string;
   weight: string;
   weightUnit: string;
   diabetesType: string;
@@ -19,6 +20,7 @@ const HealthData = () => {
     gender: '',
     age: '',
     height: '',
+    heightUnit: 'cm',
     weight: '',
     weightUnit: 'lbs',
     diabetesType: ''
@@ -31,10 +33,10 @@ const HealthData = () => {
 
       try {
         setLoading(true);
-        // Updated the query to handle the renamed database field (weight_unit)
+        // Query includes both height_unit and weight_unit fields
         const { data, error } = await supabase
           .from('health_data')
-          .select('gender, age, height, weight, weight_unit, diabetes_type')
+          .select('gender, age, height, height_unit, weight, weight_unit, diabetes_type')
           .eq('user_id', user.id)
           .single();
 
@@ -45,6 +47,7 @@ const HealthData = () => {
             gender: data.gender || '',
             age: data.age || '',
             height: data.height || '',
+            heightUnit: data.height_unit || 'cm',
             weight: data.weight || '',
             weightUnit: data.weight_unit || 'lbs',
             diabetesType: data.diabetes_type || ''
@@ -70,6 +73,7 @@ const HealthData = () => {
           gender: newData.gender,
           age: newData.age,
           height: newData.height,
+          height_unit: newData.heightUnit,
           weight: newData.weight,
           weight_unit: newData.weightUnit,
           diabetes_type: newData.diabetesType,

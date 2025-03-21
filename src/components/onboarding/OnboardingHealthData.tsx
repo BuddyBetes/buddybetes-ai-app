@@ -19,6 +19,7 @@ interface HealthData {
   gender: string;
   age: string;
   height: string;
+  heightUnit: string;
   weight: string;
   weightUnit: string;
   diabetesType: string;
@@ -33,6 +34,7 @@ const formSchema = z.object({
   gender: z.string().min(1, 'Please select your gender'),
   age: z.string().min(1, 'Age is required'),
   height: z.string().min(1, 'Height is required'),
+  heightUnit: z.string().min(1, 'Please select height unit'),
   weight: z.string().min(1, 'Weight is required'),
   weightUnit: z.string().min(1, 'Please select weight unit'),
   diabetesType: z.string().min(1, 'Please select your diabetes type'),
@@ -48,6 +50,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
       gender: healthData.gender,
       age: healthData.age,
       height: healthData.height,
+      heightUnit: healthData.heightUnit || 'cm',
       weight: healthData.weight,
       weightUnit: healthData.weightUnit || 'lbs',
       diabetesType: healthData.diabetesType,
@@ -61,6 +64,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
         gender: value.gender || '',
         age: value.age || '',
         height: value.height || '',
+        heightUnit: value.heightUnit || 'cm',
         weight: value.weight || '',
         weightUnit: value.weightUnit || 'lbs',
         diabetesType: value.diabetesType || '',
@@ -126,23 +130,51 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
             )}
           />
           
-          <FormField
-            control={form.control}
-            name="height"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-700 font-medium">Height (in inches or cm)</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g., 5'7 or 170cm" 
-                    {...field} 
-                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
-                  />
-                </FormControl>
-                <FormMessage className="text-red-500" />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="height"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 font-medium">Height</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter height" 
+                      type="number" 
+                      {...field} 
+                      className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-500" />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="heightUnit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-700 font-medium">Unit</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="rounded-lg">
+                      <SelectItem value="cm">cm</SelectItem>
+                      <SelectItem value="in">in</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-red-500" />
+                </FormItem>
+              )}
+            />
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <FormField

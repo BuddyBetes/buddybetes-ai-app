@@ -14,6 +14,7 @@ interface OnboardingContentProps {
     gender: string;
     age: string;
     height: string;
+    heightUnit: string;
     weight: string;
     weightUnit: string;
     diabetesType: string;
@@ -26,6 +27,7 @@ interface OnboardingContentProps {
     gender: string;
     age: string;
     height: string;
+    heightUnit: string;
     weight: string;
     weightUnit: string;
     diabetesType: string;

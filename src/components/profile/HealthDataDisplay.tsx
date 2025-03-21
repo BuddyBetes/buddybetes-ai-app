@@ -10,6 +10,7 @@ interface HealthDataDisplayProps {
     gender: string;
     age: string;
     height: string;
+    heightUnit: string;
     weight: string;
     weightUnit: string;
     diabetesType: string;
@@ -18,6 +19,7 @@ interface HealthDataDisplayProps {
     gender: string;
     age: string;
     height: string;
+    heightUnit: string;
     weight: string;
     weightUnit: string;
     diabetesType: string;
@@ -63,7 +65,7 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
         </div>
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Height</div>
-          <div className="font-medium">{healthData.height}</div>
+          <div className="font-medium">{healthData.height} {healthData.heightUnit}</div>
         </div>
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Weight</div>
