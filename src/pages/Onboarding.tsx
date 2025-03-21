@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -49,20 +50,22 @@ const Onboarding = () => {
       try {
         setLoading(true);
         
-        // Check profile data
+        // Check profile data - use limit(1) and maybeSingle() to avoid multiple row errors
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('first_name, last_name')
           .eq('id', user.id)
+          .limit(1)
           .maybeSingle();
           
         if (profileError) throw profileError;
         
-        // Check health data
+        // Check health data - use limit(1) and maybeSingle() to avoid multiple row errors
         const { data: userHealthData, error: healthError } = await supabase
           .from('health_data')
           .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type')
           .eq('user_id', user.id)
+          .limit(1)
           .maybeSingle();
           
         if (healthError) throw healthError;
@@ -70,8 +73,8 @@ const Onboarding = () => {
         // If we have both profile and essential health data, we can mark onboarding as complete
         const hasProfileData = profileData?.first_name && profileData?.last_name;
         const hasEssentialHealthData = userHealthData?.gender && userHealthData?.birthdate && 
-                                       userHealthData?.height && userHealthData?.weight && 
-                                       userHealthData?.diabetes_type;
+                                      userHealthData?.height && userHealthData?.weight && 
+                                      userHealthData?.diabetes_type;
         
         if (hasProfileData && hasEssentialHealthData) {
           // User has already completed onboarding with all essential data
@@ -87,10 +90,19 @@ const Onboarding = () => {
           }
           
           if (userHealthData) {
+            // Make sure height is stored as a valid numeric string, not with units
+            let height = userHealthData.height || '';
+            if (height && !isNaN(Number(height))) {
+              height = height.toString();
+            } else {
+              // If height contains units or is not numeric, reset it
+              height = '';
+            }
+            
             setHealthData({
               gender: userHealthData.gender || '',
               birthdate: userHealthData.birthdate ? new Date(userHealthData.birthdate) : undefined,
-              height: userHealthData.height || '',
+              height: height,
               heightUnit: userHealthData.height_unit || 'cm',
               weight: userHealthData.weight || '',
               weightUnit: userHealthData.weight_unit || 'lbs',
@@ -176,21 +188,50 @@ const Onboarding = () => {
         })
         .eq('id', user.id);
       
-      // Insert health data with heightUnit and weightUnit and birthdate
-      await supabase
+      // Check if health data already exists
+      const { data: existingHealthData, error: checkError } = await supabase
         .from('health_data')
-        .insert({
-          user_id: user.id,
-          gender: healthData.gender,
-          age: age,
-          birthdate: healthData.birthdate ? healthData.birthdate.toISOString() : null,
-          height: healthData.height,
-          height_unit: healthData.heightUnit,
-          weight: healthData.weight,
-          weight_unit: healthData.weightUnit,
-          diabetes_type: healthData.diabetesType,
-          completed_onboarding: true,
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+      
+      if (checkError) throw checkError;
+      
+      if (existingHealthData) {
+        // Update existing health data
+        await supabase
+          .from('health_data')
+          .update({
+            gender: healthData.gender,
+            age: age,
+            birthdate: healthData.birthdate ? healthData.birthdate.toISOString() : null,
+            height: healthData.height,
+            height_unit: healthData.heightUnit,
+            weight: healthData.weight,
+            weight_unit: healthData.weightUnit,
+            diabetes_type: healthData.diabetesType,
+            completed_onboarding: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+      } else {
+        // Insert new health data
+        await supabase
+          .from('health_data')
+          .insert({
+            user_id: user.id,
+            gender: healthData.gender,
+            age: age,
+            birthdate: healthData.birthdate ? healthData.birthdate.toISOString() : null,
+            height: healthData.height,
+            height_unit: healthData.heightUnit,
+            weight: healthData.weight,
+            weight_unit: healthData.weightUnit,
+            diabetes_type: healthData.diabetesType,
+            completed_onboarding: true,
+          });
+      }
       
       // Use the auth context to update the state and ensure it's in sync
       setHasCompletedOnboarding(true);

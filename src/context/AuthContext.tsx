@@ -28,10 +28,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to check and update onboarding status
   const checkOnboardingStatus = async (userId: string) => {
     try {
+      // Use a more specific query with eq() to get exactly the right record
       const { data: healthData, error } = await supabase
         .from('health_data')
         .select('completed_onboarding')
         .eq('user_id', userId)
+        .limit(1)
         .maybeSingle();
       
       if (error) throw error;
@@ -98,11 +100,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       // First check if a health_data record exists
-      const { data: existingData } = await supabase
+      const { data: existingData, error: checkError } = await supabase
         .from('health_data')
         .select('id')
         .eq('user_id', user.id)
+        .limit(1)
         .maybeSingle();
+      
+      if (checkError) throw checkError;
       
       if (existingData) {
         // Update existing record
