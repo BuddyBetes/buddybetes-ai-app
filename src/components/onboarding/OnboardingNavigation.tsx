@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface OnboardingNavigationProps {
   currentStep: number;
@@ -21,12 +22,17 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
   handleSubmit
 }) => {
   return (
-    <div className="flex justify-between">
+    <motion.div 
+      className="flex justify-between mt-10"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <Button
         variant="outline"
         onClick={handleBack}
         disabled={currentStep === 0 || loading}
-        className="h-12 px-5 flex items-center gap-2 rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
+        className="h-12 px-5 flex items-center gap-2 rounded-full border-gray-200 text-gray-700 hover:bg-gray-50 transition-all"
       >
         <ChevronLeft className="h-4 w-4" />
         Back
@@ -35,7 +41,7 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
       {currentStep < totalSteps - 1 ? (
         <Button
           onClick={handleNext}
-          className="h-12 px-5 bg-buddy-500 hover:bg-buddy-600 rounded-xl flex items-center gap-2"
+          className="h-12 px-6 bg-buddy-500 hover:bg-buddy-600 rounded-full flex items-center gap-2 shadow-md shadow-buddy-100/50 transition-all"
         >
           Next
           <ChevronRight className="h-4 w-4" />
@@ -43,14 +49,23 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
       ) : (
         <Button
           onClick={handleSubmit}
-          className="h-12 px-5 bg-buddy-500 hover:bg-buddy-600 rounded-xl flex items-center gap-2"
+          className="h-12 px-6 bg-buddy-500 hover:bg-buddy-600 rounded-full flex items-center gap-2 shadow-md shadow-buddy-100/50 transition-all"
           disabled={loading}
         >
-          {loading ? "Saving..." : "Complete Setup"}
-          <ChevronRight className="h-4 w-4" />
+          {loading ? (
+            <>
+              <span className="animate-pulse mr-2">•••</span>
+              Saving
+            </>
+          ) : (
+            <>
+              Complete Setup
+              <ChevronRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
       )}
-    </div>
+    </motion.div>
   );
 };
 
