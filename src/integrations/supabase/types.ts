@@ -17,10 +17,12 @@ export type Database = {
           diabetes_type: string | null
           gender: string | null
           height: string | null
+          height_unit: string | null
           id: string
           updated_at: string | null
           user_id: string
           weight: string | null
+          weight_unit: string | null
         }
         Insert: {
           age?: string | null
@@ -29,10 +31,12 @@ export type Database = {
           diabetes_type?: string | null
           gender?: string | null
           height?: string | null
+          height_unit?: string | null
           id?: string
           updated_at?: string | null
           user_id: string
           weight?: string | null
+          weight_unit?: string | null
         }
         Update: {
           age?: string | null
@@ -41,10 +45,12 @@ export type Database = {
           diabetes_type?: string | null
           gender?: string | null
           height?: string | null
+          height_unit?: string | null
           id?: string
           updated_at?: string | null
           user_id?: string
           weight?: string | null
+          weight_unit?: string | null
         }
         Relationships: []
       }

@@ -33,7 +33,6 @@ const HealthData = () => {
 
       try {
         setLoading(true);
-        // Query includes both height_unit and weight_unit fields
         const { data, error } = await supabase
           .from('health_data')
           .select('gender, age, height, height_unit, weight, weight_unit, diabetes_type')
