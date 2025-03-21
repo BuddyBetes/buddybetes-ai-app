@@ -5,11 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface HealthDataEditProps {
   healthData: {
     gender: string;
-    age: string;
+    birthdate: Date | undefined;
     height: string;
     heightUnit: string;
     weight: string;
@@ -18,7 +23,7 @@ interface HealthDataEditProps {
   };
   setHealthData: React.Dispatch<React.SetStateAction<{
     gender: string;
-    age: string;
+    birthdate: Date | undefined;
     height: string;
     heightUnit: string;
     weight: string;
@@ -32,7 +37,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
   const [localHealthData, setLocalHealthData] = useState(healthData);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleHealthDataChange = (field: string, value: string) => {
+  const handleHealthDataChange = (field: string, value: string | Date) => {
     setLocalHealthData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -84,17 +89,45 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
             </SelectContent>
           </Select>
         </div>
+        
         <div className="grid grid-cols-4 items-center gap-4">
-          <label htmlFor="age" className="text-right">
-            Age
+          <label htmlFor="birthdate" className="text-right">
+            Date of Birth
           </label>
-          <Input
-            id="age"
-            value={localHealthData.age}
-            onChange={(e) => handleHealthDataChange('age', e.target.value)}
-            className="col-span-3"
-          />
+          <div className="col-span-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !localHealthData.birthdate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {localHealthData.birthdate ? (
+                    format(localHealthData.birthdate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={localHealthData.birthdate}
+                  onSelect={(date) => handleHealthDataChange('birthdate', date as Date)}
+                  disabled={(date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
+        
         <div className="grid grid-cols-4 items-center gap-4">
           <label htmlFor="height" className="text-right">
             Height
@@ -119,6 +152,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
             </Select>
           </div>
         </div>
+        
         <div className="grid grid-cols-4 items-center gap-4">
           <label htmlFor="weight" className="text-right">
             Weight
@@ -143,6 +177,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
             </Select>
           </div>
         </div>
+        
         <div className="grid grid-cols-4 items-center gap-4">
           <label htmlFor="diabetesType" className="text-right">
             Diabetes Type

@@ -13,11 +13,16 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { ActivitySquare } from 'lucide-react';
+import { ActivitySquare, CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface HealthData {
   gender: string;
-  age: string;
+  birthdate: Date | undefined;
   height: string;
   heightUnit: string;
   weight: string;
@@ -32,7 +37,9 @@ interface OnboardingHealthDataProps {
 
 const formSchema = z.object({
   gender: z.string().min(1, 'Please select your gender'),
-  age: z.string().min(1, 'Age is required'),
+  birthdate: z.date({
+    required_error: 'Please select your date of birth',
+  }),
   height: z.string().min(1, 'Height is required'),
   heightUnit: z.string().min(1, 'Please select height unit'),
   weight: z.string().min(1, 'Weight is required'),
@@ -48,7 +55,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       gender: healthData.gender,
-      age: healthData.age,
+      birthdate: healthData.birthdate,
       height: healthData.height,
       heightUnit: healthData.heightUnit || 'cm',
       weight: healthData.weight,
@@ -62,7 +69,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
     const subscription = form.watch((value) => {
       setHealthData({
         gender: value.gender || '',
-        age: value.age || '',
+        birthdate: value.birthdate,
         height: value.height || '',
         heightUnit: value.heightUnit || 'cm',
         weight: value.weight || '',
@@ -113,18 +120,42 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
           
           <FormField
             control={form.control}
-            name="age"
+            name="birthdate"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-700 font-medium">Age</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Enter your age" 
-                    type="number" 
-                    {...field} 
-                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
-                  />
-                </FormControl>
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-gray-700 font-medium">Date of Birth</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-12 rounded-xl w-full border-gray-200 focus:border-buddy-500 focus:ring-buddy-500 pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage className="text-red-500" />
               </FormItem>
             )}

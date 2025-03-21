@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import HealthDataEdit from './HealthDataEdit';
+import { format } from 'date-fns';
 
 interface HealthDataDisplayProps {
   healthData: {
     gender: string;
-    age: string;
+    birthdate: Date | undefined;
     height: string;
     heightUnit: string;
     weight: string;
@@ -17,7 +18,7 @@ interface HealthDataDisplayProps {
   };
   setHealthData: React.Dispatch<React.SetStateAction<{
     gender: string;
-    age: string;
+    birthdate: Date | undefined;
     height: string;
     heightUnit: string;
     weight: string;
@@ -36,6 +37,21 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
         delay: i * 0.1,
       },
     }),
+  };
+
+  // Calculate age from birthdate
+  const calculateAge = (birthdate: Date | undefined): string => {
+    if (!birthdate) return 'Not specified';
+    
+    const today = new Date();
+    let age = today.getFullYear() - birthdate.getFullYear();
+    const monthDiff = today.getMonth() - birthdate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
+      age--;
+    }
+    
+    return age.toString();
   };
 
   return (
@@ -57,23 +73,35 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
       <div className="grid grid-cols-2 gap-3">
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Gender</div>
-          <div className="font-medium">{healthData.gender}</div>
+          <div className="font-medium">{healthData.gender || 'Not specified'}</div>
         </div>
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Age</div>
-          <div className="font-medium">{healthData.age}</div>
+          <div className="font-medium">{calculateAge(healthData.birthdate)}</div>
+        </div>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <div className="text-xs text-gray-500 mb-1">Date of Birth</div>
+          <div className="font-medium">
+            {healthData.birthdate 
+              ? format(healthData.birthdate, 'PPP') 
+              : 'Not specified'}
+          </div>
         </div>
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Height</div>
-          <div className="font-medium">{healthData.height} {healthData.heightUnit}</div>
+          <div className="font-medium">
+            {healthData.height ? `${healthData.height} ${healthData.heightUnit}` : 'Not specified'}
+          </div>
         </div>
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Weight</div>
-          <div className="font-medium">{healthData.weight} {healthData.weightUnit}</div>
+          <div className="font-medium">
+            {healthData.weight ? `${healthData.weight} ${healthData.weightUnit}` : 'Not specified'}
+          </div>
         </div>
-        <div className="col-span-2 p-3 bg-gray-50 rounded-lg">
+        <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Diabetes Type</div>
-          <div className="font-medium">{healthData.diabetesType}</div>
+          <div className="font-medium">{healthData.diabetesType || 'Not specified'}</div>
         </div>
       </div>
     </motion.div>

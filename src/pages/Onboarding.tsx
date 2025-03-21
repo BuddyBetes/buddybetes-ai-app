@@ -30,7 +30,7 @@ const Onboarding = () => {
   
   const [healthData, setHealthData] = useState({
     gender: '',
-    age: '',
+    birthdate: undefined as Date | undefined,
     height: '',
     heightUnit: 'cm',
     weight: '',
@@ -60,12 +60,29 @@ const Onboarding = () => {
     }
   };
 
+  const calculateAge = (birthdate: Date | undefined): string => {
+    if (!birthdate) return '';
+    
+    const today = new Date();
+    let age = today.getFullYear() - birthdate.getFullYear();
+    const monthDiff = today.getMonth() - birthdate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
+      age--;
+    }
+    
+    return age.toString();
+  };
+
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || !healthData.birthdate) return;
     
     setLoading(true);
     
     try {
+      // Calculate age from birthdate
+      const age = calculateAge(healthData.birthdate);
+      
       // Update profile information
       await supabase
         .from('profiles')
@@ -76,13 +93,14 @@ const Onboarding = () => {
         })
         .eq('id', user.id);
       
-      // Insert health data with heightUnit and weightUnit
+      // Insert health data with heightUnit and weightUnit and birthdate
       await supabase
         .from('health_data')
         .insert({
           user_id: user.id,
           gender: healthData.gender,
-          age: healthData.age,
+          age: age,
+          birthdate: healthData.birthdate ? healthData.birthdate.toISOString() : null,
           height: healthData.height,
           height_unit: healthData.heightUnit,
           weight: healthData.weight,

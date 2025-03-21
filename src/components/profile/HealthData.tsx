@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface HealthDataType {
   gender: string;
-  age: string;
+  birthdate: Date | undefined;
   height: string;
   heightUnit: string;
   weight: string;
@@ -18,7 +18,7 @@ const HealthData = () => {
   const { user } = useAuth();
   const [healthData, setHealthData] = useState<HealthDataType>({
     gender: '',
-    age: '',
+    birthdate: undefined,
     height: '',
     heightUnit: 'cm',
     weight: '',
@@ -35,16 +35,16 @@ const HealthData = () => {
         setLoading(true);
         const { data, error } = await supabase
           .from('health_data')
-          .select('gender, age, height, height_unit, weight, weight_unit, diabetes_type')
+          .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching health data:', error);
         } else if (data) {
           setHealthData({
             gender: data.gender || '',
-            age: data.age || '',
+            birthdate: data.birthdate ? new Date(data.birthdate) : undefined,
             height: data.height || '',
             heightUnit: data.height_unit || 'cm',
             weight: data.weight || '',
@@ -70,7 +70,7 @@ const HealthData = () => {
         .from('health_data')
         .update({
           gender: newData.gender,
-          age: newData.age,
+          birthdate: newData.birthdate?.toISOString(),
           height: newData.height,
           height_unit: newData.heightUnit,
           weight: newData.weight,
