@@ -76,21 +76,11 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
     <div className="w-full p-4 rounded-xl bg-white shadow-sm">
       <div className="flex justify-between items-center mb-2">
         {title && <div className="text-lg font-semibold">{title}</div>}
-        
-        {showControls && (
-          <Tabs defaultValue="24h" value={timeRange} onValueChange={(value) => setTimeRange(value as '24h' | '7d' | '30d')}>
-            <TabsList className="bg-gray-100">
-              {Object.entries(timeRanges).map(([key, label]) => (
-                <TabsTrigger key={key} value={key} className="text-xs">{label}</TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        )}
       </div>
       
       {chartData.length > 0 ? (
         <>
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-1">
             <div className="flex space-x-2">
               <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Avg: </span>
@@ -105,6 +95,16 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
                 <span className="text-xs font-medium">{stats.max} mg/dL</span>
               </div>
             </div>
+            
+            {showControls && (
+              <Tabs defaultValue="24h" value={timeRange} onValueChange={(value) => setTimeRange(value as '24h' | '7d' | '30d')}>
+                <TabsList className="bg-gray-100 h-6">
+                  {Object.entries(timeRanges).map(([key, label]) => (
+                    <TabsTrigger key={key} value={key} className="text-xs px-2 py-0.5 h-5">{label}</TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            )}
           </div>
           
           <ResponsiveContainer width="100%" height={300}>

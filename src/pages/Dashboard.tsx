@@ -4,14 +4,13 @@ import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
 import { motion } from 'framer-motion';
-import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle, RefreshCw, Info } from 'lucide-react';
+import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle, RefreshCw } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { useGlucoseInsights } from '@/hooks/useGlucoseInsights';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
@@ -121,18 +120,6 @@ const Dashboard = () => {
               <span className="text-xl font-bold text-gray-800">
                 {logsToday}
               </span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-5 w-5 ml-1">
-                      <Info size={12} className="text-gray-400" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">Total number of log entries today</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </div>
           </motion.div>
         </motion.div>
