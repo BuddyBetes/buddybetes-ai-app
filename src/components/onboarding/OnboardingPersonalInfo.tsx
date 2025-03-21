@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
+import { User } from 'lucide-react';
 
 interface PersonalInfo {
   firstName: string;
@@ -54,19 +55,29 @@ const OnboardingPersonalInfo: React.FC<OnboardingPersonalInfoProps> = ({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-full bg-buddy-100 flex items-center justify-center">
+          <User className="h-5 w-5 text-buddy-500" />
+        </div>
+        <h2 className="text-xl font-semibold">Personal Information</h2>
+      </div>
+      
       <Form {...form}>
-        <form className="space-y-4">
+        <form className="space-y-5">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your first name" {...field} />
+                  <Input 
+                    placeholder="Enter your first name" 
+                    {...field} 
+                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-500" />
               </FormItem>
             )}
           />
@@ -76,11 +87,15 @@ const OnboardingPersonalInfo: React.FC<OnboardingPersonalInfoProps> = ({
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your last name" {...field} />
+                  <Input 
+                    placeholder="Enter your last name" 
+                    {...field} 
+                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-500" />
               </FormItem>
             )}
           />

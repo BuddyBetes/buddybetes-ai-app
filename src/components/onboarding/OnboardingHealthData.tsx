@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
+import { ActivitySquare } from 'lucide-react';
 
 interface HealthData {
   gender: string;
@@ -67,31 +68,37 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Health Information</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-full bg-buddy-100 flex items-center justify-center">
+          <ActivitySquare className="h-5 w-5 text-buddy-500" />
+        </div>
+        <h2 className="text-xl font-semibold">Health Information</h2>
+      </div>
+      
       <Form {...form}>
-        <form className="space-y-4">
+        <form className="space-y-5">
           <FormField
             control={form.control}
             name="gender"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Gender</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Gender</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
                       <SelectValue placeholder="Select your gender" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="rounded-lg">
                     <SelectItem value="Female">Female</SelectItem>
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage className="text-red-500" />
               </FormItem>
             )}
           />
@@ -101,11 +108,16 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
             name="age"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Age</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Age</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your age" type="number" {...field} />
+                  <Input 
+                    placeholder="Enter your age" 
+                    type="number" 
+                    {...field} 
+                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-500" />
               </FormItem>
             )}
           />
@@ -115,11 +127,15 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
             name="height"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Height (in inches or cm)</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Height (in inches or cm)</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 5'7&quot; or 170cm" {...field} />
+                  <Input 
+                    placeholder="e.g., 5'7\" or 170cm" 
+                    {...field} 
+                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-500" />
               </FormItem>
             )}
           />
@@ -129,11 +145,16 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
             name="weight"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Weight (in lbs)</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Weight (in lbs)</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 150" type="number" {...field} />
+                  <Input 
+                    placeholder="e.g., 150" 
+                    type="number" 
+                    {...field} 
+                    className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-500" />
               </FormItem>
             )}
           />
@@ -143,24 +164,24 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
             name="diabetesType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Diabetes Type</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Diabetes Type</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
                       <SelectValue placeholder="Select your diabetes type" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="rounded-lg">
                     <SelectItem value="Type 1">Type 1</SelectItem>
                     <SelectItem value="Type 2">Type 2</SelectItem>
                     <SelectItem value="Gestational">Gestational</SelectItem>
                     <SelectItem value="Pre-diabetes">Pre-diabetes</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage />
+                <FormMessage className="text-red-500" />
               </FormItem>
             )}
           />
