@@ -1,286 +1,181 @@
 
 import React from 'react';
-import { 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl, 
-  FormMessage 
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form } from '@/components/ui/form';
-import { ActivitySquare, CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-
-interface HealthData {
-  gender: string;
-  birthdate: Date | undefined;
-  height: string;
-  heightUnit: string;
-  weight: string;
-  weightUnit: string;
-  diabetesType: string;
-}
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface OnboardingHealthDataProps {
-  healthData: HealthData;
-  setHealthData: React.Dispatch<React.SetStateAction<HealthData>>;
+  healthData: {
+    gender: string;
+    birthdate: Date | undefined;
+    height: string;
+    heightUnit: string;
+    weight: string;
+    weightUnit: string;
+    diabetesType: string;
+  };
+  setHealthData: React.Dispatch<React.SetStateAction<{
+    gender: string;
+    birthdate: Date | undefined;
+    height: string;
+    heightUnit: string;
+    weight: string;
+    weightUnit: string;
+    diabetesType: string;
+  }>>;
 }
 
-const formSchema = z.object({
-  gender: z.string().min(1, 'Please select your gender'),
-  birthdate: z.date({
-    required_error: 'Please select your date of birth',
-  }),
-  height: z.string().min(1, 'Height is required'),
-  heightUnit: z.string().min(1, 'Please select height unit'),
-  weight: z.string().min(1, 'Weight is required'),
-  weightUnit: z.string().min(1, 'Please select weight unit'),
-  diabetesType: z.string().min(1, 'Please select your diabetes type'),
-});
-
-const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
-  healthData,
-  setHealthData,
-}) => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      gender: healthData.gender,
-      birthdate: healthData.birthdate,
-      height: healthData.height,
-      heightUnit: healthData.heightUnit || 'cm',
-      weight: healthData.weight,
-      weightUnit: healthData.weightUnit || 'lbs',
-      diabetesType: healthData.diabetesType,
-    },
-  });
-
-  // Update parent state when form values change
-  React.useEffect(() => {
-    const subscription = form.watch((value) => {
-      setHealthData({
-        gender: value.gender || '',
-        birthdate: value.birthdate,
-        height: value.height || '',
-        heightUnit: value.heightUnit || 'cm',
-        weight: value.weight || '',
-        weightUnit: value.weightUnit || 'lbs',
-        diabetesType: value.diabetesType || '',
-      });
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, setHealthData]);
+const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData, setHealthData }) => {
+  // Calculate max date (18 years ago) and min date (100 years ago)
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 1); // Allow children (minimum 1 year old)
+  
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 100);
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-buddy-100 flex items-center justify-center">
-          <ActivitySquare className="h-5 w-5 text-buddy-500" />
-        </div>
-        <h2 className="text-xl font-semibold">Health Information</h2>
-      </div>
+    <div className="space-y-6">
+      <h3 className="text-xl font-semibold mb-4">Health Information</h3>
       
-      <Form {...form}>
-        <form className="space-y-5">
-          <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-700 font-medium">Gender</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
-                      <SelectValue placeholder="Select your gender" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="rounded-lg">
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage className="text-red-500" />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="birthdate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="text-gray-700 font-medium">Date of Birth</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-12 rounded-xl w-full border-gray-200 focus:border-buddy-500 focus:ring-buddy-500 pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage className="text-red-500" />
-              </FormItem>
-            )}
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="height"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Height</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter height" 
-                      type="number" 
-                      {...field} 
-                      className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-500" />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="heightUnit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Unit</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
-                        <SelectValue placeholder="Select unit" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="rounded-lg">
-                      <SelectItem value="cm">cm</SelectItem>
-                      <SelectItem value="in">in</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-red-500" />
-                </FormItem>
-              )}
-            />
+      <div className="space-y-4">
+        <div>
+          <Label className="mb-2 block">Gender</Label>
+          <RadioGroup 
+            value={healthData.gender} 
+            onValueChange={(value) => setHealthData({...healthData, gender: value})}
+            className="flex flex-col space-y-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="male" id="male" />
+              <Label htmlFor="male">Male</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="female" id="female" />
+              <Label htmlFor="female">Female</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="other" id="other" />
+              <Label htmlFor="other">Other</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <div>
+          <Label className="mb-2 block">Date of Birth</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !healthData.birthdate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {healthData.birthdate ? (
+                  format(healthData.birthdate, "PPP")
+                ) : (
+                  <span>Select your date of birth</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={healthData.birthdate}
+                onSelect={(date) => setHealthData({...healthData, birthdate: date || undefined})}
+                disabled={(date) => date > maxDate || date < minDate}
+                initialFocus
+                captionLayout="dropdown-buttons"
+                fromYear={maxDate.getFullYear() - 100}
+                toYear={maxDate.getFullYear()}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="flex space-x-3">
+          <div className="flex-1">
+            <Label htmlFor="height" className="mb-2 block">Height</Label>
+            <div className="flex space-x-2">
+              <Input 
+                id="height" 
+                type="number" 
+                value={healthData.height} 
+                onChange={(e) => setHealthData({...healthData, height: e.target.value})}
+                className="flex-1"
+                placeholder="Enter your height"
+              />
+              <Select 
+                value={healthData.heightUnit} 
+                onValueChange={(value) => setHealthData({...healthData, heightUnit: value})}
+              >
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cm">cm</SelectItem>
+                  <SelectItem value="ft">ft</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="weight"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Weight</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter weight" 
-                      type="number" 
-                      {...field} 
-                      className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-red-500" />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="weightUnit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Unit</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
-                        <SelectValue placeholder="Select unit" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="rounded-lg">
-                      <SelectItem value="lbs">lbs</SelectItem>
-                      <SelectItem value="kg">kg</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-red-500" />
-                </FormItem>
-              )}
-            />
+          <div className="flex-1">
+            <Label htmlFor="weight" className="mb-2 block">Weight</Label>
+            <div className="flex space-x-2">
+              <Input 
+                id="weight" 
+                type="number" 
+                value={healthData.weight} 
+                onChange={(e) => setHealthData({...healthData, weight: e.target.value})}
+                className="flex-1"
+                placeholder="Enter your weight"
+              />
+              <Select 
+                value={healthData.weightUnit} 
+                onValueChange={(value) => setHealthData({...healthData, weightUnit: value})}
+              >
+                <SelectTrigger className="w-24">
+                  <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">kg</SelectItem>
+                  <SelectItem value="lbs">lbs</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          
-          <FormField
-            control={form.control}
-            name="diabetesType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-700 font-medium">Diabetes Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="h-12 rounded-xl border-gray-200 focus:border-buddy-500 focus:ring-buddy-500">
-                      <SelectValue placeholder="Select your diabetes type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="rounded-lg">
-                    <SelectItem value="Type 1">Type 1</SelectItem>
-                    <SelectItem value="Type 2">Type 2</SelectItem>
-                    <SelectItem value="Gestational">Gestational</SelectItem>
-                    <SelectItem value="Pre-diabetes">Pre-diabetes</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage className="text-red-500" />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
+        </div>
+
+        <div>
+          <Label htmlFor="diabetesType" className="mb-2 block">Diabetes Type</Label>
+          <Select 
+            value={healthData.diabetesType} 
+            onValueChange={(value) => setHealthData({...healthData, diabetesType: value})}
+          >
+            <SelectTrigger className="w-full" id="diabetesType">
+              <SelectValue placeholder="Select your diabetes type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="type1">Type 1</SelectItem>
+              <SelectItem value="type2">Type 2</SelectItem>
+              <SelectItem value="gestational">Gestational</SelectItem>
+              <SelectItem value="prediabetes">Prediabetes</SelectItem>
+              <SelectItem value="lada">LADA</SelectItem>
+              <SelectItem value="mody">MODY</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   );
 };

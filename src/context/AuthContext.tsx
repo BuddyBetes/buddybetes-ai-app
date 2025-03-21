@@ -29,11 +29,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (event === 'SIGNED_OUT') {
           setHasCompletedOnboarding(false);
+        } else if (event === 'SIGNED_IN' && currentSession?.user) {
+          // Check onboarding status when signed in
+          checkOnboardingStatus(currentSession.user.id);
         }
       }
     );
@@ -48,14 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(initialSession?.user ?? null);
         
         if (initialSession?.user) {
-          // Check if user has completed onboarding
-          const { data: healthData } = await supabase
-            .from('health_data')
-            .select('completed_onboarding')
-            .eq('user_id', initialSession.user.id)
-            .single();
-          
-          setHasCompletedOnboarding(healthData?.completed_onboarding || false);
+          await checkOnboardingStatus(initialSession.user.id);
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
@@ -75,6 +72,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, [toast]);
+
+  const checkOnboardingStatus = async (userId: string) => {
+    try {
+      // Use proper query filters
+      const { data, error } = await supabase
+        .from('health_data')
+        .select('completed_onboarding')
+        .eq('user_id', userId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error checking onboarding status:', error);
+        // Don't set loading to false here as it will be handled by the parent function
+      } else {
+        console.log('Onboarding status data:', data);
+        setHasCompletedOnboarding(data?.completed_onboarding || false);
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      // Don't set loading to false here as it will be handled by the parent function
+    }
+  };
 
   const signUp = async (email: string, password: string) => {
     try {

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import HealthDataDisplay from './HealthDataDisplay';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface HealthDataType {
   gender: string;
@@ -16,6 +17,7 @@ interface HealthDataType {
 
 const HealthData = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [healthData, setHealthData] = useState<HealthDataType>({
     gender: '',
     birthdate: undefined,
@@ -37,10 +39,15 @@ const HealthData = () => {
           .from('health_data')
           .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .maybeSingle(); // Use maybeSingle instead of single to handle multiple rows
 
         if (error) {
           console.error('Error fetching health data:', error);
+          toast({
+            title: "Error",
+            description: "Could not load your health data. Please try again later.",
+            variant: "destructive",
+          });
         } else if (data) {
           setHealthData({
             gender: data.gender || '',
@@ -54,13 +61,18 @@ const HealthData = () => {
         }
       } catch (error) {
         console.error('Error fetching health data:', error);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred. Please try again later.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchHealthData();
-  }, [user]);
+  }, [user, toast]);
 
   const updateHealthData = async (newData: HealthDataType) => {
     if (!user) return;
@@ -82,11 +94,25 @@ const HealthData = () => {
 
       if (error) {
         console.error('Error updating health data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update your health data. Please try again.",
+          variant: "destructive",
+        });
       } else {
         setHealthData(newData);
+        toast({
+          title: "Success",
+          description: "Your health data has been updated.",
+        });
       }
     } catch (error) {
       console.error('Error updating health data:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive",
+      });
     }
   };
   

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
@@ -8,8 +8,14 @@ import { useAuth } from '@/context/AuthContext';
 const Index = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasCompletedOnboarding, loading } = useAuth();
+  const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Clear previous timeout if it exists
+    if (redirectTimeout) {
+      clearTimeout(redirectTimeout);
+    }
+
     // Wait for auth status to load, then redirect
     if (!loading) {
       console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding });
@@ -17,17 +23,29 @@ const Index = () => {
       const timer = setTimeout(() => {
         if (isAuthenticated) {
           if (hasCompletedOnboarding) {
+            console.log('Redirecting to dashboard');
             navigate('/dashboard');
           } else {
+            console.log('Redirecting to onboarding');
             navigate('/onboarding');
           }
         } else {
+          console.log('Redirecting to signin');
           navigate('/signin');
         }
       }, 3000);
       
+      setRedirectTimeout(timer);
       return () => clearTimeout(timer);
     }
+
+    // Fallback - if loading takes too long, redirect to signin
+    const fallbackTimer = setTimeout(() => {
+      console.log('Fallback timeout triggered, redirecting to signin');
+      navigate('/signin');
+    }, 10000);
+
+    return () => clearTimeout(fallbackTimer);
   }, [navigate, isAuthenticated, hasCompletedOnboarding, loading]);
 
   return (

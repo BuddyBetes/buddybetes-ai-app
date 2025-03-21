@@ -76,21 +76,47 @@ const Onboarding = () => {
         })
         .eq('id', user.id);
       
-      // Insert health data with birthdate directly
-      await supabase
+      // First check if health_data entry already exists
+      const { data: existingData } = await supabase
         .from('health_data')
-        .insert({
-          user_id: user.id,
-          gender: healthData.gender,
-          birthdate: healthData.birthdate ? healthData.birthdate.toISOString() : null,
-          height: healthData.height,
-          height_unit: healthData.heightUnit,
-          weight: healthData.weight,
-          weight_unit: healthData.weightUnit,
-          diabetes_type: healthData.diabetesType,
-          completed_onboarding: true,
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
       
+      if (existingData) {
+        // Update existing health data
+        await supabase
+          .from('health_data')
+          .update({
+            gender: healthData.gender,
+            birthdate: healthData.birthdate.toISOString(),
+            height: healthData.height,
+            height_unit: healthData.heightUnit,
+            weight: healthData.weight,
+            weight_unit: healthData.weightUnit,
+            diabetes_type: healthData.diabetesType,
+            completed_onboarding: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+      } else {
+        // Insert new health data
+        await supabase
+          .from('health_data')
+          .insert({
+            user_id: user.id,
+            gender: healthData.gender,
+            birthdate: healthData.birthdate.toISOString(),
+            height: healthData.height,
+            height_unit: healthData.heightUnit,
+            weight: healthData.weight,
+            weight_unit: healthData.weightUnit,
+            diabetes_type: healthData.diabetesType,
+            completed_onboarding: true,
+          });
+      }
+      
+      // Update context state
       setHasCompletedOnboarding(true);
       
       toast({
