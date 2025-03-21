@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Sheet, 
   SheetContent, 
-  SheetTitle 
+  SheetTitle,
+  SheetDescription
 } from '@/components/ui/sheet';
 import CameraCapture from '@/components/camera/CameraCapture';
 import ProcessingService from './ProcessingService';
@@ -79,8 +80,16 @@ const CameraModal: React.FC<CameraModalProps> = ({
           <SheetTitle>
             {scanMode === 'food' ? 'Food Scanner' : 'Glucose Meter Scanner'}
           </SheetTitle>
+          <SheetDescription id="camera-modal-description">
+            {scanMode === 'food' 
+              ? 'Use your camera to capture food for nutritional analysis' 
+              : 'Use your camera to scan your glucose meter reading'}
+          </SheetDescription>
         </VisuallyHidden>
-        <div className="h-full bg-black overflow-hidden">
+        <div 
+          className="h-full bg-black overflow-hidden"
+          aria-describedby="camera-modal-description"
+        >
           <CameraCapture 
             mode={scanMode} 
             onCapture={handleCapture} 

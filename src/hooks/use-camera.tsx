@@ -88,27 +88,56 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     setErrorState
   });
 
-  // Monitor when the video element becomes available
+  // Modified video element ready detection
   useEffect(() => {
+    // Flag to track if component is mounted
+    let isMounted = true;
+    let checkIntervalId: number | null = null;
+    
     const checkVideoRef = () => {
+      if (!isMounted) return;
+      
       if (videoRef.current) {
+        console.log('Video element is now available in the DOM');
         setVideoElementReady(true);
+        
+        if (checkIntervalId !== null) {
+          clearInterval(checkIntervalId);
+          checkIntervalId = null;
+        }
       }
     };
 
     // Check immediately
     checkVideoRef();
-
-    // Set up MutationObserver to detect when video element is added to DOM
-    if (!videoElementReady && typeof MutationObserver !== 'undefined') {
-      const observer = new MutationObserver(checkVideoRef);
-      observer.observe(document.body, { childList: true, subtree: true });
+    
+    // If video element isn't ready yet, set up a polling interval
+    if (!videoElementReady && enabled) {
+      console.log('Setting up polling for video element availability');
+      checkIntervalId = window.setInterval(checkVideoRef, 100);
       
-      return () => {
-        observer.disconnect();
-      };
+      // Clear interval after a reasonable timeout (10 seconds)
+      setTimeout(() => {
+        if (!isMounted) return;
+        
+        if (checkIntervalId !== null) {
+          clearInterval(checkIntervalId);
+          checkIntervalId = null;
+        }
+        
+        if (!videoElementReady) {
+          console.log('Video element polling timed out');
+        }
+      }, 10000);
     }
-  }, [videoElementReady]);
+    
+    return () => {
+      isMounted = false;
+      if (checkIntervalId !== null) {
+        clearInterval(checkIntervalId);
+      }
+    };
+  }, [videoElementReady, enabled]);
 
   // Definition of initCamera with lock mechanism
   const initCamera = useCallback(async (errorTypeHint?: string) => {
@@ -152,68 +181,35 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
       try {
         const mediaStream = await requestCamera(constraintsToUse);
         
-        // Delay the video stream initialization slightly to ensure DOM is ready
-        setTimeout(() => {
-          if (videoRef.current) {
-            initializeVideoStream(mediaStream);
-            
-            if (retryAttempts > 0) {
-              toast({
-                title: "Camera connected",
-                description: "Camera connection restored successfully",
-                duration: 3000,
-              });
-              
-              setTimeout(() => {
-                resetErrorState();
-              }, 500);
-            }
-          } else {
-            console.error("Video reference still null after delay");
-            const videoMissingError = {
-              type: 'initialization' as const,
-              message: 'Camera UI not ready. Please try again.',
-              isPermissionIssue: false,
-              suggestedAction: 'Close and reopen the camera.',
-              isRetryable: true,
-              retryDelay: 2000,
-              technicalDetails: 'Video element reference is null'
-            };
-            setErrorState(videoMissingError);
-          }
-        }, 300); // Increased delay to ensure DOM is ready
+        // Initialize video stream with the obtained media stream
+        // The initializeVideoStream function now has its own delay
+        initializeVideoStream(mediaStream);
+        
+        if (retryAttempts > 0) {
+          toast({
+            title: "Camera connected",
+            description: "Camera connection restored successfully",
+            duration: 3000,
+          });
+          
+          setTimeout(() => {
+            resetErrorState();
+          }, 500);
+        }
       } catch (err: any) {
         if (retryAttempts === 0 && !isRetrying && constraintsToUse === constraints.optimal) {
           console.log('Optimal constraints failed, trying fallback:', err);
           try {
             console.log('Attempting fallback constraints...');
             const fallbackStream = await requestCamera(constraints.fallback);
-            
-            // Delay initialization to ensure DOM is ready
-            setTimeout(() => {
-              if (videoRef.current) {
-                initializeVideoStream(fallbackStream);
-              } else {
-                console.error("Video reference null during fallback initialization");
-                throw new Error("Video element not available");
-              }
-            }, 300); // Increased delay for fallback
+            initializeVideoStream(fallbackStream);
             return;
           } catch (fallbackErr) {
             console.error('Fallback camera access also failed:', fallbackErr);
             try {
               console.log('Attempting minimal constraints...');
               const minimalStream = await requestCamera(constraints.minimal);
-              
-              // Delay initialization to ensure DOM is ready
-              setTimeout(() => {
-                if (videoRef.current) {
-                  initializeVideoStream(minimalStream);
-                } else {
-                  console.error("Video reference null during minimal initialization");
-                  throw new Error("Video element not available");
-                }
-              }, 300); // Increased delay for minimal
+              initializeVideoStream(minimalStream);
               return;
             } catch (minimalErr) {
               console.error('All constraint options failed:', minimalErr);
@@ -247,8 +243,7 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     resetErrorState,
     setPermissionDenied,
     setError,
-    toast,
-    videoRef
+    toast
   ]);
 
   // Store the current initCamera in the ref
@@ -267,121 +262,77 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     cleanupRetryTimeout();
     resetErrorState();
     
-    // Properly return the Promise from initCamera
+    // Return the Promise from initCamera
     return initCamera();
   }, [initCamera, cleanupRetryTimeout, resetErrorState]);
 
   // Effect to initialize camera when enabled, with improved lifecycle management
   useEffect(() => {
-    let isActive = true; // Flag to track if this effect is still active
-    let checkInterval: number | null = null;
+    // Skip initialization if component is not enabled
+    if (!enabled) return;
+
+    let isActive = true; // Flag to track if effect is still active
     let timeoutTimer: number | null = null;
     
-    if (enabled) {
-      console.log('Camera is enabled, initializing...');
+    console.log('Camera is enabled, initializing...');
+    
+    // Add a longer delay before initialization to ensure DOM is ready
+    timeoutTimer = window.setTimeout(() => {
+      if (!isActive) return; // Check if component is still mounted
       
-      // Add a slight delay before initialization to ensure everything is ready
-      timeoutTimer = window.setTimeout(() => {
-        if (!isActive) return; // Check if component is still mounted
+      // Check if we have detected a video element is ready
+      if (videoElementReady) {
+        console.log('Video element is ready, proceeding with initialization');
+        initCamera();
+      } else {
+        console.log('Video element not ready yet, waiting for ready state...');
+        // We'll rely on the videoElementReady state change to trigger initialization
         
-        // Check if the video element is available before trying to initialize
-        if (videoRef.current) {
-          console.log('Video element is ready, proceeding with initialization');
-          initCamera();
-        } else {
-          console.log('Video element not ready yet, waiting...');
-          // Set up a polling mechanism to check for video element
-          checkInterval = window.setInterval(() => {
-            if (!isActive) {
-              // Clean up if component unmounted
-              if (checkInterval !== null) {
-                clearInterval(checkInterval);
-                checkInterval = null;
-              }
-              return;
-            }
-            
-            if (videoRef.current) {
-              console.log('Video element now available, initializing camera');
-              if (checkInterval !== null) {
-                clearInterval(checkInterval);
-                checkInterval = null;
-              }
-              initCamera();
-            }
-          }, 100);
+        // Set a longer timeout as a fallback if the ready state never triggers
+        timeoutTimer = window.setTimeout(() => {
+          if (!isActive) return;
           
-          // Clean up interval after a reasonable timeout
-          timeoutTimer = window.setTimeout(() => {
-            if (!isActive) return;
-            
-            if (checkInterval !== null) {
-              clearInterval(checkInterval);
-              checkInterval = null;
-            }
-            
-            if (!videoRef.current) {
-              console.error('Video element still not available after timeout');
-              const timeoutError = {
-                type: 'initialization' as const,
-                message: 'Camera could not initialize. Please try again.',
-                isPermissionIssue: false,
-                suggestedAction: 'Close and reopen the camera.',
-                isRetryable: true,
-                retryDelay: 1000,
-                technicalDetails: 'Video element reference timeout'
-              };
-              setErrorState(timeoutError);
-            }
-          }, 5000);
-        }
-      }, 300);
-      
-      return () => {
-        // Mark effect as inactive to prevent state updates after unmount
-        isActive = false;
-        
-        // Clear all timers and intervals
-        if (timeoutTimer !== null) {
-          clearTimeout(timeoutTimer);
-          timeoutTimer = null;
-        }
-        
-        if (checkInterval !== null) {
-          clearInterval(checkInterval);
-          checkInterval = null;
-        }
-        
-        // Clean up resources
-        cleanupStream();
-        cleanupRetryTimeout();
-        
-        // Reset initialization lock on unmount
-        initializationLock.current = false;
-      };
-    }
-
+          if (!videoElementReady) {
+            console.log('Forcing camera initialization after timeout');
+            initCamera();
+          }
+        }, 2000); // Wait 2 seconds before forcing initialization
+      }
+    }, 800); // Increased initial delay to 800ms
+    
     return () => {
       // Mark effect as inactive
       isActive = false;
       
       // Clean up resources
-      cleanupStream();
-      cleanupRetryTimeout();
-      
-      // Clear timers
       if (timeoutTimer !== null) {
         clearTimeout(timeoutTimer);
+        timeoutTimer = null;
       }
       
-      if (checkInterval !== null) {
-        clearInterval(checkInterval);
-      }
+      cleanupStream();
+      cleanupRetryTimeout();
       
       // Reset initialization lock
       initializationLock.current = false;
     };
-  }, [enabled, isMobile, initCamera, cleanupStream, cleanupRetryTimeout, setErrorState]);
+  }, [enabled, videoElementReady, initCamera, cleanupStream, cleanupRetryTimeout]);
+
+  // Effect to initialize camera when videoElementReady changes to true
+  useEffect(() => {
+    if (!enabled || !videoElementReady || initializationLock.current) return;
+    
+    console.log('Video element is ready, initializing camera...');
+    
+    // Small delay to ensure React rendering cycle is complete
+    const timer = setTimeout(() => {
+      initCamera();
+    }, 300);
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [videoElementReady, enabled, initCamera]);
 
   // Clean up resources when component unmounts
   useEffect(() => {
