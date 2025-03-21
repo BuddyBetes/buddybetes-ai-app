@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera, RefreshCw } from 'lucide-react';
+import { X, Camera, RefreshCw, Smartphone } from 'lucide-react';
 import CaptureOverlay from './CaptureOverlay';
 
 interface CameraViewProps {
@@ -15,6 +15,7 @@ interface CameraViewProps {
   flashEffect: boolean;
   permissionDenied?: boolean;
   isMobile?: boolean;
+  onRetryCamera: () => void;
 }
 
 const CameraView: React.FC<CameraViewProps> = ({ 
@@ -27,19 +28,43 @@ const CameraView: React.FC<CameraViewProps> = ({
   error,
   flashEffect,
   permissionDenied = false,
-  isMobile = false
+  isMobile = false,
+  onRetryCamera
 }) => {
+  const [cameraAttempts, setCameraAttempts] = useState(0);
+
   // Function to refresh the page
   const handleRefresh = () => {
     window.location.reload();
   };
 
+  // Function to retry camera connection
+  const handleRetryCamera = () => {
+    setCameraAttempts(prev => prev + 1);
+    onRetryCamera();
+  };
+
+  // Function for iOS-specific camera help
+  const showIOSHelp = () => {
+    return (
+      <div className="mt-4 p-3 bg-yellow-900/50 rounded-lg text-left">
+        <p className="text-yellow-300 font-semibold mb-1">iOS Safari Tips:</p>
+        <ul className="text-white/80 text-sm list-disc pl-4 space-y-1">
+          <li>Make sure camera access is enabled in Settings &gt; Safari &gt; Camera</li>
+          <li>Try using the main Safari browser (not in-app browsers)</li>
+          <li>Ensure iOS is updated to the latest version</li>
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <div className="relative flex-1 flex items-center justify-center overflow-hidden">
       {isInitializing ? (
-        <div className="text-white text-center">
+        <div className="text-white text-center px-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Initializing camera...</p>
+          <p className="mb-3">Initializing camera...</p>
+          <p className="text-sm text-white/70">Please allow camera access when prompted</p>
         </div>
       ) : error ? (
         <div className="text-white text-center p-6">
@@ -53,24 +78,40 @@ const CameraView: React.FC<CameraViewProps> = ({
               <p className="text-white/80 mb-4">
                 You need to allow camera access in your browser settings to use this feature.
               </p>
-              <Button 
-                variant="outline" 
-                className="bg-white/10 text-white border-white/30"
-                onClick={onClose}
-              >
-                Close Camera
-              </Button>
+              
+              {navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? showIOSHelp() : null}
+              
+              <div className="flex justify-center space-x-3 mt-4">
+                <Button 
+                  variant="outline" 
+                  className="bg-white/10 text-white border-white/30"
+                  onClick={handleRetryCamera}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Try Again
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="bg-white/10 text-white border-white/30"
+                  onClick={onClose}
+                >
+                  Close Camera
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="mt-4 flex flex-col items-center space-y-4">
               <Button 
                 variant="outline" 
                 className="bg-white/10 text-white border-white/30"
-                onClick={handleRefresh}
+                onClick={handleRetryCamera}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Retry Camera
               </Button>
+              
+              {navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? showIOSHelp() : null}
               
               <Button 
                 variant="outline" 
@@ -90,7 +131,10 @@ const CameraView: React.FC<CameraViewProps> = ({
             playsInline
             muted
             className={`absolute inset-0 w-full h-full ${isMobile ? 'object-cover' : 'object-contain'}`}
-            style={{ transform: isMobile ? 'scaleX(1)' : 'none' }}
+            style={{ 
+              transform: 'scaleX(1)',
+              WebkitTransform: 'scaleX(1)'
+            }}
           />
           <CaptureOverlay mode={mode} />
           <canvas ref={canvasRef} className="hidden" />

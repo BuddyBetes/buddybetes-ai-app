@@ -33,69 +33,109 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const { toast } = useToast();
 
   // Initialize camera
-  useEffect(() => {
-    const initCamera = async () => {
-      try {
-        setIsInitializing(true);
+  const initCamera = async () => {
+    try {
+      console.log('Starting camera initialization...');
+      setIsInitializing(true);
+      setError(null);
+      
+      if (stream) {
+        // Clean up existing stream first
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log('Stopped existing camera track');
+        });
+      }
+      
+      // Set constraints based on device
+      const facingMode = isMobile ? 'environment' : 'user';
+      
+      // For mobile devices, we'll try lower resolution first for compatibility
+      const mobileConstraints = {
+        video: { 
+          facingMode: facingMode,
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 }
+        },
+        audio: false
+      };
+      
+      // For desktop devices, we can use higher resolution
+      const desktopConstraints = {
+        video: { 
+          facingMode: facingMode,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        audio: false
+      };
+      
+      const constraints = isMobile ? mobileConstraints : desktopConstraints;
+      
+      console.log('Requesting camera with constraints:', JSON.stringify(constraints));
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      console.log('Camera access granted successfully');
+      
+      if (videoRef.current) {
+        console.log('Setting video source and applying properties');
         
-        // Request camera permission with appropriate constraints for mobile
-        const constraints = {
-          video: { 
-            facingMode: 'environment', 
-            width: { ideal: isMobile ? 1280 : 1920 }, 
-            height: { ideal: isMobile ? 720 : 1080 }
-          },
-          audio: false
+        // Important for iOS Safari
+        videoRef.current.setAttribute('autoplay', 'true');
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('muted', 'true');
+        
+        videoRef.current.srcObject = mediaStream;
+        videoRef.current.muted = true;
+        
+        // Ensure video plays after metadata is loaded
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded, playing video...');
+          if (videoRef.current) {
+            videoRef.current.play().catch(e => {
+              console.error('Error playing video:', e);
+              setError('Could not play camera feed. Please try again or check browser settings.');
+            });
+          }
         };
         
-        console.log('Requesting camera access with constraints:', constraints);
-        const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log('Camera access granted');
-        
-        if (videoRef.current) {
-          console.log('Setting video source object');
-          videoRef.current.srcObject = mediaStream;
-          
-          // Ensure video plays after metadata is loaded
-          videoRef.current.onloadedmetadata = () => {
-            console.log('Video metadata loaded, playing video');
-            if (videoRef.current) {
-              videoRef.current.play().catch(e => {
-                console.error('Error playing video:', e);
-                setError('Could not play camera feed. Please check your browser settings.');
-              });
-            }
-          };
-          
-          setStream(mediaStream);
-        }
-        
-        setIsInitializing(false);
-      } catch (err) {
-        console.error('Error accessing camera:', err);
-        
-        if (err instanceof DOMException && 
-            (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
-          setPermissionDenied(true);
-          setError('Camera access denied. Please allow camera access in your browser settings.');
-          toast({
-            title: "Camera access denied",
-            description: "Please allow camera access in your browser settings.",
-            variant: "destructive",
-          });
-        } else {
-          setError('Could not access camera. Please check if another app is using your camera or try a different browser.');
-          toast({
-            title: "Camera error",
-            description: "Could not access camera. Try reloading the page or using a different browser.",
-            variant: "destructive",
-          });
-        }
-        
-        setIsInitializing(false);
+        setStream(mediaStream);
+      } else {
+        console.error('Video reference is null');
+        setError('Camera initialization failed. Please reload the page and try again.');
       }
-    };
+      
+      setIsInitializing(false);
+    } catch (err: any) {
+      console.error('Error accessing camera:', err);
+      
+      if (err instanceof DOMException && 
+          (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+        setPermissionDenied(true);
+        setError('Camera access denied. Please allow camera access in your browser settings.');
+        toast({
+          title: "Camera access denied",
+          description: "Please allow camera access in your browser settings.",
+          variant: "destructive",
+        });
+      } else if (err instanceof DOMException && err.name === 'NotReadableError') {
+        setError('Camera is already in use by another application or tab. Please close other apps using your camera.');
+      } else if (err instanceof DOMException && err.name === 'OverconstrainedError') {
+        setError('Your device does not support the requested camera resolution. Please try again.');
+      } else {
+        setError(`Could not access camera. ${err.message || 'Please try again with a different browser.'}`);
+        toast({
+          title: "Camera error",
+          description: "Could not access camera. Try reloading the page or using a different browser.",
+          variant: "destructive",
+        });
+      }
+      
+      setIsInitializing(false);
+    }
+  };
 
+  useEffect(() => {
     if (!capturedImage) {
       initCamera();
     }
@@ -109,7 +149,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         });
       }
     };
-  }, [capturedImage, isMobile, toast]);
+  }, [capturedImage, isMobile]);
 
   const captureImage = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -167,6 +207,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         flashEffect={flashEffect}
         permissionDenied={permissionDenied}
         isMobile={isMobile}
+        onRetryCamera={initCamera}
       />
       
       {/* Controls */}
