@@ -25,14 +25,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const { toast } = useToast();
 
+  // Function to check and update onboarding status
+  const checkOnboardingStatus = async (userId: string) => {
+    try {
+      const { data: healthData, error } = await supabase
+        .from('health_data')
+        .select('completed_onboarding')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      // If we have health data and onboarding is completed, update state
+      setHasCompletedOnboarding(!!healthData?.completed_onboarding);
+      
+      return !!healthData?.completed_onboarding;
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_IN' && currentSession?.user) {
+          await checkOnboardingStatus(currentSession.user.id);
+        } else if (event === 'SIGNED_OUT') {
           setHasCompletedOnboarding(false);
         }
       }
@@ -48,14 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(initialSession?.user ?? null);
         
         if (initialSession?.user) {
-          // Check if user has completed onboarding
-          const { data: healthData } = await supabase
-            .from('health_data')
-            .select('completed_onboarding')
-            .eq('user_id', initialSession.user.id)
-            .single();
-          
-          setHasCompletedOnboarding(healthData?.completed_onboarding || false);
+          await checkOnboardingStatus(initialSession.user.id);
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
@@ -75,6 +91,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, [toast]);
+
+  // Update the onboarding status in the database
+  const updateOnboardingStatus = async (value: boolean) => {
+    if (!user) return;
+    
+    try {
+      // First check if a health_data record exists
+      const { data: existingData } = await supabase
+        .from('health_data')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existingData) {
+        // Update existing record
+        await supabase
+          .from('health_data')
+          .update({ completed_onboarding: value })
+          .eq('user_id', user.id);
+      } else if (value) {
+        // If we're trying to mark as completed but no record exists,
+        // create a minimal record (other fields will be filled during onboarding)
+        await supabase
+          .from('health_data')
+          .insert({
+            user_id: user.id,
+            completed_onboarding: true
+          });
+      }
+      
+      // Update local state
+      setHasCompletedOnboarding(value);
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update onboarding status.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -132,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         hasCompletedOnboarding,
-        setHasCompletedOnboarding,
+        setHasCompletedOnboarding: updateOnboardingStatus,
       }}
     >
       {children}

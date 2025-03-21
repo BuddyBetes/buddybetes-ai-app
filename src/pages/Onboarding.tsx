@@ -109,6 +109,7 @@ const Onboarding = () => {
           completed_onboarding: true,
         });
       
+      // Use the auth context to update the state and ensure it's in sync
       setHasCompletedOnboarding(true);
       
       toast({
