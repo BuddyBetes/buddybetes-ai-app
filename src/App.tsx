@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -6,7 +7,7 @@ import {
   Navigate,
   useLocation,
 } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
 import AddLog from './pages/AddLog';
@@ -115,12 +116,12 @@ const AppContent: React.FC = () => {
       />
       <Route path="/confirm" element={<Confirm />} />
       <Route
-        path="/reset-password",
-        element: (
+        path="/reset-password"
+        element={
           <PageTransition>
             <ResetPassword />
           </PageTransition>
-        ),
+        }
       />
     </Routes>
   );
