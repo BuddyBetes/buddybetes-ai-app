@@ -7,15 +7,15 @@ import {
   Navigate,
   useLocation,
 } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
 import AddLog from './pages/AddLog';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
-import Confirm from './pages/auth/Confirm';
 import Onboarding from './pages/Onboarding';
 import ResetPassword from './pages/auth/ResetPassword';
+import EmailConfirmed from './pages/auth/EmailConfirmed';
 
 const PageTransition: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -114,7 +114,7 @@ const AppContent: React.FC = () => {
           </PublicRoute>
         }
       />
-      <Route path="/confirm" element={<Confirm />} />
+      <Route path="/confirm" element={<EmailConfirmed />} />
       <Route
         path="/reset-password"
         element={
