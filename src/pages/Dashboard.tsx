@@ -7,11 +7,13 @@ import { motion } from 'framer-motion';
 import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { logs, getRecentLogs, getAverageGlucose } = useLogContext();
   const recentLogs = getRecentLogs(5);
   const averageGlucose = getAverageGlucose();
+  const navigate = useNavigate();
   
   const lastReading = recentLogs[0]?.glucoseLevel || 0;
   const isInRange = lastReading >= 70 && lastReading <= 180;
@@ -26,6 +28,10 @@ const Dashboard = () => {
         duration: 0.5,
       },
     }),
+  };
+
+  const navigateToLogs = () => {
+    navigate('/logs');
   };
 
   return (
@@ -107,7 +113,10 @@ const Dashboard = () => {
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold text-gray-800">Glucose Trend</h3>
-            <button className="text-buddy-600 text-sm font-medium flex items-center">
+            <button 
+              className="text-buddy-600 text-sm font-medium flex items-center"
+              onClick={navigateToLogs}
+            >
               View All <ArrowUpRight size={14} className="ml-1" />
             </button>
           </div>
