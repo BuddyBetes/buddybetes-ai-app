@@ -1,0 +1,41 @@
+
+# netlify.toml
+# Configuration for deploying to Netlify
+
+[build]
+  # Directory with the production-ready files
+  publish = "dist"
+  # Build command
+  command = "npm run build"
+
+# Redirects for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers to set
+[[headers]]
+  # Define headers for all files
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+# Environment variable configuration
+[build.environment]
+  NODE_VERSION = "18"
+
+# These settings will optimize your site build in production
+[build.processing]
+  skip_processing = false
+[build.processing.css]
+  bundle = true
+  minify = true
+[build.processing.js]
+  bundle = true
+  minify = true
+[build.processing.images]
+  compress = true
