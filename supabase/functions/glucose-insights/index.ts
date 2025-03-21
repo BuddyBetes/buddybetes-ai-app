@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { glucoseHistory } = await req.json();
+    const { glucoseHistory, language = 'english' } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
     if (!OPENAI_API_KEY) {
@@ -24,10 +24,15 @@ serve(async (req) => {
     if (!glucoseHistory || !Array.isArray(glucoseHistory) || glucoseHistory.length === 0) {
       return new Response(
         JSON.stringify({ 
-          insights: [
-            "Not enough glucose data to generate insights. Please log more readings.",
-            "Regular glucose tracking helps identify patterns. Try logging after meals and exercise."
-          ]
+          insights: language === 'tagalog' 
+            ? [
+                "Hindi sapat ang datos ng glucose upang makabuo ng mga insight. Mangyaring mag-log ng mas maraming pagbasa.",
+                "Ang regular na pag-track ng glucose ay tumutulong na matukoy ang mga pattern. Subukang mag-log pagkatapos kumain at mag-ehersisyo."
+              ]
+            : [
+                "Not enough glucose data to generate insights. Please log more readings.",
+                "Regular glucose tracking helps identify patterns. Try logging after meals and exercise."
+              ]
         }),
         { 
           headers: { 
@@ -38,34 +43,56 @@ serve(async (req) => {
       );
     }
 
-    // Prepare system prompt for OpenAI
-    const systemPrompt = `
-      You are an AI assistant specializing in diabetes management. 
-      Analyze the provided glucose readings and generate 2-3 insightful observations or recommendations.
-      Keep each insight short (25 words or less) and action-oriented.
-      Focus on patterns, potential concerns, and positive reinforcement.
-      Do not mention "based on your data" or similar phrases - be direct.
-      DO NOT use technical jargon - keep language accessible.
+    // Prepare system prompt for OpenAI based on language preference
+    const systemPrompt = language === 'tagalog'
+      ? `
+        Ikaw ay isang AI assistant na nagspecialize sa pamamahala ng diabetes.
+        Suriin ang mga ibinigay na pagbasa ng glucose at bumuo ng 2-3 kapaki-pakinabang na obserbasyon o rekomendasyon.
+        Panatilihing maikli ang bawat insight (25 salita o mas mababa) at nakatuon sa aksyon.
+        Tumuon sa mga pattern, potensyal na mga alalahanin, at positibong pagpapalakas.
+        HUWAG banggitin ang "batay sa iyong data" o mga katulad na parirala - maging direkta.
+        HUWAG gumamit ng teknikal na jargon - panatilihing accessible ang wika.
+        GUMAMIT LAMANG NG TAGALOG.
 
-      Examples:
-      - "Your glucose has been stable in the morning. Continue your current breakfast routine."
-      - "Consider a small protein snack before bed to prevent overnight drops."
-      - "Regular physical activity may help reduce your afternoon glucose spikes."
-    `;
+        Mga halimbawa:
+        - "Matatag ang iyong glucose sa umaga. Ipagpatuloy ang iyong kasalukuyang routine sa almusal."
+        - "Isaalang-alang ang maliit na meryenda na may protina bago matulog upang maiwasan ang pagbaba sa gabi."
+        - "Ang regular na pisikal na aktibidad ay maaaring makatulong na mabawasan ang iyong mga spike ng glucose sa hapon."
+      `
+      : `
+        You are an AI assistant specializing in diabetes management. 
+        Analyze the provided glucose readings and generate 2-3 insightful observations or recommendations.
+        Keep each insight short (25 words or less) and action-oriented.
+        Focus on patterns, potential concerns, and positive reinforcement.
+        Do not mention "based on your data" or similar phrases - be direct.
+        DO NOT use technical jargon - keep language accessible.
+
+        Examples:
+        - "Your glucose has been stable in the morning. Continue your current breakfast routine."
+        - "Consider a small protein snack before bed to prevent overnight drops."
+        - "Regular physical activity may help reduce your afternoon glucose spikes."
+      `;
 
     // Format glucose history for the AI
     const formattedData = glucoseHistory.map(log => 
       `${new Date(log.timestamp).toLocaleString()}: ${log.glucoseLevel} mg/dL ${log.food ? `after eating ${log.food}` : ''}`
     ).join('\n');
 
-    const userPrompt = `
-      Here are recent glucose readings (in mg/dL):
-      ${formattedData}
+    const userPrompt = language === 'tagalog'
+      ? `
+        Narito ang mga kamakailang pagbasa ng glucose (sa mg/dL):
+        ${formattedData}
 
-      Please provide 2-3 short, practical insights or recommendations based on this data.
-    `;
+        Mangyaring magbigay ng 2-3 maikling, praktikal na mga insight o rekomendasyon batay sa data na ito. GUMAMIT LAMANG NG TAGALOG.
+      `
+      : `
+        Here are recent glucose readings (in mg/dL):
+        ${formattedData}
 
-    console.log("Sending request to OpenAI with glucose history");
+        Please provide 2-3 short, practical insights or recommendations based on this data.
+      `;
+
+    console.log(`Sending request to OpenAI with glucose history in ${language}`);
 
     // Make request to OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
