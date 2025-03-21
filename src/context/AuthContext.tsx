@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
         options: {
-          // Add redirectTo to properly direct users after email confirmation
+          // Use window.location.origin to dynamically get the base URL
           emailRedirectTo: `${window.location.origin}/confirm`
         }
       });
