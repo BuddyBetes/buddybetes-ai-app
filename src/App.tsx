@@ -18,6 +18,7 @@ import Onboarding from './pages/Onboarding';
 import ResetPassword from './pages/auth/ResetPassword';
 import EmailConfirmed from './pages/auth/EmailConfirmed';
 import Profile from './pages/Profile';
+import Assistant from './pages/Assistant';
 
 const PageTransition: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -84,6 +85,16 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <PageTransition>
               <AddLog />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/assistant"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <Assistant />
             </PageTransition>
           </ProtectedRoute>
         }
