@@ -12,7 +12,7 @@ interface OnboardingContentProps {
   };
   healthData: {
     gender: string;
-    birthdate: Date | undefined;
+    age: string;
     height: string;
     heightUnit: string;
     weight: string;
@@ -25,7 +25,7 @@ interface OnboardingContentProps {
   }>>;
   setHealthData: React.Dispatch<React.SetStateAction<{
     gender: string;
-    birthdate: Date | undefined;
+    age: string;
     height: string;
     heightUnit: string;
     weight: string;

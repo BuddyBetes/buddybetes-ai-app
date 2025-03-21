@@ -104,7 +104,6 @@ export type Database = {
       health_data: {
         Row: {
           age: string | null
-          birthdate: string | null
           completed_onboarding: boolean | null
           created_at: string | null
           diabetes_type: string | null
@@ -119,7 +118,6 @@ export type Database = {
         }
         Insert: {
           age?: string | null
-          birthdate?: string | null
           completed_onboarding?: boolean | null
           created_at?: string | null
           diabetes_type?: string | null
@@ -134,7 +132,6 @@ export type Database = {
         }
         Update: {
           age?: string | null
-          birthdate?: string | null
           completed_onboarding?: boolean | null
           created_at?: string | null
           diabetes_type?: string | null

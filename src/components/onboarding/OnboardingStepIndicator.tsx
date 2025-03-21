@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface OnboardingStepIndicatorProps {
   steps: string[];
@@ -8,35 +9,68 @@ interface OnboardingStepIndicatorProps {
 }
 
 const OnboardingStepIndicator: React.FC<OnboardingStepIndicatorProps> = ({ 
-  steps, 
+  steps,
   currentStep 
 }) => {
   return (
-    <div className="flex justify-between mb-8 relative">
-      {steps.map((step, index) => (
-        <div key={index} className="flex flex-col items-center relative z-10">
-          <div 
-            className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold",
-              index <= currentStep 
-                ? "bg-buddy-500 text-white" 
-                : "bg-gray-200 text-gray-500"
+    <div className="my-10">
+      <div className="flex justify-between items-center">
+        {steps.map((step, index) => (
+          <React.Fragment key={index}>
+            <div 
+              className={`flex flex-col items-center ${
+                index <= currentStep ? 'text-buddy-500' : 'text-gray-300'
+              }`}
+            >
+              <motion.div 
+                className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+                  index < currentStep 
+                    ? 'bg-buddy-500 shadow-md shadow-buddy-100' 
+                    : index === currentStep 
+                    ? 'border-2 border-buddy-500 text-buddy-500' 
+                    : 'border-2 border-gray-200 text-gray-300'
+                }`}
+                initial={{ scale: 0.9 }}
+                animate={{ scale: index === currentStep ? 1 : 0.9 }}
+                transition={{ duration: 0.3 }}
+              >
+                {index < currentStep ? (
+                  <Check className="h-6 w-6 text-white" strokeWidth={3} />
+                ) : (
+                  <span className="text-base font-medium">{index + 1}</span>
+                )}
+              </motion.div>
+              
+              <motion.span 
+                className="text-sm font-medium"
+                initial={{ opacity: 0.7 }}
+                animate={{ 
+                  opacity: index <= currentStep ? 1 : 0.7,
+                  y: index === currentStep ? -2 : 0
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                {step}
+              </motion.span>
+            </div>
+            
+            {index < steps.length - 1 && (
+              <div className="w-full mx-2 h-0.5 bg-gray-100 relative">
+                <motion.div 
+                  className="absolute h-0.5 bg-buddy-500"
+                  initial={{ width: "0%" }}
+                  animate={{ 
+                    width: currentStep > index ? '100%' : '0%' 
+                  }}
+                  transition={{ 
+                    duration: 0.5,
+                    ease: "easeInOut"
+                  }}
+                />
+              </div>
             )}
-          >
-            {index + 1}
-          </div>
-          <p className="text-xs mt-2 text-center">{step}</p>
-        </div>
-      ))}
-      
-      {/* Connecting lines */}
-      <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-0">
-        <div 
-          className="h-full bg-buddy-500 transition-all" 
-          style={{ 
-            width: `${currentStep === 0 ? 0 : (currentStep === steps.length - 1 ? 100 : (100 / (steps.length - 1)) * currentStep)}%` 
-          }}
-        />
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );

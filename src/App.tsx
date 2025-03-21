@@ -4,8 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
 import { LogProvider } from "./context/LogContext";
+import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
@@ -23,31 +23,16 @@ import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import Onboarding from "./pages/Onboarding";
 
-// Create Query Client with better error handling
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      // Update error handling to use the proper syntax for the current version
-      // of @tanstack/react-query
-      meta: {
-        onError: (error: Error) => {
-          console.error("Query error:", error);
-        }
-      }
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <TooltipProvider>
-        <AuthProvider>
-          <LogProvider>
-            <Toaster />
-            <Sonner />
+    <TooltipProvider>
+      <AuthProvider>
+        <LogProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />
@@ -100,10 +85,10 @@ const App = () => (
               {/* 404 route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </LogProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </BrowserRouter>
+          </BrowserRouter>
+        </LogProvider>
+      </AuthProvider>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
