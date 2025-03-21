@@ -49,26 +49,52 @@ const Onboarding = () => {
 
       try {
         setLoading(true);
+        console.log("Checking existing data for user:", user.id);
         
-        // Check profile data - use limit(1) and maybeSingle() to avoid multiple row errors
+        // Check profile data - get the most recent record
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('first_name, last_name')
           .eq('id', user.id)
           .limit(1)
-          .maybeSingle();
+          .single();
           
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Error fetching profile data:", profileError);
+          if (profileError.code !== 'PGRST116') { // Don't throw for "no rows" error
+            throw profileError;
+          }
+        }
         
-        // Check health data - use limit(1) and maybeSingle() to avoid multiple row errors
-        const { data: userHealthData, error: healthError } = await supabase
+        // Check health data - get the most recent record
+        const { data: healthDataList, error: healthListError } = await supabase
           .from('health_data')
-          .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type')
+          .select('id')
           .eq('user_id', user.id)
-          .limit(1)
-          .maybeSingle();
+          .order('updated_at', { ascending: false });
           
-        if (healthError) throw healthError;
+        if (healthListError) {
+          console.error("Error listing health data:", healthListError);
+          throw healthListError;
+        }
+        
+        let userHealthData = null;
+        
+        if (healthDataList && healthDataList.length > 0) {
+          // Get the most recent health data record
+          const { data: latestHealthData, error: healthError } = await supabase
+            .from('health_data')
+            .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type, completed_onboarding')
+            .eq('id', healthDataList[0].id)
+            .single();
+            
+          if (healthError) {
+            console.error("Error fetching latest health data:", healthError);
+            throw healthError;
+          }
+          
+          userHealthData = latestHealthData;
+        }
 
         // If we have both profile and essential health data, we can mark onboarding as complete
         const hasProfileData = profileData?.first_name && profileData?.last_name;
@@ -76,39 +102,43 @@ const Onboarding = () => {
                                       userHealthData?.height && userHealthData?.weight && 
                                       userHealthData?.diabetes_type;
         
-        if (hasProfileData && hasEssentialHealthData) {
+        if (hasProfileData && hasEssentialHealthData && userHealthData?.completed_onboarding) {
           // User has already completed onboarding with all essential data
+          console.log("User has completed onboarding with all essential data");
           await setHasCompletedOnboarding(true);
           navigate('/dashboard');
-        } else {
-          // Pre-fill whatever data we have
-          if (profileData) {
-            setPersonalInfo({
-              firstName: profileData.first_name || '',
-              lastName: profileData.last_name || '',
-            });
+          return;
+        }
+        
+        // Pre-fill whatever data we have
+        if (profileData) {
+          console.log("Pre-filling profile data:", profileData);
+          setPersonalInfo({
+            firstName: profileData.first_name || '',
+            lastName: profileData.last_name || '',
+          });
+        }
+        
+        if (userHealthData) {
+          console.log("Pre-filling health data:", userHealthData);
+          // Make sure height is stored as a valid numeric string, not with units
+          let height = userHealthData.height || '';
+          if (height && !isNaN(Number(height))) {
+            height = height.toString();
+          } else {
+            // If height contains units or is not numeric, reset it
+            height = '';
           }
           
-          if (userHealthData) {
-            // Make sure height is stored as a valid numeric string, not with units
-            let height = userHealthData.height || '';
-            if (height && !isNaN(Number(height))) {
-              height = height.toString();
-            } else {
-              // If height contains units or is not numeric, reset it
-              height = '';
-            }
-            
-            setHealthData({
-              gender: userHealthData.gender || '',
-              birthdate: userHealthData.birthdate ? new Date(userHealthData.birthdate) : undefined,
-              height: height,
-              heightUnit: userHealthData.height_unit || 'cm',
-              weight: userHealthData.weight || '',
-              weightUnit: userHealthData.weight_unit || 'lbs',
-              diabetesType: userHealthData.diabetes_type || '',
-            });
-          }
+          setHealthData({
+            gender: userHealthData.gender || '',
+            birthdate: userHealthData.birthdate ? new Date(userHealthData.birthdate) : undefined,
+            height: height,
+            heightUnit: userHealthData.height_unit || 'cm',
+            weight: userHealthData.weight || '',
+            weightUnit: userHealthData.weight_unit || 'lbs',
+            diabetesType: userHealthData.diabetes_type || '',
+          });
         }
       } catch (error) {
         console.error('Error checking existing data:', error);
@@ -175,11 +205,17 @@ const Onboarding = () => {
     setLoading(true);
     
     try {
+      console.log("Submitting onboarding data");
+      
       // Calculate age from birthdate
       const age = calculateAge(healthData.birthdate);
       
+      // Ensure height and weight are numeric values
+      const height = healthData.height ? healthData.height.toString() : '';
+      const weight = healthData.weight ? healthData.weight.toString() : '';
+      
       // Update profile information
-      await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           first_name: personalInfo.firstName,
@@ -188,53 +224,58 @@ const Onboarding = () => {
         })
         .eq('id', user.id);
       
+      if (profileError) throw profileError;
+      
       // Check if health data already exists
-      const { data: existingHealthData, error: checkError } = await supabase
+      const { data: healthDataList, error: listError } = await supabase
         .from('health_data')
         .select('id')
         .eq('user_id', user.id)
-        .limit(1)
-        .maybeSingle();
+        .order('updated_at', { ascending: false });
       
-      if (checkError) throw checkError;
+      if (listError) throw listError;
       
-      if (existingHealthData) {
-        // Update existing health data
-        await supabase
+      if (healthDataList && healthDataList.length > 0) {
+        // Update the most recent health data record
+        const { error: updateError } = await supabase
           .from('health_data')
           .update({
             gender: healthData.gender,
             age: age,
             birthdate: healthData.birthdate ? healthData.birthdate.toISOString() : null,
-            height: healthData.height,
+            height: height,
             height_unit: healthData.heightUnit,
-            weight: healthData.weight,
+            weight: weight,
             weight_unit: healthData.weightUnit,
             diabetes_type: healthData.diabetesType,
             completed_onboarding: true,
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', user.id);
+          .eq('id', healthDataList[0].id);
+          
+        if (updateError) throw updateError;
       } else {
         // Insert new health data
-        await supabase
+        const { error: insertError } = await supabase
           .from('health_data')
           .insert({
             user_id: user.id,
             gender: healthData.gender,
             age: age,
             birthdate: healthData.birthdate ? healthData.birthdate.toISOString() : null,
-            height: healthData.height,
+            height: height,
             height_unit: healthData.heightUnit,
-            weight: healthData.weight,
+            weight: weight,
             weight_unit: healthData.weightUnit,
             diabetes_type: healthData.diabetesType,
             completed_onboarding: true,
           });
+          
+        if (insertError) throw insertError;
       }
       
       // Use the auth context to update the state and ensure it's in sync
-      setHasCompletedOnboarding(true);
+      await setHasCompletedOnboarding(true);
       
       toast({
         title: "Onboarding completed!",

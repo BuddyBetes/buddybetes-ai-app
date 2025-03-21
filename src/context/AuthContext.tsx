@@ -28,19 +28,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to check and update onboarding status
   const checkOnboardingStatus = async (userId: string) => {
     try {
-      // Use a more specific query with eq() to get exactly the right record
+      console.log("Checking onboarding status for user:", userId);
+      
+      // First check if any health_data records exist for this user
+      const { data: healthDataCount, error: countError } = await supabase
+        .from('health_data')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      
+      if (countError) {
+        console.error("Error checking health data count:", countError);
+        throw countError;
+      }
+      
+      // If no records exist, onboarding is not completed
+      const count = (healthDataCount as any)?.count || 0;
+      if (count === 0) {
+        console.log("No health data found for user, onboarding not completed");
+        return false;
+      }
+      
+      // Get the most recent health data record
       const { data: healthData, error } = await supabase
         .from('health_data')
         .select('completed_onboarding')
         .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error getting most recent health data:", error);
+        throw error;
+      }
       
-      // If we have health data and onboarding is completed, update state
-      setHasCompletedOnboarding(!!healthData?.completed_onboarding);
-      
+      console.log("Found health data:", healthData);
       return !!healthData?.completed_onboarding;
     } catch (error) {
       console.error('Error checking onboarding status:', error);
@@ -73,7 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(initialSession?.user ?? null);
         
         if (initialSession?.user) {
-          await checkOnboardingStatus(initialSession.user.id);
+          const onboardingStatus = await checkOnboardingStatus(initialSession.user.id);
+          setHasCompletedOnboarding(onboardingStatus);
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
@@ -99,25 +122,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     
     try {
+      console.log("Updating onboarding status to:", value);
+      
       // First check if a health_data record exists
-      const { data: existingData, error: checkError } = await supabase
+      const { data: healthDataCount, error: countError } = await supabase
         .from('health_data')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .maybeSingle();
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id);
       
-      if (checkError) throw checkError;
+      if (countError) throw countError;
       
-      if (existingData) {
-        // Update existing record
+      const count = (healthDataCount as any)?.count || 0;
+      
+      if (count > 0) {
+        // If records exist, get the most recent one and update it
+        const { data: latestRecord, error: getError } = await supabase
+          .from('health_data')
+          .select('id')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (getError) throw getError;
+        
+        // Update the most recent record
         await supabase
           .from('health_data')
-          .update({ completed_onboarding: value })
-          .eq('user_id', user.id);
+          .update({ 
+            completed_onboarding: value,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', latestRecord.id);
       } else if (value) {
-        // If we're trying to mark as completed but no record exists,
-        // create a minimal record (other fields will be filled during onboarding)
+        // If no records exist and we're trying to mark as completed, create a minimal record
         await supabase
           .from('health_data')
           .insert({
