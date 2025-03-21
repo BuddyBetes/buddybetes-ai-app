@@ -23,12 +23,7 @@ const AddLog: React.FC = () => {
   return (
     <Layout title="Add Glucose Log">
       <AppHeader />
-      <div className="space-y-6">
-        <QuickActionButtons 
-          onScanFood={handleScanFood}
-          onScanMeter={handleScanMeter}
-        />
-        
+      <div className="space-y-6">     
         <LogFormContainer />
       </div>
 
