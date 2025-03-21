@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useIsMobile } from './use-mobile';
 import { useToast } from './use-toast';
 import { useCameraConstraints, CameraConstraints } from '@/utils/cameraConstraints';
@@ -8,11 +8,15 @@ import {
   parseCameraError, 
   handleCameraError, 
   createCaptureError, 
-  createPlaybackError 
+  createPlaybackError,
+  isRetryableError,
+  getRetryDelay,
+  createRetryMessage
 } from '@/utils/cameraErrorHandler';
 
 interface UseCameraProps {
   enabled: boolean;
+  maxRetryAttempts?: number;
 }
 
 interface UseCameraReturn {
@@ -26,9 +30,11 @@ interface UseCameraReturn {
   setFlashEffect: (show: boolean) => void;
   captureImage: () => string | null;
   initCamera: () => Promise<void>;
+  retryAttempts: number;
+  isRetrying: boolean;
 }
 
-export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
+export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): UseCameraReturn {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -36,79 +42,61 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [flashEffect, setFlashEffect] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [retryAttempts, setRetryAttempts] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [lastError, setLastError] = useState<CameraError | null>(null);
+  const retryTimeoutRef = useRef<number | null>(null);
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const constraints = useCameraConstraints();
 
-  // Initialize camera
-  const initCamera = async () => {
-    try {
-      console.log('Starting camera initialization...');
-      setIsInitializing(true);
-      setError(null);
-      setPermissionDenied(false);
-      
-      if (stream) {
-        // Clean up existing stream first
-        stream.getTracks().forEach(track => {
-          track.stop();
-          console.log('Stopped existing camera track');
-        });
-        setStream(null);
+  // Clean up retry timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current !== null) {
+        window.clearTimeout(retryTimeoutRef.current);
       }
-      
-      console.log('Requesting camera with constraints:', JSON.stringify(constraints.optimal));
-      
-      // Check if getUserMedia is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera API is not supported in this browser');
-      }
-      
-      try {
-        // Try with optimal constraints first
-        const mediaStream = await requestCamera(constraints.optimal);
-        initializeVideoStream(mediaStream);
-      } catch (err: any) {
-        // If optimal constraints fail, try fallback
-        console.log('Optimal constraints failed, trying fallback:', err);
-        if (err instanceof DOMException && err.name === 'OverconstrainedError') {
-          try {
-            const fallbackStream = await requestCamera(constraints.fallback);
-            initializeVideoStream(fallbackStream);
-            return;
-          } catch (fallbackErr) {
-            console.error('Fallback camera access also failed:', fallbackErr);
-            // If fallback fails, try minimal constraints
-            try {
-              const minimalStream = await requestCamera(constraints.minimal);
-              initializeVideoStream(minimalStream);
-              return;
-            } catch (minimalErr) {
-              // If all attempts fail, throw the original error
-              throw err;
-            }
-          }
-        }
-        throw err;
-      }
-    } catch (err: any) {
-      const cameraError = parseCameraError(err);
-      setErrorState(cameraError);
-    } finally {
-      setIsInitializing(false);
-    }
-  };
+    };
+  }, []);
 
   // Helper function to set error state from a camera error
-  const setErrorState = (cameraError: CameraError) => {
+  const setErrorState = useCallback((cameraError: CameraError) => {
     setError(cameraError.message);
+    setLastError(cameraError);
     
     if (cameraError.isPermissionIssue) {
       setPermissionDenied(true);
     }
     
     handleCameraError(cameraError);
-  };
+    
+    // Set up automatic retry if applicable
+    if (isRetryableError(cameraError) && retryAttempts < maxRetryAttempts) {
+      const nextAttempt = retryAttempts + 1;
+      const retryDelay = getRetryDelay(cameraError, nextAttempt);
+      
+      console.log(`Setting up automatic retry #${nextAttempt} in ${retryDelay}ms for error: ${cameraError.type}`);
+      
+      // Notify user about retry
+      if (nextAttempt > 1) { // Don't show for first retry to avoid too many toasts
+        toast({
+          title: "Camera reconnection",
+          description: createRetryMessage(nextAttempt, maxRetryAttempts, cameraError.type),
+          duration: 3000,
+        });
+      }
+      
+      setIsRetrying(true);
+      
+      // Schedule retry
+      retryTimeoutRef.current = window.setTimeout(() => {
+        setRetryAttempts(nextAttempt);
+        initCamera(cameraError.type);
+      }, retryDelay);
+    } else {
+      setIsRetrying(false);
+    }
+  }, [retryAttempts, maxRetryAttempts, toast]);
 
   // Helper function to request camera access
   const requestCamera = async (constraints: CameraConstraints): Promise<MediaStream> => {
@@ -116,7 +104,7 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
   };
   
   // Helper function to initialize video stream
-  const initializeVideoStream = (mediaStream: MediaStream) => {
+  const initializeVideoStream = useCallback((mediaStream: MediaStream) => {
     console.log('Camera access granted successfully');
     
     if (videoRef.current) {
@@ -149,13 +137,115 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
         type: 'initialization' as const,
         message: 'Camera initialization failed. Please reload the page and try again.',
         isPermissionIssue: false,
-        suggestedAction: 'Reload the page and try again.'
+        suggestedAction: 'Reload the page and try again.',
+        isRetryable: true,
+        retryDelay: 2000
       };
       setErrorState(initError);
     }
-  };
+  }, [setErrorState]);
 
-  const captureImage = (): string | null => {
+  // Initialize camera with optional error type hint
+  const initCamera = useCallback(async (errorTypeHint?: string) => {
+    try {
+      console.log(`Starting camera initialization... ${errorTypeHint ? `After ${errorTypeHint} error` : ''} (Attempt ${retryAttempts + 1})`);
+      setIsInitializing(true);
+      setError(null);
+      
+      // Only reset permission denial on first attempt or explicit user retry
+      if (retryAttempts === 0 || !isRetrying) {
+        setPermissionDenied(false);
+      }
+      
+      if (stream) {
+        // Clean up existing stream first
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log('Stopped existing camera track');
+        });
+        setStream(null);
+      }
+      
+      // Determine which constraints to use based on error type and retry attempt
+      let constraintsToUse = constraints.optimal;
+      
+      if (errorTypeHint === 'overconstrained' || retryAttempts === 1) {
+        console.log('Using fallback constraints due to previous error or retry attempt');
+        constraintsToUse = constraints.fallback;
+      } else if (retryAttempts >= 2) {
+        console.log('Using minimal constraints for higher retry attempt');
+        constraintsToUse = constraints.minimal;
+      }
+      
+      console.log('Requesting camera with constraints:', JSON.stringify(constraintsToUse));
+      
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API is not supported in this browser');
+      }
+      
+      try {
+        // Try with selected constraints
+        const mediaStream = await requestCamera(constraintsToUse);
+        initializeVideoStream(mediaStream);
+        
+        // Reset retry count on success
+        if (retryAttempts > 0) {
+          toast({
+            title: "Camera connected",
+            description: "Camera connection restored successfully",
+            duration: 3000,
+          });
+          
+          // Reset retry state after short delay to avoid UI flicker
+          setTimeout(() => {
+            setRetryAttempts(0);
+            setIsRetrying(false);
+            setLastError(null);
+          }, 500);
+        }
+      } catch (err: any) {
+        // For first attempt, try fallback constraints
+        if (retryAttempts === 0 && !isRetrying && constraintsToUse === constraints.optimal) {
+          console.log('Optimal constraints failed, trying fallback:', err);
+          try {
+            const fallbackStream = await requestCamera(constraints.fallback);
+            initializeVideoStream(fallbackStream);
+            return;
+          } catch (fallbackErr) {
+            console.error('Fallback camera access also failed:', fallbackErr);
+            // If fallback fails, try minimal constraints
+            try {
+              const minimalStream = await requestCamera(constraints.minimal);
+              initializeVideoStream(minimalStream);
+              return;
+            } catch (minimalErr) {
+              // If all attempts fail, throw the original error
+              throw err;
+            }
+          }
+        } else {
+          // If already retrying or using non-optimal constraints, propagate error
+          throw err;
+        }
+      }
+    } catch (err: any) {
+      const cameraError = parseCameraError(err);
+      setErrorState(cameraError);
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [
+    retryAttempts, 
+    isRetrying, 
+    stream, 
+    constraints, 
+    initializeVideoStream, 
+    setErrorState,
+    toast
+  ]);
+
+  const captureImage = useCallback((): string | null => {
     if (!videoRef.current || !canvasRef.current) {
       console.error('Cannot capture: Video or canvas ref is null');
       return null;
@@ -194,9 +284,9 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
       }
     }
     return null;
-  };
+  }, [setErrorState]);
 
-  // Initialize camera on mount if enabled
+  // Initialize camera on mount if enabled or when retry count changes
   useEffect(() => {
     if (enabled) {
       console.log('Camera is enabled, initializing...');
@@ -216,9 +306,34 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
           console.log('Camera track stopped');
         });
       }
+      
+      if (retryTimeoutRef.current !== null) {
+        window.clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
     };
-  }, [enabled, isMobile]);
+  }, [enabled, isMobile, initCamera, stream, retryAttempts]);
 
+  // Manual retry handler - completely resets the camera
+  const manualRetry = useCallback(() => {
+    console.log('Manual camera retry initiated');
+    
+    // Clear any pending automatic retries
+    if (retryTimeoutRef.current !== null) {
+      window.clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    
+    // Reset retry state
+    setRetryAttempts(0);
+    setIsRetrying(false);
+    setLastError(null);
+    
+    // Re-initialize camera
+    initCamera();
+  }, [initCamera]);
+
+  // Override initCamera with manualRetry to ensure proper reset
   return {
     videoRef,
     canvasRef,
@@ -229,6 +344,8 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
     flashEffect,
     setFlashEffect,
     captureImage,
-    initCamera
+    initCamera: manualRetry,
+    retryAttempts,
+    isRetrying
   };
 }

@@ -32,9 +32,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     flashEffect,
     permissionDenied,
     initCamera,
-    captureImage
+    captureImage,
+    retryAttempts,
+    isRetrying
   } = useCamera({
-    enabled: !capturedImage
+    enabled: !capturedImage,
+    maxRetryAttempts: 3
   });
 
   const handleCaptureImage = () => {
@@ -75,6 +78,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         flashEffect={flashEffect}
         permissionDenied={permissionDenied}
         onRetryCamera={initCamera}
+        retryAttempts={retryAttempts}
+        isRetrying={isRetrying}
       />
       
       {/* Controls */}

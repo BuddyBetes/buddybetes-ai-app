@@ -16,6 +16,8 @@ interface CameraViewProps {
   permissionDenied?: boolean;
   isMobile?: boolean;
   onRetryCamera: () => void;
+  retryAttempts?: number;
+  isRetrying?: boolean;
 }
 
 const CameraView: React.FC<CameraViewProps> = ({ 
@@ -29,9 +31,11 @@ const CameraView: React.FC<CameraViewProps> = ({
   flashEffect,
   permissionDenied = false,
   isMobile = false,
-  onRetryCamera
+  onRetryCamera,
+  retryAttempts = 0,
+  isRetrying = false
 }) => {
-  const [retryAttempts, setRetryAttempts] = useState(0);
+  const [manualRetryAttempts, setManualRetryAttempts] = useState(0);
 
   // Function to refresh the page
   const handleRefresh = () => {
@@ -40,7 +44,7 @@ const CameraView: React.FC<CameraViewProps> = ({
 
   // Function to retry camera connection
   const handleRetryCamera = () => {
-    setRetryAttempts(prev => prev + 1);
+    setManualRetryAttempts(prev => prev + 1);
     onRetryCamera();
   };
 
@@ -68,13 +72,23 @@ const CameraView: React.FC<CameraViewProps> = ({
         <div className="text-white text-center px-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
           <p className="mb-3">Initializing camera...</p>
-          <p className="text-sm text-white/70">Please allow camera access when prompted</p>
+          <p className="text-sm text-white/70">
+            {isRetrying ? `Automatic retry in progress (${retryAttempts}/3)...` : 'Please allow camera access when prompted'}
+          </p>
         </div>
       ) : error ? (
         <div className="text-white text-center p-6">
           <div className="bg-red-900/50 p-4 rounded-lg mb-4">
             <p className="text-red-300 font-semibold mb-2">Camera Error</p>
             <p className="text-white/80">{error}</p>
+            
+            {isRetrying && (
+              <div className="mt-3 bg-blue-900/30 p-2 rounded">
+                <p className="text-blue-300 text-sm">
+                  Automatic recovery in progress ({retryAttempts}/3)
+                </p>
+              </div>
+            )}
           </div>
           
           {permissionDenied ? (
@@ -110,12 +124,13 @@ const CameraView: React.FC<CameraViewProps> = ({
                 variant="outline" 
                 className="bg-white/10 text-white border-white/30"
                 onClick={handleRetryCamera}
+                disabled={isRetrying}
               >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Retry Camera
+                <RefreshCw className={`mr-2 h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+                {isRetrying ? 'Retrying...' : 'Retry Camera'}
               </Button>
               
-              {retryAttempts >= 2 && (
+              {(manualRetryAttempts >= 2 || retryAttempts >= 2) && (
                 <Button 
                   variant="outline" 
                   className="bg-white/10 text-white border-white/30"

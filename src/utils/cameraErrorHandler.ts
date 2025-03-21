@@ -22,6 +22,8 @@ export interface CameraError {
   technicalDetails?: string;
   isPermissionIssue: boolean;
   suggestedAction?: string;
+  isRetryable?: boolean;
+  retryDelay?: number;
 }
 
 /**
@@ -42,7 +44,8 @@ export function parseCameraError(err: any): CameraError {
           message: 'Camera access denied. Please allow camera access in your browser settings.',
           technicalDetails: `${err.name}: ${err.message}`,
           isPermissionIssue: true,
-          suggestedAction: 'Check browser permissions and try again.'
+          suggestedAction: 'Check browser permissions and try again.',
+          isRetryable: false
         };
         
       case 'NotReadableError':
@@ -51,7 +54,9 @@ export function parseCameraError(err: any): CameraError {
           message: 'Camera is already in use by another application or tab.',
           technicalDetails: `${err.name}: ${err.message}`,
           isPermissionIssue: false,
-          suggestedAction: 'Close other apps using your camera and try again.'
+          suggestedAction: 'Close other apps using your camera and try again.',
+          isRetryable: true,
+          retryDelay: 3000 // Retry after 3 seconds
         };
         
       case 'OverconstrainedError':
@@ -60,7 +65,9 @@ export function parseCameraError(err: any): CameraError {
           message: 'Your device does not support the requested camera resolution or facing mode.',
           technicalDetails: `${err.name}: ${err.message}`,
           isPermissionIssue: false,
-          suggestedAction: 'Try again with different settings.'
+          suggestedAction: 'Try again with different settings.',
+          isRetryable: true,
+          retryDelay: 1000 // Retry quickly with fallback constraints
         };
         
       case 'NotFoundError':
@@ -69,7 +76,9 @@ export function parseCameraError(err: any): CameraError {
           message: 'No camera detected on your device, or camera access is disabled.',
           technicalDetails: `${err.name}: ${err.message}`,
           isPermissionIssue: false,
-          suggestedAction: 'Check if your device has a camera and it is enabled.'
+          suggestedAction: 'Check if your device has a camera and it is enabled.',
+          isRetryable: true,
+          retryDelay: 2000 // Retry after 2 seconds
         };
     }
   }
@@ -81,7 +90,8 @@ export function parseCameraError(err: any): CameraError {
       message: 'Your browser does not support camera access.',
       technicalDetails: err.message,
       isPermissionIssue: false,
-      suggestedAction: 'Try using a modern browser like Chrome, Firefox, or Safari.'
+      suggestedAction: 'Try using a modern browser like Chrome, Firefox, or Safari.',
+      isRetryable: false
     };
   }
   
@@ -91,7 +101,9 @@ export function parseCameraError(err: any): CameraError {
     message: 'An unexpected error occurred while accessing the camera.',
     technicalDetails: err?.message || 'Unknown error',
     isPermissionIssue: false,
-    suggestedAction: 'Try reloading the page or using a different browser.'
+    suggestedAction: 'Try reloading the page or using a different browser.',
+    isRetryable: true,
+    retryDelay: 2000 // Retry after 2 seconds
   };
 }
 
@@ -112,7 +124,9 @@ export function handleCameraError(error: CameraError): void {
     message: error.message,
     details: error.technicalDetails,
     isPermissionIssue: error.isPermissionIssue,
-    suggestedAction: error.suggestedAction
+    suggestedAction: error.suggestedAction,
+    isRetryable: error.isRetryable,
+    retryDelay: error.retryDelay
   });
 }
 
@@ -150,7 +164,9 @@ export function createCaptureError(message: string): CameraError {
     type: 'capture',
     message: message || 'Failed to capture image. Please try again.',
     isPermissionIssue: false,
-    suggestedAction: 'Try again or reload the page.'
+    suggestedAction: 'Try again or reload the page.',
+    isRetryable: true,
+    retryDelay: 1000
   };
 }
 
@@ -164,6 +180,59 @@ export function createPlaybackError(message: string): CameraError {
     type: 'playback',
     message: message || 'Could not play camera feed. Please try again or check browser settings.',
     isPermissionIssue: false,
-    suggestedAction: 'Check that your browser allows autoplay or reload the page.'
+    suggestedAction: 'Check that your browser allows autoplay or reload the page.',
+    isRetryable: true,
+    retryDelay: 2000
   };
+}
+
+/**
+ * Determine if an error should trigger an automatic retry
+ * @param error The camera error object
+ * @returns True if the error is retryable
+ */
+export function isRetryableError(error: CameraError): boolean {
+  // Don't retry permission errors - user interaction required
+  if (error.isPermissionIssue) {
+    return false;
+  }
+  
+  return error.isRetryable === true;
+}
+
+/**
+ * Get appropriate retry delay for an error
+ * @param error The camera error object
+ * @param attemptNumber The current retry attempt number (1-based)
+ * @returns Delay in milliseconds before next retry
+ */
+export function getRetryDelay(error: CameraError, attemptNumber: number): number {
+  // Base delay from error definition or default to 2000ms
+  const baseDelay = error.retryDelay || 2000;
+  
+  // Use exponential backoff with a maximum of 10 seconds
+  const exponentialDelay = Math.min(
+    baseDelay * Math.pow(1.5, attemptNumber - 1), 
+    10000
+  );
+  
+  // Add some jitter (±20%)
+  const jitter = 0.8 + (Math.random() * 0.4);
+  
+  return Math.floor(exponentialDelay * jitter);
+}
+
+/**
+ * Create a notification message for camera retry attempts
+ * @param attemptNumber Current retry attempt number
+ * @param maxAttempts Maximum number of retry attempts
+ * @param errorType Type of error being retried
+ * @returns Message string for user notification
+ */
+export function createRetryMessage(
+  attemptNumber: number, 
+  maxAttempts: number, 
+  errorType: CameraErrorType
+): string {
+  return `Retrying camera ${attemptNumber}/${maxAttempts} after ${errorType.replace('_', ' ')} error`;
 }
