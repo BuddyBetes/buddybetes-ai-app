@@ -59,7 +59,7 @@ const Index = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
         >
-          Your AI Health Assistant
+          Your BestFriend in Diabetes Care
         </motion.p>
       </motion.div>
     </div>
