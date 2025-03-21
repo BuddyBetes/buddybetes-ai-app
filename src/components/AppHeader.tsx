@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ProfileNotifications from './profile/ProfileNotifications';
 import NotificationIndicator from './profile/NotificationIndicator';
+import ProfileMenu from './profile/ProfileMenu';
 
 const AppHeader = () => {
   const location = useLocation();
@@ -24,12 +24,7 @@ const AppHeader = () => {
         <ProfileNotifications>
           <NotificationIndicator className="p-2 rounded-full hover:bg-gray-100 relative" />
         </ProfileNotifications>
-        <button 
-          className="p-2 rounded-full hover:bg-gray-100"
-          onClick={navigateToProfile}
-        >
-          <User size={20} className="text-gray-700" />
-        </button>
+        <ProfileMenu />
       </div>
     </header>
   );
