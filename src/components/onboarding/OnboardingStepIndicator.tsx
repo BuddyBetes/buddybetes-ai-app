@@ -32,7 +32,7 @@ const OnboardingStepIndicator: React.FC<OnboardingStepIndicatorProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between mb-10 px-4">
+    <div className="flex items-center justify-between mb-14 px-4">
       {steps.map((step, index) => (
         <React.Fragment key={index}>
           {/* Step with label */}
