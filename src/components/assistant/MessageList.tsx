@@ -57,7 +57,8 @@ const MessageList: React.FC<MessageListProps> = ({
       }
     });
     
-    return grouped;
+    // Filter out empty groups
+    return Object.entries(grouped).filter(([_, groupMessages]) => groupMessages.length > 0);
   };
   
   // Add scroll event listener
@@ -96,26 +97,24 @@ const MessageList: React.FC<MessageListProps> = ({
       </AnimatePresence>
       
       <div className="space-y-6 pt-4">
-        {Object.entries(groupedMessages()).map(([timeGroup, groupMessages]) => (
-          groupMessages.length > 0 && (
-            <div key={timeGroup} className="space-y-6">
-              <div className="flex justify-center">
-                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                  {timeGroup}
-                </span>
-              </div>
-              
-              {groupMessages.map((message, index) => (
-                <MessageBubble
-                  key={`${timeGroup}-${index}`}
-                  text={message.text}
-                  type={message.type}
-                  nutritionalInfo={message.nutritionalInfo}
-                  isNew={message.isNew}
-                />
-              ))}
+        {groupedMessages().map(([timeGroup, groupMessages]) => (
+          <div key={timeGroup} className="space-y-6">
+            <div className="flex justify-center">
+              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                {timeGroup}
+              </span>
             </div>
-          )
+            
+            {groupMessages.map((message, index) => (
+              <MessageBubble
+                key={`${timeGroup}-${index}`}
+                text={message.text}
+                type={message.type}
+                nutritionalInfo={message.nutritionalInfo}
+                isNew={message.isNew}
+              />
+            ))}
+          </div>
         ))}
       </div>
       

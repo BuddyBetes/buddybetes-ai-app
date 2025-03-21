@@ -10,7 +10,7 @@ export const useMessagePersistence = () => {
 
   useEffect(() => {
     const loadConversation = async () => {
-      if (!user) return;
+      if (!user) return null;
       
       try {
         const { data: conversationData, error: conversationError } = await supabase
@@ -22,7 +22,7 @@ export const useMessagePersistence = () => {
           
         if (conversationError) {
           console.error('Error fetching conversation:', conversationError);
-          return;
+          return null;
         }
         
         let currentConversationId: string;
@@ -65,8 +65,9 @@ export const useMessagePersistence = () => {
             
             return loadedMessages;
           } else {
+            // No messages found for this conversation, create a welcome message
             const welcomeMessage: Message = {
-              text: "Hi! I'm BuddyBetes. How can I help?",
+              text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
               type: 'assistant',
               timestamp: Date.now()
             };
@@ -75,6 +76,7 @@ export const useMessagePersistence = () => {
             return [welcomeMessage];
           }
         } else {
+          // No conversation found, create a new one
           const newConversationId = `conv-${Date.now()}`;
           const { data: newConv, error: createError } = await supabase
             .from('assistant_conversations')
@@ -94,7 +96,7 @@ export const useMessagePersistence = () => {
           setConversationId(currentConversationId);
           
           const welcomeMessage: Message = {
-            text: "Hi! I'm BuddyBetes. How can I help?",
+            text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
             type: 'assistant',
             timestamp: Date.now()
           };
@@ -140,6 +142,7 @@ export const useMessagePersistence = () => {
         console.error('Error saving message:', error);
       }
       
+      // Update the conversation's updated_at timestamp
       await supabase
         .from('assistant_conversations')
         .update({ updated_at: new Date().toISOString() })

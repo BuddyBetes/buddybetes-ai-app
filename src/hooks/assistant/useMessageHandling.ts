@@ -1,9 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Message } from '@/types';
 import { useMessagePersistence } from './useMessagePersistence';
 import { useAssistantResponse } from './useAssistantResponse';
 import { useDirectGlucoseLogging } from './useDirectGlucoseLogging';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 export const useMessageHandling = (
   playResponseAudio?: (text: string) => Promise<void>,
@@ -12,10 +14,75 @@ export const useMessageHandling = (
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
   
+  const { user } = useAuth();
   const { conversationId, saveMessageToSupabase } = useMessagePersistence();
   const { requestAssistantResponse } = useAssistantResponse();
   const { processGlucoseLog } = useDirectGlucoseLogging();
+  
+  // Load past messages
+  useEffect(() => {
+    if (user && conversationId && !isInitialized) {
+      const loadMessages = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('assistant_messages')
+            .select('*')
+            .eq('conversation_id', conversationId)
+            .order('timestamp', { ascending: true });
+            
+          if (error) {
+            console.error('Error loading messages:', error);
+            return;
+          }
+          
+          if (data && data.length > 0) {
+            const loadedMessages: Message[] = data.map(msg => {
+              let nutritionalInfo = undefined;
+              if (msg.nutritional_info) {
+                const info = msg.nutritional_info as any;
+                nutritionalInfo = {
+                  name: info.name || '',
+                  calories: info.calories || '',
+                  carbs: info.carbs || '',
+                  details: info.details || ''
+                };
+              }
+              
+              return {
+                text: msg.content,
+                type: msg.message_type as 'user' | 'assistant',
+                timestamp: new Date(msg.timestamp).getTime(),
+                nutritionalInfo
+              };
+            });
+            
+            setMessages(loadedMessages);
+            setIsInitialized(true);
+          } else if (!isInitialized) {
+            // If no messages, add welcome message
+            const welcomeMessage: Message = {
+              text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
+              type: 'assistant',
+              timestamp: Date.now()
+            };
+            setMessages([welcomeMessage]);
+            
+            if (conversationId) {
+              await saveMessageToSupabase(welcomeMessage, conversationId);
+            }
+            
+            setIsInitialized(true);
+          }
+        } catch (error) {
+          console.error('Error loading conversation:', error);
+        }
+      };
+      
+      loadMessages();
+    }
+  }, [user, conversationId, isInitialized]);
   
   const handleUserMessage = async (message: string) => {
     if (!message.trim() || isLoading) return;
@@ -33,7 +100,7 @@ export const useMessageHandling = (
       setMessages, 
       playResponseAudio, 
       currentMode || 'text',
-      saveMessageToSupabase,
+      saveMessageToSupabase, 
       conversationId
     );
     

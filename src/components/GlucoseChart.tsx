@@ -14,13 +14,14 @@ import { GlucoseLog } from '../context/LogContext';
 
 interface GlucoseChartProps {
   data: GlucoseLog[];
+  title?: string;
 }
 
 const formatDate = (timestamp: Date) => {
   return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const GlucoseChart: React.FC<GlucoseChartProps> = ({ data }) => {
+const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title }) => {
   const chartData = data.map(log => ({
     time: formatDate(log.timestamp),
     value: log.glucoseLevel,
@@ -29,7 +30,7 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data }) => {
 
   return (
     <div className="w-full h-64 p-4 rounded-xl bg-white shadow-sm">
-      <div className="text-lg font-semibold mb-2">Glucose Trends</div>
+      {title && <div className="text-lg font-semibold mb-2">{title}</div>}
       <ResponsiveContainer width="100%" height="90%">
         <LineChart
           data={chartData}
