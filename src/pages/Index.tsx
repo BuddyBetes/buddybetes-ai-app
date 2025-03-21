@@ -12,6 +12,8 @@ const Index = () => {
   useEffect(() => {
     // Wait for auth status to load, then redirect
     if (!loading) {
+      console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding });
+      
       const timer = setTimeout(() => {
         if (isAuthenticated) {
           if (hasCompletedOnboarding) {
