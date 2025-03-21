@@ -14,6 +14,7 @@ interface AuthContextProps {
   signOut: () => Promise<void>;
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (value: boolean) => void;
+  isCheckingData: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -23,6 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [isCheckingData, setIsCheckingData] = useState(true);
   const { toast } = useToast();
 
   // Function to check and update onboarding status
@@ -89,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const getInitialSession = async () => {
       try {
         setLoading(true);
+        setIsCheckingData(true);
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         
         setSession(initialSession);
@@ -107,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       } finally {
         setLoading(false);
+        setIsCheckingData(false);
       }
     };
 
@@ -233,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         hasCompletedOnboarding,
         setHasCompletedOnboarding: updateOnboardingStatus,
+        isCheckingData,
       }}
     >
       {children}
