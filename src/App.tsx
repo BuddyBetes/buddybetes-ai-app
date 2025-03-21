@@ -21,6 +21,7 @@ import Privacy from "./pages/settings/Privacy";
 import Help from "./pages/settings/Help";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
+import EmailConfirmed from "./pages/auth/EmailConfirmed";
 import Onboarding from "./pages/Onboarding";
 import TermsAndConditions from "./pages/TermsAndConditions";
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/confirm" element={<EmailConfirmed />} />
               <Route path="/onboarding" element={<Onboarding />} />
               
               {/* Protected routes - require authentication and completed onboarding */}
