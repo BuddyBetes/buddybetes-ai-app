@@ -100,6 +100,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          // Add redirectTo to properly direct users after email confirmation
+          emailRedirectTo: `${window.location.origin}/confirm`
+        }
       });
       
       if (error) throw error;
