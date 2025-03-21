@@ -1,0 +1,157 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { Message } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+
+export const useMessagePersistence = () => {
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadConversation = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: conversationData, error: conversationError } = await supabase
+          .from('assistant_conversations')
+          .select('id, conversation_id')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+          
+        if (conversationError) {
+          console.error('Error fetching conversation:', conversationError);
+          return;
+        }
+        
+        let currentConversationId: string;
+        
+        if (conversationData && conversationData.length > 0) {
+          currentConversationId = conversationData[0].id;
+          setConversationId(currentConversationId);
+          
+          const { data: messageData, error: messageError } = await supabase
+            .from('assistant_messages')
+            .select('*')
+            .eq('conversation_id', currentConversationId)
+            .order('timestamp', { ascending: true });
+            
+          if (messageError) {
+            console.error('Error fetching messages:', messageError);
+            return null;
+          }
+          
+          if (messageData && messageData.length > 0) {
+            const loadedMessages: Message[] = messageData.map(msg => {
+              let nutritionalInfo = undefined;
+              if (msg.nutritional_info) {
+                const info = msg.nutritional_info as any;
+                nutritionalInfo = {
+                  name: info.name || '',
+                  calories: info.calories || '',
+                  carbs: info.carbs || '',
+                  details: info.details || ''
+                };
+              }
+              
+              return {
+                text: msg.content,
+                type: msg.message_type as 'user' | 'assistant',
+                timestamp: new Date(msg.timestamp).getTime(),
+                nutritionalInfo
+              };
+            });
+            
+            return loadedMessages;
+          } else {
+            const welcomeMessage: Message = {
+              text: "Hi! I'm BuddyBetes. How can I help?",
+              type: 'assistant',
+              timestamp: Date.now()
+            };
+            
+            await saveMessageToSupabase(welcomeMessage, currentConversationId);
+            return [welcomeMessage];
+          }
+        } else {
+          const newConversationId = `conv-${Date.now()}`;
+          const { data: newConv, error: createError } = await supabase
+            .from('assistant_conversations')
+            .insert({
+              user_id: user.id,
+              conversation_id: newConversationId
+            })
+            .select('id')
+            .single();
+            
+          if (createError) {
+            console.error('Error creating conversation:', createError);
+            return null;
+          }
+          
+          currentConversationId = newConv.id;
+          setConversationId(currentConversationId);
+          
+          const welcomeMessage: Message = {
+            text: "Hi! I'm BuddyBetes. How can I help?",
+            type: 'assistant',
+            timestamp: Date.now()
+          };
+          
+          await saveMessageToSupabase(welcomeMessage, currentConversationId);
+          return [welcomeMessage];
+        }
+      } catch (error) {
+        console.error('Error in loadConversation:', error);
+        return null;
+      }
+    };
+    
+    loadConversation().then(messages => {
+      if (messages && messages.length > 0) {
+        // This is now handled by the parent component
+      }
+    });
+  }, [user]);
+  
+  const saveMessageToSupabase = async (message: Message, convId: string) => {
+    if (!user || !convId) return;
+    
+    try {
+      const messageData = {
+        conversation_id: convId,
+        message_type: message.type,
+        content: message.text,
+        nutritional_info: message.nutritionalInfo ? {
+          name: message.nutritionalInfo.name,
+          calories: message.nutritionalInfo.calories,
+          carbs: message.nutritionalInfo.carbs,
+          details: message.nutritionalInfo.details
+        } : null,
+        timestamp: new Date(message.timestamp).toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('assistant_messages')
+        .insert(messageData);
+        
+      if (error) {
+        console.error('Error saving message:', error);
+      }
+      
+      await supabase
+        .from('assistant_conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', convId);
+        
+    } catch (error) {
+      console.error('Error saving message to Supabase:', error);
+    }
+  };
+
+  return {
+    conversationId,
+    saveMessageToSupabase,
+  };
+};
