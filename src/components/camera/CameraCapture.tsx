@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useCamera } from '@/hooks/use-camera';
 import { useToast } from '@/hooks/use-toast';
 import CaptureButton from './CaptureButton';
@@ -39,6 +39,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     enabled: !capturedImage,
     maxRetryAttempts: 3
   });
+
+  // Log when component mounts and unmounts for debugging
+  useEffect(() => {
+    console.log('CameraCapture component mounted');
+    
+    return () => {
+      console.log('CameraCapture component unmounted, cleaning up resources');
+    };
+  }, []);
 
   const handleCaptureImage = () => {
     const imageDataUrl = captureImage();

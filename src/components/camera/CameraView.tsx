@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Camera, RefreshCw, Smartphone } from 'lucide-react';
 import CaptureOverlay from './CaptureOverlay';
@@ -37,6 +36,7 @@ const CameraView: React.FC<CameraViewProps> = ({
 }) => {
   const [manualRetryAttempts, setManualRetryAttempts] = useState(0);
   const [isRetryingManually, setIsRetryingManually] = useState(false);
+  const mountedRef = useRef(false);
 
   // Function to refresh the page
   const handleRefresh = () => {
@@ -65,6 +65,17 @@ const CameraView: React.FC<CameraViewProps> = ({
       setManualRetryAttempts(0);
     }
   }, [error]);
+
+  // Mark component as mounted
+  useEffect(() => {
+    console.log('CameraView component mounted');
+    mountedRef.current = true;
+    
+    return () => {
+      console.log('CameraView component unmounted');
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Function for iOS-specific camera help
   const showIOSHelp = () => {

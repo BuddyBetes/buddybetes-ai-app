@@ -7,6 +7,7 @@ interface UseCameraInitializationProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   setStream: (stream: MediaStream | null) => void;
   setErrorState: (error: CameraError) => void;
+  setVideoElementReady?: (ready: boolean) => void;
 }
 
 /**
@@ -15,7 +16,8 @@ interface UseCameraInitializationProps {
 export function useCameraInitialization({
   videoRef,
   setStream,
-  setErrorState
+  setErrorState,
+  setVideoElementReady
 }: UseCameraInitializationProps) {
   
   /**
@@ -42,9 +44,29 @@ export function useCameraInitialization({
   const initializeVideoStream = useCallback((mediaStream: MediaStream) => {
     console.log('Camera access granted successfully');
     
-    if (videoRef.current) {
-      console.log('Setting video source and applying properties');
-      
+    if (!videoRef.current) {
+      console.error('Video reference is null');
+      const initError = {
+        type: 'initialization' as const,
+        message: 'Camera initialization failed. Please reload the page and try again.',
+        isPermissionIssue: false,
+        suggestedAction: 'Reload the page and try again.',
+        isRetryable: true,
+        retryDelay: 2000,
+        technicalDetails: 'Video element reference is null'
+      };
+      setErrorState(initError);
+      return;
+    }
+    
+    console.log('Setting video source and applying properties');
+    
+    // Notify that we've found the video element (if callback provided)
+    if (setVideoElementReady) {
+      setVideoElementReady(true);
+    }
+    
+    try {
       videoRef.current.setAttribute('autoplay', 'true');
       videoRef.current.setAttribute('playsinline', 'true');
       videoRef.current.setAttribute('muted', 'true');
@@ -64,19 +86,20 @@ export function useCameraInitialization({
       };
       
       setStream(mediaStream);
-    } else {
-      console.error('Video reference is null');
-      const initError = {
+    } catch (err) {
+      console.error('Error setting up video element:', err);
+      const setupError = {
         type: 'initialization' as const,
-        message: 'Camera initialization failed. Please reload the page and try again.',
+        message: 'Failed to initialize camera stream. Please try again.',
         isPermissionIssue: false,
-        suggestedAction: 'Reload the page and try again.',
+        suggestedAction: 'Try reloading the page.',
         isRetryable: true,
-        retryDelay: 2000
+        retryDelay: 2000,
+        technicalDetails: err instanceof Error ? err.message : String(err)
       };
-      setErrorState(initError);
+      setErrorState(setupError);
     }
-  }, [videoRef, setStream, setErrorState]);
+  }, [videoRef, setStream, setErrorState, setVideoElementReady]);
 
   return {
     requestCamera,
