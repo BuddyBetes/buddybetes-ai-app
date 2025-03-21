@@ -1,7 +1,7 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 import CaptureOverlay from './CaptureOverlay';
 
 interface CameraViewProps {
@@ -13,6 +13,7 @@ interface CameraViewProps {
   isInitializing: boolean;
   error: string | null;
   flashEffect: boolean;
+  permissionDenied?: boolean;
 }
 
 const CameraView: React.FC<CameraViewProps> = ({ 
@@ -23,7 +24,8 @@ const CameraView: React.FC<CameraViewProps> = ({
   canvasRef,
   isInitializing,
   error,
-  flashEffect
+  flashEffect,
+  permissionDenied = false
 }) => {
   return (
     <div className="relative flex-1 flex items-center justify-center overflow-hidden">
@@ -33,9 +35,26 @@ const CameraView: React.FC<CameraViewProps> = ({
           <p>Initializing camera...</p>
         </div>
       ) : error ? (
-        <div className="text-white text-center p-4">
-          <p className="text-red-400 mb-2">Error</p>
-          <p>{error}</p>
+        <div className="text-white text-center p-6">
+          <div className="bg-red-900/50 p-4 rounded-lg mb-4">
+            <p className="text-red-300 font-semibold mb-2">Camera Error</p>
+            <p className="text-white/80">{error}</p>
+          </div>
+          
+          {permissionDenied && (
+            <div className="mt-4">
+              <p className="text-white/80 mb-4">
+                You need to allow camera access in your browser settings to use this feature.
+              </p>
+              <Button 
+                variant="outline" 
+                className="bg-white/10 text-white border-white/30"
+                onClick={onClose}
+              >
+                Close Camera
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <>
@@ -43,6 +62,7 @@ const CameraView: React.FC<CameraViewProps> = ({
             ref={videoRef}
             autoPlay
             playsInline
+            muted
             className="absolute inset-0 w-full h-full object-cover"
           />
           <CaptureOverlay mode={mode} />
@@ -50,7 +70,7 @@ const CameraView: React.FC<CameraViewProps> = ({
           
           {/* Flash effect */}
           {flashEffect && (
-            <div className="absolute inset-0 bg-white animate-flash"></div>
+            <div className="absolute inset-0 bg-white opacity-70 z-10"></div>
           )}
         </>
       )}
