@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from './use-mobile';
 import { useToast } from './use-toast';
+import { useCameraConstraints, CameraConstraints } from '@/utils/cameraConstraints';
 
 interface UseCameraProps {
   enabled: boolean;
@@ -30,6 +31,7 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const constraints = useCameraConstraints();
 
   // Initialize camera
   const initCamera = async () => {
@@ -48,139 +50,109 @@ export function useCamera({ enabled }: UseCameraProps): UseCameraReturn {
         setStream(null);
       }
       
-      // Set constraints based on device
-      const facingMode = isMobile ? { exact: 'environment' } : 'user';
-      
-      // For mobile devices, we'll try lower resolution first for compatibility
-      const mobileConstraints = {
-        audio: false,
-        video: { 
-          facingMode: facingMode,
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 }
-        }
-      };
-      
-      // For desktop devices, we can use higher resolution
-      const desktopConstraints = {
-        audio: false,
-        video: { 
-          facingMode: facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
-      };
-      
-      const constraints = isMobile ? mobileConstraints : desktopConstraints;
-      
-      console.log('Requesting camera with constraints:', JSON.stringify(constraints));
+      console.log('Requesting camera with constraints:', JSON.stringify(constraints.optimal));
       
       // Check if getUserMedia is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera API is not supported in this browser');
       }
       
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Camera access granted successfully');
-      
-      if (videoRef.current) {
-        console.log('Setting video source and applying properties');
-        
-        // Important for iOS Safari
-        videoRef.current.setAttribute('autoplay', 'true');
-        videoRef.current.setAttribute('playsinline', 'true');
-        videoRef.current.setAttribute('muted', 'true');
-        
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.muted = true;
-        
-        // Ensure video plays after metadata is loaded
-        videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded, playing video...');
-          if (videoRef.current) {
-            videoRef.current.play().catch(e => {
-              console.error('Error playing video:', e);
-              setError('Could not play camera feed. Please try again or check browser settings.');
-            });
-          }
-        };
-        
-        setStream(mediaStream);
-      } else {
-        console.error('Video reference is null');
-        setError('Camera initialization failed. Please reload the page and try again.');
-      }
-      
-      setIsInitializing(false);
-    } catch (err: any) {
-      console.error('Error accessing camera:', err);
-      
-      if (err instanceof DOMException && 
-          (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
-        setPermissionDenied(true);
-        setError('Camera access denied. Please allow camera access in your browser settings.');
-        toast({
-          title: "Camera access denied",
-          description: "Please allow camera access in your browser settings.",
-          variant: "destructive",
-        });
-      } else if (err instanceof DOMException && err.name === 'NotReadableError') {
-        setError('Camera is already in use by another application or tab. Please close other apps using your camera.');
-      } else if (err instanceof DOMException && err.name === 'OverconstrainedError') {
-        // If 'exact: environment' fails, try without 'exact' constraint
-        // We need to define the current constraints within this scope for the check below
-        const currentConstraints = isMobile ? {
-          audio: false,
-          video: { 
-            facingMode: { exact: 'environment' },
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 }
-          }
-        } : {
-          audio: false,
-          video: { 
-            facingMode: 'user',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          }
-        };
-        
-        if (isMobile && JSON.stringify(currentConstraints).includes('exact')) {
-          console.log('Retrying with less strict constraints...');
-          const fallbackConstraints = {
-            audio: false,
-            video: { 
-              facingMode: 'environment',
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            }
-          };
-          
+      try {
+        // Try with optimal constraints first
+        const mediaStream = await requestCamera(constraints.optimal);
+        initializeVideoStream(mediaStream);
+      } catch (err: any) {
+        // If optimal constraints fail, try fallback
+        console.log('Optimal constraints failed, trying fallback:', err);
+        if (err instanceof DOMException && err.name === 'OverconstrainedError') {
           try {
-            const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
-            if (videoRef.current) {
-              videoRef.current.srcObject = fallbackStream;
-              videoRef.current.play().catch(e => console.error('Fallback play error:', e));
-              setStream(fallbackStream);
-              setIsInitializing(false);
-              return;
-            }
+            const fallbackStream = await requestCamera(constraints.fallback);
+            initializeVideoStream(fallbackStream);
+            return;
           } catch (fallbackErr) {
             console.error('Fallback camera access also failed:', fallbackErr);
+            // If fallback fails, try minimal constraints
+            try {
+              const minimalStream = await requestCamera(constraints.minimal);
+              initializeVideoStream(minimalStream);
+              return;
+            } catch (minimalErr) {
+              // If all attempts fail, throw the original error
+              throw err;
+            }
           }
         }
-        
-        setError('Your device does not support the requested camera resolution or facing mode. Please try again with different settings.');
-      } else {
-        setError(`Could not access camera. ${err.message || 'Please try again with a different browser.'}`);
-        toast({
-          title: "Camera error",
-          description: "Could not access camera. Try reloading the page or using a different browser.",
-          variant: "destructive",
-        });
+        throw err;
       }
-      
+    } catch (err: any) {
+      handleCameraError(err);
+    } finally {
       setIsInitializing(false);
+    }
+  };
+
+  // Helper function to request camera access
+  const requestCamera = async (constraints: CameraConstraints): Promise<MediaStream> => {
+    return await navigator.mediaDevices.getUserMedia(constraints);
+  };
+  
+  // Helper function to initialize video stream
+  const initializeVideoStream = (mediaStream: MediaStream) => {
+    console.log('Camera access granted successfully');
+    
+    if (videoRef.current) {
+      console.log('Setting video source and applying properties');
+      
+      // Important for iOS Safari
+      videoRef.current.setAttribute('autoplay', 'true');
+      videoRef.current.setAttribute('playsinline', 'true');
+      videoRef.current.setAttribute('muted', 'true');
+      
+      videoRef.current.srcObject = mediaStream;
+      videoRef.current.muted = true;
+      
+      // Ensure video plays after metadata is loaded
+      videoRef.current.onloadedmetadata = () => {
+        console.log('Video metadata loaded, playing video...');
+        if (videoRef.current) {
+          videoRef.current.play().catch(e => {
+            console.error('Error playing video:', e);
+            setError('Could not play camera feed. Please try again or check browser settings.');
+          });
+        }
+      };
+      
+      setStream(mediaStream);
+    } else {
+      console.error('Video reference is null');
+      setError('Camera initialization failed. Please reload the page and try again.');
+    }
+  };
+  
+  // Helper function to handle camera errors
+  const handleCameraError = (err: any) => {
+    console.error('Error accessing camera:', err);
+    
+    if (err instanceof DOMException && 
+        (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+      setPermissionDenied(true);
+      setError('Camera access denied. Please allow camera access in your browser settings.');
+      toast({
+        title: "Camera access denied",
+        description: "Please allow camera access in your browser settings.",
+        variant: "destructive",
+      });
+    } else if (err instanceof DOMException && err.name === 'NotReadableError') {
+      setError('Camera is already in use by another application or tab. Please close other apps using your camera.');
+    } else if (err instanceof DOMException && err.name === 'OverconstrainedError') {
+      setError('Your device does not support the requested camera resolution or facing mode. Please try again with different settings.');
+    } else {
+      setError(`Could not access camera. ${err.message || 'Please try again with a different browser.'}`);
+      toast({
+        title: "Camera error",
+        description: "Could not access camera. Try reloading the page or using a different browser.",
+        variant: "destructive",
+      });
     }
   };
 
