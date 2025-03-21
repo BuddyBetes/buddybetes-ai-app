@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -16,6 +17,7 @@ import SignUp from './pages/auth/SignUp';
 import Onboarding from './pages/Onboarding';
 import ResetPassword from './pages/auth/ResetPassword';
 import EmailConfirmed from './pages/auth/EmailConfirmed';
+import Profile from './pages/Profile';
 
 const PageTransition: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -92,6 +94,16 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <PageTransition>
               <Onboarding />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <Profile />
             </PageTransition>
           </ProtectedRoute>
         }
