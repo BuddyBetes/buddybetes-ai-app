@@ -43,13 +43,38 @@ const Assistant = () => {
   const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string | null>(null);
   const [fromAddLog, setFromAddLog] = useState(false);
+  const [schedulingIntent, setSchedulingIntent] = useState(false);
 
-  // Check if we came from the add-log page
+  // Check if we came from the add-log page and check for scheduling intent
   useEffect(() => {
-    if (location.state && location.state.from === 'add-log') {
-      setFromAddLog(true);
+    if (location.state) {
+      if (location.state.from === 'add-log') {
+        setFromAddLog(true);
+      }
+      
+      if (location.state.intent === 'schedule') {
+        setSchedulingIntent(true);
+        // Automatically switch to voice mode for scheduling
+        handleVoiceMode();
+      }
     }
-  }, [location]);
+  }, [location, handleVoiceMode]);
+
+  // If coming with scheduling intent, automatically start the voice session
+  // and prompt the user for scheduling information
+  useEffect(() => {
+    if (schedulingIntent && mode === 'voice' && !isLoading) {
+      // Add a small delay to let the UI render before starting the session
+      const timer = setTimeout(() => {
+        handleStartSession();
+        // Pre-fill with scheduling message to guide the assistant
+        handleInputChange("I'd like to schedule a glucose logging reminder");
+        handleSend();
+      }, 800);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [schedulingIntent, mode, isLoading, handleStartSession, handleInputChange, handleSend]);
 
   // Create a custom event for message updates
   React.useEffect(() => {
