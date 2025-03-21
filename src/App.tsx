@@ -29,8 +29,12 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      onError: (error) => {
-        console.error("Query error:", error);
+      // Update error handling to use the proper syntax for the current version
+      // of @tanstack/react-query
+      meta: {
+        onError: (error: Error) => {
+          console.error("Query error:", error);
+        }
       }
     },
   },
