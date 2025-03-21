@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useIsMobile } from './use-mobile';
 import { useToast } from './use-toast';
@@ -93,7 +94,12 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
   }, [retryAttempts, maxRetryAttempts, toast]);
 
   const requestCamera = async (constraints: CameraConstraints): Promise<MediaStream> => {
-    return await navigator.mediaDevices.getUserMedia(constraints);
+    try {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (err) {
+      console.error("Error requesting camera:", err);
+      throw err;
+    }
   };
 
   const initializeVideoStream = useCallback((mediaStream: MediaStream) => {
@@ -296,7 +302,7 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     setIsRetrying(false);
     setLastError(null);
     
-    await initCamera();
+    return initCamera();
   }, [initCamera]);
 
   return {
