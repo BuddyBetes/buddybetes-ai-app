@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +17,8 @@ const steps = [
 const Onboarding = () => {
   const { user, isAuthenticated, hasCompletedOnboarding, setHasCompletedOnboarding } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isCheckingData, setIsCheckingData] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -38,14 +38,97 @@ const Onboarding = () => {
     diabetesType: '',
   });
 
+  // Check if user's data is already filled in
+  useEffect(() => {
+    const checkExistingData = async () => {
+      if (!user) {
+        setIsCheckingData(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Check profile data
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (profileError) throw profileError;
+        
+        // Check health data
+        const { data: userHealthData, error: healthError } = await supabase
+          .from('health_data')
+          .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (healthError) throw healthError;
+
+        // If we have both profile and essential health data, we can mark onboarding as complete
+        const hasProfileData = profileData?.first_name && profileData?.last_name;
+        const hasEssentialHealthData = userHealthData?.gender && userHealthData?.birthdate && 
+                                       userHealthData?.height && userHealthData?.weight && 
+                                       userHealthData?.diabetes_type;
+        
+        if (hasProfileData && hasEssentialHealthData) {
+          // User has already completed onboarding with all essential data
+          await setHasCompletedOnboarding(true);
+          navigate('/dashboard');
+        } else {
+          // Pre-fill whatever data we have
+          if (profileData) {
+            setPersonalInfo({
+              firstName: profileData.first_name || '',
+              lastName: profileData.last_name || '',
+            });
+          }
+          
+          if (userHealthData) {
+            setHealthData({
+              gender: userHealthData.gender || '',
+              birthdate: userHealthData.birthdate ? new Date(userHealthData.birthdate) : undefined,
+              height: userHealthData.height || '',
+              heightUnit: userHealthData.height_unit || 'cm',
+              weight: userHealthData.weight || '',
+              weightUnit: userHealthData.weight_unit || 'lbs',
+              diabetesType: userHealthData.diabetes_type || '',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking existing data:', error);
+      } finally {
+        setLoading(false);
+        setIsCheckingData(false);
+      }
+    };
+
+    checkExistingData();
+  }, [user, navigate, setHasCompletedOnboarding]);
+
   // If not authenticated, redirect to sign in
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
   }
 
   // If already completed onboarding, redirect to dashboard
-  if (hasCompletedOnboarding) {
+  if (hasCompletedOnboarding && !isCheckingData) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Show loading screen while checking data
+  if (isCheckingData || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-buddy-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading your profile...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleNext = () => {
