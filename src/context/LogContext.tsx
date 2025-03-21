@@ -72,7 +72,7 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
           const glucoseLogs: GlucoseLog[] = data.map(row => ({
             id: row.id,
             timestamp: new Date(row.timestamp),
-            glucoseLevel: row.glucose_level,
+            glucoseLevel: row.glucose_level !== null ? row.glucose_level : undefined,
             food: row.food,
             // Make sure to validate the meal_context type
             mealContext: validateMealContext(row.meal_context),
@@ -139,7 +139,7 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
         const newLog: GlucoseLog = {
           id: data.id,
           timestamp: new Date(data.timestamp),
-          glucoseLevel: data.glucose_level,
+          glucoseLevel: data.glucose_level !== null ? data.glucose_level : undefined,
           food: data.food,
           mealContext: validateMealContext(data.meal_context),
           notes: data.notes
@@ -169,9 +169,15 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
   };
 
   const getAverageGlucose = () => {
-    if (logs.length === 0) return 0;
-    const sum = logs.reduce((total, log) => total + log.glucoseLevel, 0);
-    return Math.round(sum / logs.length);
+    const glucoseLogs = logs.filter(log => log.glucoseLevel !== undefined);
+    if (glucoseLogs.length === 0) return 0;
+    
+    const sum = glucoseLogs.reduce((total, log) => {
+      // TypeScript knows glucoseLevel is defined thanks to the filter above
+      return total + (log.glucoseLevel as number);
+    }, 0);
+    
+    return Math.round(sum / glucoseLogs.length);
   };
 
   return (

@@ -3,7 +3,7 @@ import React from 'react';
 import Layout from '../components/Layout';
 import { useLogContext, GlucoseLog } from '../context/LogContext';
 import { motion } from 'framer-motion';
-import { ChevronRight, Dot, Loader2 } from 'lucide-react';
+import { ChevronRight, Dot, Loader2, Utensils } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 
 const Logs = () => {
@@ -25,7 +25,8 @@ const Logs = () => {
     });
   };
 
-  const getStatusColor = (glucoseLevel: number) => {
+  const getStatusColor = (glucoseLevel: number | undefined) => {
+    if (!glucoseLevel) return 'text-gray-600';
     if (glucoseLevel < 70) return 'text-red-600';
     if (glucoseLevel > 180) return 'text-orange-600';
     return 'text-green-600';
@@ -94,9 +95,18 @@ const Logs = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xl font-bold">{log.glucoseLevel}</span>
-                        <span className="text-sm text-gray-500">mg/dL</span>
-                        <Dot size={20} className={getStatusColor(log.glucoseLevel)} />
+                        {log.glucoseLevel !== undefined ? (
+                          <>
+                            <span className="text-xl font-bold">{log.glucoseLevel}</span>
+                            <span className="text-sm text-gray-500">mg/dL</span>
+                            <Dot size={20} className={getStatusColor(log.glucoseLevel)} />
+                          </>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <Utensils size={18} className="text-buddy-500" />
+                            <span className="text-lg font-medium">Food Entry</span>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex items-center text-sm text-gray-500">

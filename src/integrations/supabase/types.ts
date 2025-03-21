@@ -72,7 +72,7 @@ export type Database = {
         Row: {
           created_at: string
           food: string | null
-          glucose_level: number
+          glucose_level: number | null
           id: string
           meal_context: string | null
           notes: string | null
@@ -82,7 +82,7 @@ export type Database = {
         Insert: {
           created_at?: string
           food?: string | null
-          glucose_level: number
+          glucose_level?: number | null
           id?: string
           meal_context?: string | null
           notes?: string | null
@@ -92,7 +92,7 @@ export type Database = {
         Update: {
           created_at?: string
           food?: string | null
-          glucose_level?: number
+          glucose_level?: number | null
           id?: string
           meal_context?: string | null
           notes?: string | null
