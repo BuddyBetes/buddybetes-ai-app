@@ -117,7 +117,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({
               <FormItem>
                 <FormLabel>Height (in inches or cm)</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., 5'7\" or 170cm" {...field} />
+                  <Input placeholder="e.g., 5'7&quot; or 170cm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
