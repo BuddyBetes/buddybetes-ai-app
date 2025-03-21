@@ -20,6 +20,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 
 import { useAuth } from '@/context/AuthContext';
+import ForgotPassword from '@/components/auth/ForgotPassword';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -31,6 +32,7 @@ type FormValues = z.infer<typeof formSchema>;
 const SignIn = () => {
   const { signIn, isAuthenticated, hasCompletedOnboarding } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -55,6 +57,21 @@ const SignIn = () => {
       return <Navigate to="/onboarding" replace />;
     }
     return <Navigate to="/dashboard" replace />;
+  }
+
+  if (showForgotPassword) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F8F8] p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="mx-auto w-full max-w-md"
+        >
+          <ForgotPassword onCancel={() => setShowForgotPassword(false)} />
+        </motion.div>
+      </div>
+    );
   }
 
   return (
@@ -107,7 +124,16 @@ const SignIn = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
+                        <button 
+                          type="button"
+                          className="text-sm text-buddy-500 hover:text-buddy-600 font-medium"
+                          onClick={() => setShowForgotPassword(true)}
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
                       <FormControl>
                         <Input 
                           type="password" 
