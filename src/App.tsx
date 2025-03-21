@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -9,6 +8,7 @@ import {
 } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LogProvider } from './context/LogContext';
 import Dashboard from './pages/Dashboard';
 import AddLog from './pages/AddLog';
 import SignIn from './pages/auth/SignIn';
@@ -38,9 +38,11 @@ const PageTransition: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <LogProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </LogProvider>
     </AuthProvider>
   );
 };
