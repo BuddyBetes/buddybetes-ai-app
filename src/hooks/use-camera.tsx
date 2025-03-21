@@ -7,6 +7,7 @@ import { useCameraResources } from './camera/use-camera-resources';
 import { useCameraInitialization } from './camera/use-camera-initialization';
 import { useCameraErrorState } from './camera/use-camera-error-state';
 import { useCameraCapture } from './camera/use-camera-capture';
+import { useState } from 'react';
 
 interface UseCameraProps {
   enabled: boolean;
@@ -58,7 +59,8 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     setErrorState,
     resetErrorState,
     setIsRetrying,
-    setPermissionDenied
+    setPermissionDenied,
+    setError
   } = useCameraErrorState({
     maxRetryAttempts,
     retryTimeoutRef,
@@ -166,6 +168,7 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     setErrorState,
     resetErrorState,
     setPermissionDenied,
+    setError,
     toast
   ]);
 
@@ -223,6 +226,3 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     isRetrying
   };
 }
-
-// Import useState at the top of the file
-import { useState } from 'react';
