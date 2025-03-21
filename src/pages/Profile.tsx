@@ -5,7 +5,6 @@ import AppHeader from '@/components/AppHeader';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import AIPreferences from '@/components/profile/AIPreferences';
 import HealthData from '@/components/profile/HealthData';
-import ProfileMenu from '@/components/profile/ProfileMenu';
 
 const Profile = () => {
   return (
@@ -18,8 +17,6 @@ const Profile = () => {
           <AIPreferences />
           <HealthData />
         </div>
-        
-        <ProfileMenu />
       </div>
     </Layout>
   );

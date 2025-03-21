@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Bell, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { SheetTrigger } from '@/components/ui/sheet';
 import ProfileNotifications from './profile/ProfileNotifications';
+import NotificationIndicator from './profile/NotificationIndicator';
 
 const AppHeader = () => {
   const location = useLocation();
@@ -22,11 +22,7 @@ const AppHeader = () => {
       <div className="text-xl font-bold text-buddy-600">BuddyBetes</div>
       <div className="flex items-center space-x-4">
         <ProfileNotifications>
-          <SheetTrigger asChild>
-            <button className="p-2 rounded-full hover:bg-gray-100 relative">
-              <Bell size={20} className="text-gray-700" />
-            </button>
-          </SheetTrigger>
+          <NotificationIndicator className="p-2 rounded-full hover:bg-gray-100 relative" />
         </ProfileNotifications>
         <button 
           className="p-2 rounded-full hover:bg-gray-100"

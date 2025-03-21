@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -176,7 +175,7 @@ export const useNotifications = () => {
     const recentLogs = sortedLogs.slice(0, 3);
     
     // Check for high glucose pattern (3 consecutive readings above 180)
-    const allHigh = recentLogs.every(log => log.glucose_level > 180);
+    const allHigh = recentLogs.every(log => log.glucoseLevel > 180);
     if (allHigh) {
       createNotification(
         "High Glucose Pattern Detected",
@@ -187,7 +186,7 @@ export const useNotifications = () => {
     }
     
     // Check for low glucose pattern (2 consecutive readings below 70)
-    const twoLow = recentLogs.slice(0, 2).every(log => log.glucose_level < 70);
+    const twoLow = recentLogs.slice(0, 2).every(log => log.glucoseLevel < 70);
     if (twoLow) {
       createNotification(
         "Low Glucose Alert",
@@ -199,7 +198,7 @@ export const useNotifications = () => {
     
     // Check for erratic pattern (rapid change of more than 100 mg/dL)
     const latestTwo = recentLogs.slice(0, 2);
-    const difference = Math.abs(latestTwo[0].glucose_level - latestTwo[1].glucose_level);
+    const difference = Math.abs(latestTwo[0].glucoseLevel - latestTwo[1].glucoseLevel);
     if (difference > 100) {
       createNotification(
         "Rapid Glucose Change",
