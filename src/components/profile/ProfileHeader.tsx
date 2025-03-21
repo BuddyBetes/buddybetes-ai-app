@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,6 +17,7 @@ const ProfileHeader = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getProfile = async () => {
@@ -23,6 +25,9 @@ const ProfileHeader = () => {
 
       try {
         setLoading(true);
+        setError(null);
+        console.log("Fetching profile for user:", user.id);
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('first_name, last_name, email')
@@ -31,11 +36,14 @@ const ProfileHeader = () => {
 
         if (error) {
           console.error('Error fetching profile:', error);
+          setError('Failed to load profile data');
         } else {
+          console.log("Profile data received:", data);
           setProfile(data);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+        setError('An unexpected error occurred');
       } finally {
         setLoading(false);
       }
@@ -76,8 +84,22 @@ const ProfileHeader = () => {
         </AvatarFallback>
       </Avatar>
       
-      <h2 className="text-xl font-bold">{loading ? 'Loading...' : getDisplayName()}</h2>
-      <p className="text-gray-500">{user?.email || ''}</p>
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-32 mx-auto" />
+          <Skeleton className="h-4 w-48 mx-auto" />
+        </div>
+      ) : error ? (
+        <div className="text-center text-red-500">
+          <p className="text-xl font-bold">Error</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      ) : (
+        <>
+          <h2 className="text-xl font-bold">{getDisplayName()}</h2>
+          <p className="text-gray-500">{user?.email || ''}</p>
+        </>
+      )}
     </motion.div>
   );
 };
