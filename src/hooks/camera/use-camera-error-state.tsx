@@ -63,13 +63,13 @@ export function useCameraErrorState({
   /**
    * Reset error state
    */
-  const resetErrorState = () => {
+  const resetErrorState = useCallback(() => {
     setRetryAttempts(0);
     setIsRetrying(false);
     setLastError(null);
     setError(null);
     setPermissionDenied(false);
-  };
+  }, []);
 
   return {
     error,

@@ -1,5 +1,6 @@
 
 import { useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { useIsMobile } from './use-mobile';
 import { useCameraConstraints } from '@/utils/cameraConstraints';
 import { parseCameraError } from '@/utils/cameraErrorHandler';
@@ -7,7 +8,6 @@ import { useCameraResources } from './camera/use-camera-resources';
 import { useCameraInitialization } from './camera/use-camera-initialization';
 import { useCameraErrorState } from './camera/use-camera-error-state';
 import { useCameraCapture } from './camera/use-camera-capture';
-import { useState } from 'react';
 
 interface UseCameraProps {
   enabled: boolean;
@@ -89,7 +89,10 @@ export function useCamera({ enabled, maxRetryAttempts = 3 }: UseCameraProps): Us
     try {
       console.log(`Starting camera initialization... ${errorTypeHint ? `After ${errorTypeHint} error` : ''} (Attempt ${retryAttempts + 1})`);
       setIsInitializing(true);
-      setError(null);
+      
+      if (setError) {
+        setError(null);
+      }
       
       if (retryAttempts === 0 || !isRetrying) {
         setPermissionDenied(false);
