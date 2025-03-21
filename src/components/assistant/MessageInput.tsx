@@ -25,7 +25,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <SuggestionChips onSelectSuggestion={onSuggestionSelect} />
+      <div className="mb-3">
+        <SuggestionChips onSelectSuggestion={onSuggestionSelect} />
+      </div>
       
       <div className="flex items-center gap-2 bg-gray-50 rounded-full p-2 border border-gray-200">
         <Button

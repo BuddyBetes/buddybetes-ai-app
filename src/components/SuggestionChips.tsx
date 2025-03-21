@@ -18,7 +18,7 @@ const suggestions = [
 
 const SuggestionChips: React.FC<SuggestionChipsProps> = ({ onSelectSuggestion }) => {
   return (
-    <div className="pb-3 overflow-x-auto flex space-x-2 scrollbar-hide -mx-1 px-1">
+    <div className="overflow-x-auto flex space-x-2 scrollbar-hide -mx-1 px-1">
       {suggestions.map((suggestion, index) => (
         <motion.div
           key={index}
