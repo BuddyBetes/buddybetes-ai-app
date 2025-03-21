@@ -8,12 +8,13 @@ interface SuggestionChipsProps {
 }
 
 const suggestions = [
+  "Analyze my glucose trends",
   "How's my glucose today?",
   "What should I eat for lunch?",
   "Effect of exercise on blood sugar?",
-  "Explain my recent trends",
+  "Why is my glucose high at night?",
   "Tips for lower glucose",
-  "Is this food good for me?",
+  "Explain my pattern",
 ];
 
 const SuggestionChips: React.FC<SuggestionChipsProps> = ({ onSelectSuggestion }) => {

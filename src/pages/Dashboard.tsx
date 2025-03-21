@@ -1,22 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
 import { motion } from 'framer-motion';
-import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle, RefreshCw, Info } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { useGlucoseInsights } from '@/hooks/useGlucoseInsights';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Dashboard = () => {
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
   const { logs, getRecentLogs, getAverageGlucose } = useLogContext();
-  const recentLogs = getRecentLogs(5);
-  const averageGlucose = getAverageGlucose();
+  const recentLogs = getRecentLogs(30); // Get more logs for the chart
+  const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
+  
   const navigate = useNavigate();
-  const { insights, isLoading } = useGlucoseInsights();
   
   const lastReading = recentLogs[0]?.glucoseLevel || 0;
   const isInRange = lastReading >= 70 && lastReading <= 180;
@@ -35,6 +38,10 @@ const Dashboard = () => {
 
   const navigateToLogs = () => {
     navigate('/logs');
+  };
+
+  const navigateToAssistant = () => {
+    navigate('/assistant');
   };
 
   return (
@@ -90,7 +97,9 @@ const Dashboard = () => {
             </div>
             <h3 className="text-sm font-medium text-gray-600">Average</h3>
             <div className="flex items-baseline">
-              <span className="text-xl font-bold text-gray-800">{averageGlucose}</span>
+              <span className="text-xl font-bold text-gray-800">
+                {stats?.average || getAverageGlucose()}
+              </span>
               <span className="ml-1 text-xs text-gray-500">mg/dL</span>
             </div>
           </motion.div>
@@ -103,8 +112,24 @@ const Dashboard = () => {
             <div className="p-2 rounded-lg bg-gray-100 mb-2">
               <Calendar size={18} className="text-blue-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-600">Logs Today</h3>
-            <span className="text-xl font-bold text-gray-800">{logs.length}</span>
+            <h3 className="text-sm font-medium text-gray-600">Time in Range</h3>
+            <div className="flex items-baseline">
+              <span className="text-xl font-bold text-gray-800">
+                {stats?.inRangePercent || 0}%
+              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-5 w-5 ml-1">
+                      <Info size={12} className="text-gray-400" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Percentage of readings between 70-140 mg/dL</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </motion.div>
         </motion.div>
 
@@ -112,18 +137,41 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white p-4 rounded-xl shadow-sm"
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold text-gray-800">Glucose Trend</h3>
-            <button 
-              className="text-buddy-600 text-sm font-medium flex items-center"
-              onClick={navigateToLogs}
-            >
-              View All <ArrowUpRight size={14} className="ml-1" />
-            </button>
+            <div className="flex space-x-2">
+              <button 
+                className="text-buddy-600 text-sm font-medium flex items-center"
+                onClick={navigateToLogs}
+              >
+                View All <ArrowUpRight size={14} className="ml-1" />
+              </button>
+            </div>
           </div>
-          <GlucoseChart data={recentLogs} />
+          
+          <Tabs 
+            defaultValue="7d" 
+            value={timeRange}
+            onValueChange={(value) => setTimeRange(value as '24h' | '7d' | '30d')}
+            className="w-full"
+          >
+            <TabsList className="w-full bg-gray-100 mb-3">
+              <TabsTrigger className="flex-1" value="24h">Last 24 Hours</TabsTrigger>
+              <TabsTrigger className="flex-1" value="7d">Last 7 Days</TabsTrigger>
+              <TabsTrigger className="flex-1" value="30d">Last 30 Days</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="24h" className="mt-0">
+              <GlucoseChart data={recentLogs} showControls={false} />
+            </TabsContent>
+            <TabsContent value="7d" className="mt-0">
+              <GlucoseChart data={recentLogs} showControls={false} />
+            </TabsContent>
+            <TabsContent value="30d" className="mt-0">
+              <GlucoseChart data={recentLogs} showControls={false} />
+            </TabsContent>
+          </Tabs>
         </motion.div>
 
         <motion.div
@@ -134,17 +182,25 @@ const Dashboard = () => {
         >
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">AI Insights</h3>
-            {isLoading ? null : (
+            <div className="flex space-x-2 mb-4">
+              {isLoading ? null : (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={refreshInsights}
+                >
+                  <RefreshCw size={14} className="mr-1" />
+                  Refresh
+                </Button>
+              )}
               <Button 
-                variant="ghost" 
-                size="sm" 
-                className="mb-4"
-                onClick={() => window.location.reload()}
+                variant="outline" 
+                size="sm"
+                onClick={navigateToAssistant}
               >
-                <RefreshCw size={14} className="mr-1" />
-                Refresh
+                Ask Assistant <ArrowUpRight size={14} className="ml-1" />
               </Button>
-            )}
+            </div>
           </div>
           
           <Alert variant="default" className="mb-4 bg-gray-50 border-gray-200">

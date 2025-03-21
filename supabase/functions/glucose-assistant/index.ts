@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, glucoseHistory, foodQuery, makeBrief, language = 'english' } = await req.json();
+    const { message, glucoseHistory, foodQuery, makeBrief, language = 'english', analyzeTrends = false } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const FATSECRET_API_KEY = Deno.env.get("FATSECRET_API_KEY");
 
@@ -57,6 +57,56 @@ serve(async (req) => {
       }
     }
 
+    // Calculate basic stats if we have glucose history
+    let stats = null;
+    let trendAnalysis = null;
+    
+    if (glucoseHistory && glucoseHistory.length > 0) {
+      const glucoseValues = glucoseHistory
+        .map(log => log.glucoseLevel)
+        .filter(value => value !== undefined && value !== null) as number[];
+      
+      if (glucoseValues.length > 0) {
+        stats = {
+          count: glucoseValues.length,
+          average: Math.round(glucoseValues.reduce((sum, val) => sum + val, 0) / glucoseValues.length),
+          min: Math.min(...glucoseValues),
+          max: Math.max(...glucoseValues),
+          inRange: glucoseValues.filter(val => val >= 70 && val <= 140).length,
+          inRangePercent: Math.round((glucoseValues.filter(val => val >= 70 && val <= 140).length / glucoseValues.length) * 100)
+        };
+        
+        // Check for trend analysis
+        if (analyzeTrends && glucoseValues.length >= 3) {
+          // Sort logs by timestamp
+          const sortedLogs = [...glucoseHistory]
+            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          
+          // Simple trend detection
+          const firstHalf = sortedLogs.slice(0, Math.floor(sortedLogs.length / 2));
+          const secondHalf = sortedLogs.slice(Math.floor(sortedLogs.length / 2));
+          
+          const firstHalfAvg = firstHalf.reduce((sum, log) => sum + (log.glucoseLevel || 0), 0) / firstHalf.length;
+          const secondHalfAvg = secondHalf.reduce((sum, log) => sum + (log.glucoseLevel || 0), 0) / secondHalf.length;
+          
+          const trendDirection = secondHalfAvg > firstHalfAvg 
+            ? "increasing" 
+            : secondHalfAvg < firstHalfAvg 
+              ? "decreasing" 
+              : "stable";
+          
+          const trendMagnitude = Math.abs(secondHalfAvg - firstHalfAvg);
+          
+          trendAnalysis = {
+            direction: trendDirection,
+            magnitude: Math.round(trendMagnitude),
+            firstHalfAvg: Math.round(firstHalfAvg),
+            secondHalfAvg: Math.round(secondHalfAvg)
+          };
+        }
+      }
+    }
+
     // Prepare system prompt with context about being a glucose assistant
     const systemPrompt = language === 'tagalog' 
       ? `
@@ -73,6 +123,23 @@ serve(async (req) => {
         Kung hindi mo alam ang isang bagay, kilalanin ito at isulong ang pagkonsulta sa isang propesyonal sa pangangalagang pangkalusugan.
         Huwag kailanman magbigay ng payong medikal na maaaring mapanganib.
         
+        ${stats ? `
+        Mga Estadistika:
+        - Bilang ng mga pagbasa: ${stats.count}
+        - Karaniwang antas ng glucose: ${stats.average} mg/dL
+        - Pinakamababang pagbasa: ${stats.min} mg/dL
+        - Pinakamataas na pagbasa: ${stats.max} mg/dL
+        - Porsyento sa loob ng target range (70-140 mg/dL): ${stats.inRangePercent}%
+        ` : ''}
+        
+        ${trendAnalysis ? `
+        Pagsusuri ng Trend:
+        - Direksyon: ${trendAnalysis.direction === 'increasing' ? 'tumataas' : trendAnalysis.direction === 'decreasing' ? 'bumababa' : 'matatag'}
+        - Unang kalahating average: ${trendAnalysis.firstHalfAvg} mg/dL
+        - Pangalawang kalahating average: ${trendAnalysis.secondHalfAvg} mg/dL
+        - Pagbabago sa magnitude: ${trendAnalysis.magnitude} mg/dL
+        ` : ''}
+        
         NAPAKAHALAGANG TAGUBILIN: LAGING SUMAGOT SA TAGALOG LAMANG. HUWAG KAILANMAN SUMAGOT SA INGLES O ANUMANG IBANG WIKA. KAHIT ANONG SABIHIN NG USER, SUMAGOT KA SA TAGALOG LANG.
       `
       : `
@@ -88,6 +155,23 @@ serve(async (req) => {
         You should be friendly, empathetic, and focused on helping the user manage their health.
         If you don't know something, acknowledge it and suggest consulting a healthcare professional.
         Never provide medical advice that could be harmful.
+        
+        ${stats ? `
+        Statistics:
+        - Number of readings: ${stats.count}
+        - Average glucose level: ${stats.average} mg/dL
+        - Lowest reading: ${stats.min} mg/dL
+        - Highest reading: ${stats.max} mg/dL
+        - Percentage in target range (70-140 mg/dL): ${stats.inRangePercent}%
+        ` : ''}
+        
+        ${trendAnalysis ? `
+        Trend Analysis:
+        - Direction: ${trendAnalysis.direction}
+        - First half average: ${trendAnalysis.firstHalfAvg} mg/dL
+        - Second half average: ${trendAnalysis.secondHalfAvg} mg/dL
+        - Magnitude of change: ${trendAnalysis.magnitude} mg/dL
+        ` : ''}
       `;
 
     let messagesPayload = [
@@ -210,7 +294,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         response: assistantResponse,
-        nutritionalInfo: nutritionalInfo 
+        nutritionalInfo: nutritionalInfo,
+        stats: stats,
+        trendAnalysis: trendAnalysis
       }),
       { 
         headers: { 

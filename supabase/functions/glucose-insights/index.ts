@@ -14,14 +14,27 @@ serve(async (req) => {
   }
 
   try {
-    const { glucoseHistory, language = 'english' } = await req.json();
+    const { glucoseHistory, language = 'english', timeRange = 'all' } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
     if (!OPENAI_API_KEY) {
       throw new Error("OpenAI API key not found");
     }
 
-    if (!glucoseHistory || !Array.isArray(glucoseHistory) || glucoseHistory.length === 0) {
+    // Filter glucose data based on time range if specified
+    let filteredHistory = [...glucoseHistory];
+    if (timeRange !== 'all' && glucoseHistory.length > 0) {
+      const now = new Date();
+      let cutoffHours = 24;
+      
+      if (timeRange === '7d') cutoffHours = 168; // 7 days
+      else if (timeRange === '30d') cutoffHours = 720; // 30 days
+      
+      const cutoffTime = new Date(now.getTime() - cutoffHours * 60 * 60 * 1000);
+      filteredHistory = glucoseHistory.filter(log => new Date(log.timestamp) > cutoffTime);
+    }
+
+    if (!filteredHistory || !Array.isArray(filteredHistory) || filteredHistory.length === 0) {
       return new Response(
         JSON.stringify({ 
           insights: language === 'tagalog' 
@@ -43,6 +56,20 @@ serve(async (req) => {
       );
     }
 
+    // Calculate basic stats
+    const glucoseValues = filteredHistory
+      .map(log => log.glucoseLevel)
+      .filter(value => value !== undefined && value !== null) as number[];
+    
+    const stats = {
+      count: glucoseValues.length,
+      average: Math.round(glucoseValues.reduce((sum, val) => sum + val, 0) / glucoseValues.length),
+      min: Math.min(...glucoseValues),
+      max: Math.max(...glucoseValues),
+      inRange: glucoseValues.filter(val => val >= 70 && val <= 140).length,
+      inRangePercent: Math.round((glucoseValues.filter(val => val >= 70 && val <= 140).length / glucoseValues.length) * 100)
+    };
+
     // Prepare system prompt for OpenAI based on language preference
     const systemPrompt = language === 'tagalog'
       ? `
@@ -53,6 +80,13 @@ serve(async (req) => {
         HUWAG banggitin ang "batay sa iyong data" o mga katulad na parirala - maging direkta.
         HUWAG gumamit ng teknikal na jargon - panatilihing accessible ang wika.
         GUMAMIT LAMANG NG TAGALOG.
+
+        Mga Estadistika:
+        - Bilang ng mga pagbasa: ${stats.count}
+        - Karaniwang antas ng glucose: ${stats.average} mg/dL
+        - Pinakamababang pagbasa: ${stats.min} mg/dL
+        - Pinakamataas na pagbasa: ${stats.max} mg/dL
+        - Porsyento sa loob ng target range (70-140 mg/dL): ${stats.inRangePercent}%
 
         Mga halimbawa:
         - "Matatag ang iyong glucose sa umaga. Ipagpatuloy ang iyong kasalukuyang routine sa almusal."
@@ -67,6 +101,13 @@ serve(async (req) => {
         Do not mention "based on your data" or similar phrases - be direct.
         DO NOT use technical jargon - keep language accessible.
 
+        Statistics:
+        - Number of readings: ${stats.count}
+        - Average glucose level: ${stats.average} mg/dL
+        - Lowest reading: ${stats.min} mg/dL
+        - Highest reading: ${stats.max} mg/dL
+        - Percentage in target range (70-140 mg/dL): ${stats.inRangePercent}%
+
         Examples:
         - "Your glucose has been stable in the morning. Continue your current breakfast routine."
         - "Consider a small protein snack before bed to prevent overnight drops."
@@ -74,7 +115,7 @@ serve(async (req) => {
       `;
 
     // Format glucose history for the AI
-    const formattedData = glucoseHistory.map(log => 
+    const formattedData = filteredHistory.map(log => 
       `${new Date(log.timestamp).toLocaleString()}: ${log.glucoseLevel} mg/dL ${log.food ? `after eating ${log.food}` : ''}`
     ).join('\n');
 
@@ -128,8 +169,17 @@ serve(async (req) => {
       .map(line => line.replace(/^-\s*/, '').trim())
       .filter(line => line.length > 0);
 
+    // Include the statistics in the response
     return new Response(
-      JSON.stringify({ insights }),
+      JSON.stringify({ 
+        insights,
+        stats: {
+          average: stats.average,
+          min: stats.min,
+          max: stats.max,
+          inRangePercent: stats.inRangePercent
+        }
+      }),
       { 
         headers: { 
           ...corsHeaders, 

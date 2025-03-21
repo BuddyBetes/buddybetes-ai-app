@@ -21,14 +21,22 @@ export const useAssistantResponse = () => {
       const recentLogs = getRecentLogs(5);
       const foodQuery = detectFoodQuery(message);
       
+      // Check if this is a request for trend analysis
+      const analyzeTrends = message.toLowerCase().includes('trend') || 
+                           message.toLowerCase().includes('analyze') ||
+                           message.toLowerCase().includes('pattern') ||
+                           message.toLowerCase().includes('history');
+      
       console.log("📤 Sending to glucose-assistant function with message:", message);
+      console.log("Analyze trends:", analyzeTrends);
       
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
         body: { 
           message: message,
           glucoseHistory: recentLogs,
           foodQuery: foodQuery,
-          makeBrief: true
+          makeBrief: true,
+          analyzeTrends: analyzeTrends
         }
       });
       
@@ -65,11 +73,15 @@ export const useAssistantResponse = () => {
       } else {
         console.log("📥 Received response from glucose-assistant!");
         console.log("🗣️ ASSISTANT RESPONSE:", data.response);
+        console.log("📊 STATS:", data.stats);
+        console.log("📈 TREND ANALYSIS:", data.trendAnalysis);
         
         const assistantMessage: Message = { 
           text: data.response, 
           type: 'assistant',
           nutritionalInfo: data.nutritionalInfo || undefined,
+          stats: data.stats || undefined,
+          trendAnalysis: data.trendAnalysis || undefined,
           timestamp: Date.now(),
           isNew: true
         };

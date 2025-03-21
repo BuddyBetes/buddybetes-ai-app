@@ -1,13 +1,16 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { NutritionalInfo } from '@/types';
+import { NutritionalInfo, GlucoseStats, TrendAnalysis } from '@/types';
 import NutritionalCard from './NutritionalCard';
+import { TrendUp, TrendDown, ArrowRight, Activity } from 'lucide-react';
 
 interface MessageBubbleProps {
   text: string;
   type: 'user' | 'assistant';
   nutritionalInfo?: NutritionalInfo;
+  stats?: GlucoseStats;
+  trendAnalysis?: TrendAnalysis;
   isNew?: boolean;
 }
 
@@ -15,6 +18,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   text, 
   type, 
   nutritionalInfo,
+  stats,
+  trendAnalysis,
   isNew = false
 }) => {
   return (
@@ -53,6 +58,53 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           name={nutritionalInfo.name} 
           details={nutritionalInfo.details} 
         />
+      )}
+      
+      {stats && type === 'assistant' && (
+        <div className="ml-10 p-3 bg-gray-50 rounded-lg text-sm">
+          <div className="font-medium mb-2 text-gray-700 flex items-center">
+            <Activity size={14} className="mr-1 text-buddy-500" />
+            Glucose Statistics
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="text-gray-500">Average:</span> {stats.average} mg/dL
+            </div>
+            <div>
+              <span className="text-gray-500">Min/Max:</span> {stats.min}/{stats.max} mg/dL
+            </div>
+            <div className="col-span-2">
+              <span className="text-gray-500">Time in Range:</span> {stats.inRangePercent}% (70-140 mg/dL)
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {trendAnalysis && type === 'assistant' && (
+        <div className="ml-10 p-3 bg-gray-50 rounded-lg text-sm">
+          <div className="font-medium mb-2 text-gray-700 flex items-center">
+            {trendAnalysis.direction === 'increasing' ? (
+              <TrendUp size={14} className="mr-1 text-orange-500" />
+            ) : trendAnalysis.direction === 'decreasing' ? (
+              <TrendDown size={14} className="mr-1 text-green-500" />
+            ) : (
+              <ArrowRight size={14} className="mr-1 text-blue-500" />
+            )}
+            Glucose Trend Analysis
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            <div>
+              <span className="text-gray-500">Direction:</span> {trendAnalysis.direction.charAt(0).toUpperCase() + trendAnalysis.direction.slice(1)}
+            </div>
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-2">Change:</span>
+              <span>{trendAnalysis.firstHalfAvg} mg/dL</span>
+              <ArrowRight size={14} className="mx-1" />
+              <span>{trendAnalysis.secondHalfAvg} mg/dL</span>
+              <span className="ml-1 text-gray-500">({trendAnalysis.magnitude} mg/dL)</span>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
