@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mic, ArrowRight } from 'lucide-react';
+import { Mic, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,14 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,6 +47,8 @@ type FormValues = z.infer<typeof formSchema>;
 const SignUp = () => {
   const { signUp, isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -57,10 +67,8 @@ const SignUp = () => {
       const { error, user } = await signUp(values.email, values.password);
       
       if (!error && user) {
-        toast({
-          title: "Account created successfully",
-          description: "Please check your email to confirm your account before signing in.",
-        });
+        setUserEmail(values.email);
+        setShowConfirmationDialog(true);
       }
     } finally {
       setIsSubmitting(false);
@@ -201,6 +209,38 @@ const SignUp = () => {
           </p>
         </div>
       </motion.div>
+      
+      {/* Email Confirmation Dialog */}
+      <Dialog open={showConfirmationDialog} onOpenChange={setShowConfirmationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Account Created Successfully</DialogTitle>
+            <DialogDescription className="text-center">
+              <div className="flex justify-center my-4">
+                <CheckCircle2 className="h-16 w-16 text-buddy-500" />
+              </div>
+              <p className="mb-2">
+                We've sent a confirmation email to:
+              </p>
+              <p className="font-medium text-black mb-4">
+                {userEmail}
+              </p>
+              <p>
+                Please check your email and click the confirmation link to activate your account before signing in.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center">
+            <Button 
+              variant="default" 
+              className="w-full sm:w-auto bg-buddy-500 hover:bg-buddy-600"
+              onClick={() => setShowConfirmationDialog(false)}
+            >
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
