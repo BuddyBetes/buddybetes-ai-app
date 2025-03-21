@@ -74,7 +74,8 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
             timestamp: new Date(row.timestamp),
             glucoseLevel: row.glucose_level,
             food: row.food,
-            mealContext: row.meal_context as 'before' | 'after' | 'fasting' | undefined,
+            // Make sure to validate the meal_context type
+            mealContext: validateMealContext(row.meal_context),
             notes: row.notes
           }));
           setLogs(glucoseLogs);
@@ -88,6 +89,14 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
 
     fetchLogs();
   }, [user, toast]);
+
+  // Helper function to validate meal_context values
+  const validateMealContext = (mealContext: string | null): 'before' | 'after' | 'fasting' | undefined => {
+    if (mealContext === 'before' || mealContext === 'after' || mealContext === 'fasting') {
+      return mealContext;
+    }
+    return undefined;
+  };
 
   const addLog = async (log: Omit<GlucoseLog, 'id'>) => {
     if (!user) {
@@ -132,7 +141,7 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
           timestamp: new Date(data.timestamp),
           glucoseLevel: data.glucose_level,
           food: data.food,
-          mealContext: data.meal_context,
+          mealContext: validateMealContext(data.meal_context),
           notes: data.notes
         };
         

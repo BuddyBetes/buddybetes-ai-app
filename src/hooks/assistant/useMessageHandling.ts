@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
-import { Message } from '@/types';
+import { Message, NutritionalInfo } from '@/types';
 import { detectFoodQuery } from '@/utils/foodDetection';
 import { useAuth } from '@/context/AuthContext';
 
@@ -58,12 +58,26 @@ export const useMessageHandling = (
           }
           
           if (messageData && messageData.length > 0) {
-            const loadedMessages: Message[] = messageData.map(msg => ({
-              text: msg.content,
-              type: msg.message_type as 'user' | 'assistant',
-              timestamp: new Date(msg.timestamp).getTime(),
-              nutritionalInfo: msg.nutritional_info
-            }));
+            const loadedMessages: Message[] = messageData.map(msg => {
+              // Process the nutritional info properly
+              let nutritionalInfo: NutritionalInfo | undefined = undefined;
+              if (msg.nutritional_info) {
+                const info = msg.nutritional_info as any;
+                nutritionalInfo = {
+                  name: info.name || '',
+                  calories: info.calories || '',
+                  carbs: info.carbs || '',
+                  details: info.details || ''
+                };
+              }
+              
+              return {
+                text: msg.content,
+                type: msg.message_type as 'user' | 'assistant',
+                timestamp: new Date(msg.timestamp).getTime(),
+                nutritionalInfo
+              };
+            });
             
             setMessages(loadedMessages);
           } else {
@@ -126,7 +140,12 @@ export const useMessageHandling = (
         conversation_id: convId,
         message_type: message.type,
         content: message.text,
-        nutritional_info: message.nutritionalInfo || null,
+        nutritional_info: message.nutritionalInfo ? {
+          name: message.nutritionalInfo.name,
+          calories: message.nutritionalInfo.calories,
+          carbs: message.nutritionalInfo.carbs,
+          details: message.nutritionalInfo.details
+        } : null,
         timestamp: new Date(message.timestamp).toISOString()
       };
       

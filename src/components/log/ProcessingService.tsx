@@ -70,11 +70,11 @@ const ProcessingService: React.FC<ProcessingServiceProps> = ({
           description: `Glucose reading: ${glucoseValue} mg/dL. Adding to your log entry.`,
         });
         
-        // Add the glucose reading to logs
+        // Add the glucose reading to logs with a valid meal context
         await addLog({
           timestamp: new Date(),
           glucoseLevel: glucoseValue,
-          mealContext: 'fasting',
+          mealContext: 'fasting', // Explicitly using a valid literal value
         });
         
         onProcessingComplete();
