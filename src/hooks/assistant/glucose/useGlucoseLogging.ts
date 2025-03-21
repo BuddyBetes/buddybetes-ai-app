@@ -1,35 +1,57 @@
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useGlucoseProcessor } from './useGlucoseProcessor';
 import { useGlucoseNavigation } from './useGlucoseNavigation';
+import { useToast } from '@/hooks/use-toast';
+import { Message } from '@/types';
+
+export const TIME_GROUPS = {
+  just_now: 'Just now',
+  today: 'Today',
+  yesterday: 'Yesterday',
+  this_week: 'This week',
+  older: 'Older'
+};
 
 export const useGlucoseLogging = (
-  setMessages: React.Dispatch<React.SetStateAction<any[]>>,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
   playResponseAudio: ((text: string) => Promise<void>) | undefined,
   mode: 'voice' | 'text'
 ) => {
+  const [logCreated, setLogCreated] = useState<boolean>(false);
+  const { toast } = useToast();
+  
   const {
     askForTime,
     processGlucoseLogIntent
   } = useGlucoseProcessor(setMessages, playResponseAudio, mode);
-
-  const {
-    logCreated,
-    setLogCreated,
-    processViewLogsNavigation,
-    handleLogCreated: handleLogCreatedBase
-  } = useGlucoseNavigation();
-
-  // Handle log creation follow-up - wrapper to provide setMessages
-  const handleLogCreated = () => {
-    handleLogCreatedBase(setMessages, playResponseAudio, mode);
-  };
-
-  // Watch for log creation and trigger the follow-up
+  
+  const { processViewLogsNavigation } = useGlucoseNavigation();
+  
+  // Clear logCreated flag after a delay
   useEffect(() => {
-    handleLogCreated();
+    if (logCreated) {
+      const timer = setTimeout(() => {
+        setLogCreated(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
   }, [logCreated]);
-
+  
+  // Handle log creation completion
+  const handleLogCreated = () => {
+    if (logCreated) {
+      toast({
+        title: "Log Added",
+        description: "Your glucose reading was added successfully.",
+        duration: 3000
+      });
+      
+      setLogCreated(false);
+    }
+  };
+  
   return {
     logCreated,
     askForTime,
@@ -38,3 +60,6 @@ export const useGlucoseLogging = (
     handleLogCreated
   };
 };
+
+// Re-export the TIME_GROUPS constant
+export { TIME_GROUPS };

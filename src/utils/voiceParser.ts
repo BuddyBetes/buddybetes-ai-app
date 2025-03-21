@@ -25,7 +25,9 @@ export const extractGlucoseInfo = (text: string): ExtractedLogInfo | null => {
     /reading(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
     /level(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
     /(\d{2,3})(?:\s+mg\/dl|\s+mg|\s+points|\s+point|\s+level)/i,
-    /my\s+(?:glucose|sugar|reading)\s+(?:is|was)\s+(\d{2,3})/i
+    /my\s+(?:glucose|sugar|reading)\s+(?:is|was)\s+(\d{2,3})/i,
+    /log\s+(\d{2,3})/i,  // Common pattern for "log 125"
+    /please\s+log\s+(\d{2,3})/i  // "please log 125"
   ];
   
   for (const pattern of glucosePatterns) {
@@ -43,7 +45,8 @@ export const extractGlucoseInfo = (text: string): ExtractedLogInfo | null => {
   const foodMatches = [
     /(?:ate|had|consumed|eating|eat|having)\s+(.*?)(?:before|after|for|and|with|when|\.|\,|\!|\?|$)/i,
     /(?:my meal was|food was|food is|meal is)\s+(.*?)(?:\.|\,|\!|\?|$)/i,
-    /(?:after eating|food|ate)\s+(.*?)(?:\.|\,|\!|\?|and my|my glucose|my reading|my level|$)/i
+    /(?:after eating|food|ate)\s+(.*?)(?:\.|\,|\!|\?|and my|my glucose|my reading|my level|$)/i,
+    /(?:and then I ate|then I ate|and I ate|I ate)\s+(.*?)(?:before|after|\.|\,|\!|\?|$)/i  // Common pattern for "and then I ate banana"
   ];
   
   for (const pattern of foodMatches) {
@@ -86,6 +89,8 @@ export const isGlucoseLogIntent = (text: string): boolean => {
     /my level/i,
     /(\d{2,3})\s*(mg\/dl|mg)/i,
     /log my/i,
+    /log (\d{2,3})/i,  // Simple "log 125" pattern
+    /please log/i,  // "please log" pattern
     /add (a|new) (reading|log|entry)/i,
     /glucose(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
     /blood\s+sugar(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,

@@ -80,7 +80,7 @@ export const useGlucoseProcessor = (
       };
       
       console.log("Creating new glucose log with time info:", newLog);
-      addLog(newLog);
+      await addLog(newLog);
       
       pendingLogRef.current = null;
       
@@ -129,7 +129,7 @@ export const useGlucoseProcessor = (
     };
     
     console.log("Creating new glucose log:", newLog);
-    addLog(newLog);
+    await addLog(newLog);
     
     toast({
       title: "Log Added",
