@@ -61,5 +61,4 @@ export const useGlucoseLogging = (
   };
 };
 
-// Re-export the TIME_GROUPS constant
-export { TIME_GROUPS };
+// No need to re-export TIME_GROUPS here since it's already exported above

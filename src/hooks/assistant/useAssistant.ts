@@ -1,10 +1,10 @@
+
 import { useEffect } from 'react';
 import { useUIState } from './useUIState';
 import { useMessageHandling } from './useMessageHandling';
 import { useSpeechSynthesis } from './useSpeechSynthesis';
-import { useGlucoseLogging } from './useGlucoseLogging';
+import { useGlucoseLogging, TIME_GROUPS } from './glucose/useGlucoseLogging';
 import { Message } from '@/types';
-import { TIME_GROUPS } from './constants';
 
 export const useAssistant = () => {
   const {
@@ -114,4 +114,4 @@ export const useAssistant = () => {
   };
 };
 
-export { TIME_GROUPS } from './constants';
+export { TIME_GROUPS };
