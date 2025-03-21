@@ -23,10 +23,18 @@ const CameraModal: React.FC<CameraModalProps> = ({
   // Reset state when modal is opened
   useEffect(() => {
     if (open) {
+      console.log(`Opening camera modal for ${scanMode} scanning`);
       setCapturedImage(null);
       setProcessingImage(false);
+    } else {
+      // Clean up when closing
+      console.log('Closing camera modal');
+      setTimeout(() => {
+        setCapturedImage(null);
+        setProcessingImage(false);
+      }, 300);
     }
-  }, [open]);
+  }, [open, scanMode]);
 
   const handleCapture = (imageDataUrl: string) => {
     console.log('Image captured, proceeding to processing');
@@ -59,22 +67,24 @@ const CameraModal: React.FC<CameraModalProps> = ({
   };
 
   return (
-    <Sheet open={open} onOpenChange={handleCloseCamera}>
-      <SheetContent side="bottom" className="h-[100dvh] p-0">
-        <CameraCapture 
-          mode={scanMode} 
-          onCapture={handleCapture} 
-          onClose={handleCloseCamera}
-          isProcessing={processingImage}
-          capturedImage={capturedImage}
-        />
-        
-        <ProcessingService
-          scanMode={scanMode}
-          capturedImage={capturedImage}
-          setProcessingImage={setProcessingImage}
-          onProcessingComplete={handleProcessingComplete}
-        />
+    <Sheet open={open} onOpenChange={handleCloseCamera} modal>
+      <SheetContent side="bottom" className="h-[100dvh] p-0 z-50">
+        <div className="h-full bg-black overflow-hidden">
+          <CameraCapture 
+            mode={scanMode} 
+            onCapture={handleCapture} 
+            onClose={handleCloseCamera}
+            isProcessing={processingImage}
+            capturedImage={capturedImage}
+          />
+          
+          <ProcessingService
+            scanMode={scanMode}
+            capturedImage={capturedImage}
+            setProcessingImage={setProcessingImage}
+            onProcessingComplete={handleProcessingComplete}
+          />
+        </div>
       </SheetContent>
     </Sheet>
   );

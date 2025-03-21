@@ -31,7 +31,7 @@ const CameraView: React.FC<CameraViewProps> = ({
   isMobile = false,
   onRetryCamera
 }) => {
-  const [cameraAttempts, setCameraAttempts] = useState(0);
+  const [retryAttempts, setRetryAttempts] = useState(0);
 
   // Function to refresh the page
   const handleRefresh = () => {
@@ -40,12 +40,16 @@ const CameraView: React.FC<CameraViewProps> = ({
 
   // Function to retry camera connection
   const handleRetryCamera = () => {
-    setCameraAttempts(prev => prev + 1);
+    setRetryAttempts(prev => prev + 1);
     onRetryCamera();
   };
 
   // Function for iOS-specific camera help
   const showIOSHelp = () => {
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (!isIOS) return null;
+    
     return (
       <div className="mt-4 p-3 bg-yellow-900/50 rounded-lg text-left">
         <p className="text-yellow-300 font-semibold mb-1">iOS Safari Tips:</p>
@@ -79,7 +83,7 @@ const CameraView: React.FC<CameraViewProps> = ({
                 You need to allow camera access in your browser settings to use this feature.
               </p>
               
-              {navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? showIOSHelp() : null}
+              {showIOSHelp()}
               
               <div className="flex justify-center space-x-3 mt-4">
                 <Button 
@@ -111,7 +115,18 @@ const CameraView: React.FC<CameraViewProps> = ({
                 Retry Camera
               </Button>
               
-              {navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? showIOSHelp() : null}
+              {retryAttempts >= 2 && (
+                <Button 
+                  variant="outline" 
+                  className="bg-white/10 text-white border-white/30"
+                  onClick={handleRefresh}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Reload Page
+                </Button>
+              )}
+              
+              {showIOSHelp()}
               
               <Button 
                 variant="outline" 

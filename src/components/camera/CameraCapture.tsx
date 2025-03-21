@@ -38,6 +38,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       console.log('Starting camera initialization...');
       setIsInitializing(true);
       setError(null);
+      setPermissionDenied(false);
       
       if (stream) {
         // Clean up existing stream first
@@ -45,36 +46,42 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           track.stop();
           console.log('Stopped existing camera track');
         });
+        setStream(null);
       }
       
       // Set constraints based on device
-      const facingMode = isMobile ? 'environment' : 'user';
+      const facingMode = isMobile ? { exact: 'environment' } : 'user';
       
       // For mobile devices, we'll try lower resolution first for compatibility
       const mobileConstraints = {
+        audio: false,
         video: { 
           facingMode: facingMode,
           width: { ideal: 1280, max: 1920 },
           height: { ideal: 720, max: 1080 }
-        },
-        audio: false
+        }
       };
       
       // For desktop devices, we can use higher resolution
       const desktopConstraints = {
+        audio: false,
         video: { 
           facingMode: facingMode,
           width: { ideal: 1920 },
           height: { ideal: 1080 }
-        },
-        audio: false
+        }
       };
       
       const constraints = isMobile ? mobileConstraints : desktopConstraints;
       
       console.log('Requesting camera with constraints:', JSON.stringify(constraints));
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API is not supported in this browser');
+      }
+      
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('Camera access granted successfully');
       
       if (videoRef.current) {
@@ -121,7 +128,33 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       } else if (err instanceof DOMException && err.name === 'NotReadableError') {
         setError('Camera is already in use by another application or tab. Please close other apps using your camera.');
       } else if (err instanceof DOMException && err.name === 'OverconstrainedError') {
-        setError('Your device does not support the requested camera resolution. Please try again.');
+        // If 'exact: environment' fails, try without 'exact' constraint
+        if (isMobile && JSON.stringify(constraints).includes('exact')) {
+          console.log('Retrying with less strict constraints...');
+          const fallbackConstraints = {
+            audio: false,
+            video: { 
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
+          };
+          
+          try {
+            const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+            if (videoRef.current) {
+              videoRef.current.srcObject = fallbackStream;
+              videoRef.current.play().catch(e => console.error('Fallback play error:', e));
+              setStream(fallbackStream);
+              setIsInitializing(false);
+              return;
+            }
+          } catch (fallbackErr) {
+            console.error('Fallback camera access also failed:', fallbackErr);
+          }
+        }
+        
+        setError('Your device does not support the requested camera resolution or facing mode. Please try again with different settings.');
       } else {
         setError(`Could not access camera. ${err.message || 'Please try again with a different browser.'}`);
         toast({
@@ -137,7 +170,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   useEffect(() => {
     if (!capturedImage) {
-      initCamera();
+      console.log('Initializing camera on component mount');
+      // Small delay to ensure the component is fully mounted
+      const timer = setTimeout(() => {
+        initCamera();
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
 
     // Cleanup function
@@ -152,7 +191,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   }, [capturedImage, isMobile]);
 
   const captureImage = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current) {
+      console.error('Cannot capture: Video or canvas ref is null');
+      return;
+    }
     
     // Play shutter sound
     const audio = new Audio('/message-sent.mp3');
@@ -173,12 +215,21 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     // Draw video frame to canvas
     const context = canvas.getContext('2d');
     if (context) {
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Get image data URL with improved quality
-      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-      console.log('Image captured successfully');
-      onCapture(imageDataUrl);
+      try {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Get image data URL with improved quality
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        console.log('Image captured successfully');
+        onCapture(imageDataUrl);
+      } catch (err) {
+        console.error('Error capturing image:', err);
+        toast({
+          title: "Capture failed",
+          description: "Failed to capture image. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
