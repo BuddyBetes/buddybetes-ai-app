@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
@@ -6,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Message, NutritionalInfo } from '@/types';
 import { detectFoodQuery } from '@/utils/foodDetection';
 import { useAuth } from '@/context/AuthContext';
+import { isGlucoseLogIntent, extractGlucoseInfo } from '@/utils/voiceParser';
 
 export const useMessageHandling = (
   playResponseAudio?: (text: string) => Promise<void>,
@@ -15,17 +15,15 @@ export const useMessageHandling = (
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const { getRecentLogs } = useLogContext();
+  const { getRecentLogs, addLog } = useLogContext();
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Load existing conversation or create a new one
   useEffect(() => {
     const loadConversation = async () => {
       if (!user) return;
       
       try {
-        // Try to find an existing conversation
         const { data: conversationData, error: conversationError } = await supabase
           .from('assistant_conversations')
           .select('id, conversation_id')
@@ -41,11 +39,9 @@ export const useMessageHandling = (
         let currentConversationId: string;
         
         if (conversationData && conversationData.length > 0) {
-          // Use existing conversation
           currentConversationId = conversationData[0].id;
           setConversationId(currentConversationId);
           
-          // Load messages for this conversation
           const { data: messageData, error: messageError } = await supabase
             .from('assistant_messages')
             .select('*')
@@ -59,7 +55,6 @@ export const useMessageHandling = (
           
           if (messageData && messageData.length > 0) {
             const loadedMessages: Message[] = messageData.map(msg => {
-              // Process the nutritional info properly
               let nutritionalInfo: NutritionalInfo | undefined = undefined;
               if (msg.nutritional_info) {
                 const info = msg.nutritional_info as any;
@@ -81,7 +76,6 @@ export const useMessageHandling = (
             
             setMessages(loadedMessages);
           } else {
-            // No messages in conversation yet, add a welcome message
             const welcomeMessage: Message = {
               text: "Hi! I'm BuddyBetes. How can I help?",
               type: 'assistant',
@@ -89,11 +83,9 @@ export const useMessageHandling = (
             };
             setMessages([welcomeMessage]);
             
-            // Save welcome message
             await saveMessageToSupabase(welcomeMessage, currentConversationId);
           }
         } else {
-          // Create a new conversation
           const newConversationId = `conv-${Date.now()}`;
           const { data: newConv, error: createError } = await supabase
             .from('assistant_conversations')
@@ -112,7 +104,6 @@ export const useMessageHandling = (
           currentConversationId = newConv.id;
           setConversationId(currentConversationId);
           
-          // Create welcome message
           const welcomeMessage: Message = {
             text: "Hi! I'm BuddyBetes. How can I help?",
             type: 'assistant',
@@ -120,7 +111,6 @@ export const useMessageHandling = (
           };
           setMessages([welcomeMessage]);
           
-          // Save welcome message
           await saveMessageToSupabase(welcomeMessage, currentConversationId);
         }
       } catch (error) {
@@ -131,7 +121,6 @@ export const useMessageHandling = (
     loadConversation();
   }, [user]);
   
-  // Function to save a message to Supabase
   const saveMessageToSupabase = async (message: Message, convId: string) => {
     if (!user || !convId) return;
     
@@ -157,7 +146,6 @@ export const useMessageHandling = (
         console.error('Error saving message:', error);
       }
       
-      // Also update the conversation's updated_at timestamp
       await supabase
         .from('assistant_conversations')
         .update({ updated_at: new Date().toISOString() })
@@ -174,12 +162,75 @@ export const useMessageHandling = (
     console.log("🔄 Processing user message:", message);
     console.log(`🎙️ Current mode: ${currentMode || 'text'}`);
     
-    // Add sound feedback
     const audio = new Audio('/message-sent.mp3');
     audio.volume = 0.2;
     audio.play().catch(e => console.log('Audio play error:', e));
     
-    // Add user message
+    const isGlucoseLog = isGlucoseLogIntent(message);
+    if (isGlucoseLog) {
+      const logInfo = extractGlucoseInfo(message);
+      if (logInfo && logInfo.glucoseLevel) {
+        const newUserMessage: Message = { 
+          text: message, 
+          type: 'user',
+          timestamp: Date.now(),
+          isNew: true
+        };
+        
+        setMessages(prev => [...prev, newUserMessage]);
+        setIsLoading(true);
+        
+        if (conversationId) {
+          await saveMessageToSupabase(newUserMessage, conversationId);
+        }
+        
+        try {
+          await addLog({
+            timestamp: new Date(),
+            glucoseLevel: logInfo.glucoseLevel,
+            food: logInfo.food || "",
+            mealContext: logInfo.mealContext || "after",
+            notes: logInfo.notes || ""
+          });
+          
+          const confirmMessage = `Added ${logInfo.glucoseLevel} mg/dL to your log.${
+            logInfo.mealContext ? ` Context: ${logInfo.mealContext} meal.` : ''
+          }${
+            logInfo.food ? ` Food: ${logInfo.food}.` : ''
+          }`;
+          
+          const assistantMessage: Message = { 
+            text: confirmMessage, 
+            type: 'assistant',
+            timestamp: Date.now(),
+            isNew: true
+          };
+          
+          setMessages(prev => [...prev, assistantMessage]);
+          
+          if (conversationId) {
+            await saveMessageToSupabase(assistantMessage, conversationId);
+          }
+          
+          if (currentMode === 'voice' && playResponseAudio) {
+            await playResponseAudio(confirmMessage);
+          }
+          
+          toast({
+            title: "Log Added",
+            description: `Glucose reading of ${logInfo.glucoseLevel} mg/dL added.`,
+            duration: 3000
+          });
+          
+          setIsLoading(false);
+          setInput('');
+          return;
+        } catch (error) {
+          console.error("Error adding glucose log:", error);
+        }
+      }
+    }
+    
     const newMessage: Message = { 
       text: message, 
       type: 'user',
@@ -190,26 +241,23 @@ export const useMessageHandling = (
     setMessages(prev => [...prev, newMessage]);
     setIsLoading(true);
     
-    // Save user message if we have a conversation
     if (conversationId) {
       await saveMessageToSupabase(newMessage, conversationId);
     }
     
     try {
-      // Get recent glucose logs to provide context
       const recentLogs = getRecentLogs(5);
       
-      // Automatically detect food queries
       const foodQuery = detectFoodQuery(message);
       
       console.log("📤 Sending to glucose-assistant function with message:", message);
-      // Call our Supabase Edge Function
+      
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
         body: { 
           message: message,
           glucoseHistory: recentLogs,
           foodQuery: foodQuery,
-          makeBrief: true // Tell the assistant to keep responses brief
+          makeBrief: true
         }
       });
       
@@ -230,12 +278,10 @@ export const useMessageHandling = (
         
         setMessages(prev => [...prev, assistantErrorMsg]);
         
-        // Save error message
         if (conversationId) {
           await saveMessageToSupabase(assistantErrorMsg, conversationId);
         }
         
-        // Even in error case, if in voice mode, play the error message
         if (currentMode === 'voice' && playResponseAudio) {
           console.log("Playing error message as audio");
           try {
@@ -250,7 +296,6 @@ export const useMessageHandling = (
         console.log("📊 Full response data:", data);
         console.log("🔄 Processing assistant response...");
         
-        // Add AI response to messages
         const assistantMessage: Message = { 
           text: data.response, 
           type: 'assistant',
@@ -261,17 +306,14 @@ export const useMessageHandling = (
         
         setMessages(prev => [...prev, assistantMessage]);
         
-        // Save assistant message
         if (conversationId) {
           await saveMessageToSupabase(assistantMessage, conversationId);
         }
         
-        // If in voice mode, play the response using TTS
         if (currentMode === 'voice' && playResponseAudio) {
           console.log("🔊 In voice mode, playing TTS response");
           try {
             console.log("▶️ Starting audio playback - isLoading will remain true");
-            // Ensure isLoading remains true while audio is playing
             await playResponseAudio(data.response);
             console.log("✅ Audio playback completed");
           } catch (playbackError) {
@@ -296,12 +338,10 @@ export const useMessageHandling = (
       
       setMessages(prev => [...prev, errorMsg]);
       
-      // Save error message
       if (conversationId) {
         await saveMessageToSupabase(errorMsg, conversationId);
       }
       
-      // Even in error case, if in voice mode, play the fallback message
       if (currentMode === 'voice' && playResponseAudio) {
         console.log("Playing fallback message as audio");
         try {
@@ -332,7 +372,6 @@ export const useMessageHandling = (
       return;
     }
     
-    // Process the speech result as a user message
     console.log("🔄 Processing speech result as user message");
     await handleUserMessage(text);
   };

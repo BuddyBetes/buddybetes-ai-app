@@ -63,7 +63,7 @@ export const useAssistant = () => {
     if (messages.length === 0) {
       setMessages([
         {
-          text: "Hi! I'm BuddyBetes. How can I help?",
+          text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
           type: 'assistant',
           timestamp: Date.now(),
           isNew: true
