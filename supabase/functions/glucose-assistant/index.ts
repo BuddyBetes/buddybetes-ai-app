@@ -73,7 +73,7 @@ serve(async (req) => {
         Kung hindi mo alam ang isang bagay, kilalanin ito at isulong ang pagkonsulta sa isang propesyonal sa pangangalagang pangkalusugan.
         Huwag kailanman magbigay ng payong medikal na maaaring mapanganib.
         
-        LAGING SUMAGOT SA TAGALOG LAMANG.
+        NAPAKAHALAGANG TAGUBILIN: LAGING SUMAGOT SA TAGALOG LAMANG. HUWAG KAILANMAN SUMAGOT SA INGLES O ANUMANG IBANG WIKA. KAHIT ANONG SABIHIN NG USER, SUMAGOT KA SA TAGALOG LANG.
       `
       : `
         You are BuddyBetes, an AI assistant specifically designed to help people manage diabetes and track glucose levels.
@@ -139,6 +139,14 @@ serve(async (req) => {
       });
     }
 
+    // For Tagalog mode, add an explicit instruction to always respond in Tagalog only
+    if (language === 'tagalog') {
+      messagesPayload.push({
+        role: "system",
+        content: "NAPAKAHALAGANG PAALALA: Ikaw ay tumatanggap at sumasagot sa TAGALOG LAMANG. Huwag kailanman sumagot sa anumang ibang wika kahit ano pa ang sabihin ng user."
+      });
+    }
+
     console.log("Sending request to OpenAI with payload:", JSON.stringify(messagesPayload));
 
     // Make request to OpenAI API
@@ -163,7 +171,41 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const assistantResponse = data.choices[0].message.content;
+    let assistantResponse = data.choices[0].message.content;
+
+    // Double-check that responses in Tagalog mode are actually in Tagalog
+    // If they appear to be in English, force a translation
+    if (language === 'tagalog' && /^[A-Za-z\s,.!?]+$/.test(assistantResponse.substring(0, 50))) {
+      console.log("Response detected as possibly in English, forcing Tagalog translation");
+      
+      const translationResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { 
+              role: "system", 
+              content: "Ikaw ay isang translator. Isalin ang sumusunod na teksto sa Tagalog." 
+            },
+            { 
+              role: "user", 
+              content: assistantResponse 
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: makeBrief ? 120 : 500
+        })
+      });
+
+      if (translationResponse.ok) {
+        const translationData = await translationResponse.json();
+        assistantResponse = translationData.choices[0].message.content;
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
