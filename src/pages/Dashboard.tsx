@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
@@ -15,14 +14,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
-  const { logs, getRecentLogs, getAverageGlucose } = useLogContext();
-  const recentLogs = getRecentLogs(30); // Get more logs for the chart
+  const { getGlucoseLogsOnly, getLogsForToday, getAverageGlucose } = useLogContext();
+  const glucoseLogs = getGlucoseLogsOnly(30); // Only get logs with glucose values
   const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
   
   const navigate = useNavigate();
   
-  const lastReading = recentLogs[0]?.glucoseLevel || 0;
+  // Use only logs with glucose readings for the last reading
+  const lastReading = glucoseLogs[0]?.glucoseLevel || 0;
   const isInRange = lastReading >= 70 && lastReading <= 180;
+  
+  // Get count of logs today for the "Time in Range" card
+  const logsToday = getLogsForToday().length;
   
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -83,7 +86,7 @@ const Dashboard = () => {
             </div>
             <div className="text-xs text-gray-500 flex items-center">
               <Clock size={12} className="mr-1" />
-              Last updated: {recentLogs[0]?.timestamp.toLocaleTimeString()}
+              Last updated: {glucoseLogs[0]?.timestamp.toLocaleTimeString() || 'No readings'}
             </div>
           </motion.div>
 
@@ -112,10 +115,10 @@ const Dashboard = () => {
             <div className="p-2 rounded-lg bg-gray-100 mb-2">
               <Calendar size={18} className="text-blue-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-600">Time in Range</h3>
+            <h3 className="text-sm font-medium text-gray-600">Logs Today</h3>
             <div className="flex items-baseline">
               <span className="text-xl font-bold text-gray-800">
-                {stats?.inRangePercent || 0}%
+                {logsToday}
               </span>
               <TooltipProvider>
                 <Tooltip>
@@ -125,7 +128,7 @@ const Dashboard = () => {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Percentage of readings between 70-140 mg/dL</p>
+                    <p className="text-xs">Total number of log entries today</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -163,13 +166,13 @@ const Dashboard = () => {
             </TabsList>
             
             <TabsContent value="24h" className="mt-0">
-              <GlucoseChart data={recentLogs} showControls={false} />
+              <GlucoseChart data={glucoseLogs} showControls={false} />
             </TabsContent>
             <TabsContent value="7d" className="mt-0">
-              <GlucoseChart data={recentLogs} showControls={false} />
+              <GlucoseChart data={glucoseLogs} showControls={false} />
             </TabsContent>
             <TabsContent value="30d" className="mt-0">
-              <GlucoseChart data={recentLogs} showControls={false} />
+              <GlucoseChart data={glucoseLogs} showControls={false} />
             </TabsContent>
           </Tabs>
         </motion.div>

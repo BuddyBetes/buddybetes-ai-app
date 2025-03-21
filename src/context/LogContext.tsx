@@ -19,6 +19,8 @@ interface LogContextType {
   logs: GlucoseLog[];
   addLog: (log: Omit<GlucoseLog, 'id'>) => Promise<void>;
   getRecentLogs: (count: number) => GlucoseLog[];
+  getGlucoseLogsOnly: (count: number) => GlucoseLog[];
+  getLogsForToday: () => GlucoseLog[];
   getAverageGlucose: () => number;
   isLoading: boolean;
 }
@@ -168,6 +170,25 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
     return [...logs].slice(0, count);
   };
 
+  // New method to get only logs with glucose readings
+  const getGlucoseLogsOnly = (count: number) => {
+    return [...logs]
+      .filter(log => log.glucoseLevel !== undefined)
+      .slice(0, count);
+  };
+
+  // New method to get all logs from today only
+  const getLogsForToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return logs.filter(log => {
+      const logDate = new Date(log.timestamp);
+      logDate.setHours(0, 0, 0, 0);
+      return logDate.getTime() === today.getTime();
+    });
+  };
+
   const getAverageGlucose = () => {
     const glucoseLogs = logs.filter(log => log.glucoseLevel !== undefined);
     if (glucoseLogs.length === 0) return 0;
@@ -181,7 +202,15 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
   };
 
   return (
-    <LogContext.Provider value={{ logs, addLog, getRecentLogs, getAverageGlucose, isLoading }}>
+    <LogContext.Provider value={{ 
+      logs, 
+      addLog, 
+      getRecentLogs, 
+      getGlucoseLogsOnly,
+      getLogsForToday,
+      getAverageGlucose, 
+      isLoading 
+    }}>
       {children}
     </LogContext.Provider>
   );

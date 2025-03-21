@@ -45,7 +45,7 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
     const cutoff = new Date(now.getTime() - timeRangeHours * 60 * 60 * 1000);
     
     return data
-      .filter(log => log.timestamp > cutoff)
+      .filter(log => log.timestamp > cutoff && log.glucoseLevel !== undefined)
       .map(log => ({
         time: timeRange === '24h' ? formatDate(log.timestamp) : formatDay(log.timestamp),
         value: log.glucoseLevel,
@@ -90,19 +90,19 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
       
       {chartData.length > 0 ? (
         <>
-          <div className="flex justify-between items-center mb-4 text-sm">
+          <div className="flex justify-between items-center mb-4">
             <div className="flex space-x-4">
               <div className="px-3 py-1 bg-gray-100 rounded-lg">
-                <span className="text-gray-500">Avg: </span>
-                <span className="font-semibold">{stats.avg} mg/dL</span>
+                <span className="text-xs text-gray-500">Avg: </span>
+                <span className="text-xs font-semibold">{stats.avg} mg/dL</span>
               </div>
               <div className="px-3 py-1 bg-gray-100 rounded-lg">
-                <span className="text-gray-500">Min: </span>
-                <span className="font-semibold">{stats.min} mg/dL</span>
+                <span className="text-xs text-gray-500">Min: </span>
+                <span className="text-xs font-semibold">{stats.min} mg/dL</span>
               </div>
               <div className="px-3 py-1 bg-gray-100 rounded-lg">
-                <span className="text-gray-500">Max: </span>
-                <span className="font-semibold">{stats.max} mg/dL</span>
+                <span className="text-xs text-gray-500">Max: </span>
+                <span className="text-xs font-semibold">{stats.max} mg/dL</span>
               </div>
             </div>
           </div>

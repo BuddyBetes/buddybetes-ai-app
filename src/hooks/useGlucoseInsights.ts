@@ -15,15 +15,15 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
   const [insights, setInsights] = useState<string[]>([]);
   const [stats, setStats] = useState<GlucoseStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { getRecentLogs } = useLogContext();
+  const { getGlucoseLogsOnly } = useLogContext();
   const { toast } = useToast();
 
   const fetchInsights = useCallback(async () => {
     try {
       setIsLoading(true);
       
-      // Get recent glucose logs
-      const recentLogs = getRecentLogs(30); // Get more logs to allow for filtering by time range
+      // Get recent glucose logs - only include logs with glucose readings
+      const recentLogs = getGlucoseLogsOnly(30);
       
       if (recentLogs.length === 0) {
         setInsights([
@@ -84,7 +84,7 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
     } finally {
       setIsLoading(false);
     }
-  }, [getRecentLogs, toast, timeRange]);
+  }, [getGlucoseLogsOnly, toast, timeRange]);
 
   useEffect(() => {
     fetchInsights();
