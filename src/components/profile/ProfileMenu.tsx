@@ -1,94 +1,83 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Settings, 
-  Bell, 
-  Lock, 
-  HelpCircle, 
-  LogOut, 
-  ChevronRight
-} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { SheetTrigger } from '@/components/ui/sheet';
-import ProfileNotifications from './ProfileNotifications';
+import { LogOut, Settings, ShieldAlert, HelpCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const ProfileMenu = () => {
   const navigate = useNavigate();
-  
-  const menuItems = [
-    { icon: Settings, label: 'Settings', color: 'bg-gray-100', path: '/settings' },
-    { icon: Bell, label: 'Notifications', color: 'bg-blue-100', isNotification: true },
-    { icon: Lock, label: 'Privacy', color: 'bg-purple-100', path: '/privacy' },
-    { icon: HelpCircle, label: 'Help', color: 'bg-green-100', path: '/help' },
-    { icon: LogOut, label: 'Logout', color: 'bg-red-100' },
-  ];
-  
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: (i: number) => ({
-      opacity: 1,
-      x: 0,
-      transition: {
-        delay: i * 0.1,
-      },
-    }),
-  };
+  const { signOut } = useAuth();
+  const { toast } = useToast();
 
-  const handleMenuItemClick = (path?: string) => {
-    if (path) {
-      navigate(path);
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out",
+      });
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
+  const menuItems = [
+    {
+      icon: <Settings size={20} />,
+      title: "Settings",
+      description: "App preferences and account settings",
+      onClick: () => navigate("/settings")
+    },
+    {
+      icon: <ShieldAlert size={20} />,
+      title: "Privacy",
+      description: "Manage your data and privacy settings",
+      onClick: () => navigate("/privacy")
+    },
+    {
+      icon: <HelpCircle size={20} />,
+      title: "Help",
+      description: "Get help and support",
+      onClick: () => navigate("/help")
+    },
+    {
+      icon: <LogOut size={20} />,
+      title: "Sign Out",
+      description: "Sign out of your account",
+      onClick: handleLogout,
+      className: "text-red-500"
+    }
+  ];
+
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={{
-        visible: {
-          transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.3,
-          },
-        },
-      }}
-      className="bg-white rounded-xl shadow-sm overflow-hidden"
-    >
-      {menuItems.map((item, index) => (
-        <motion.div
-          key={item.label}
-          custom={index}
-          variants={itemVariants}
-          className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
-          onClick={() => !item.isNotification && handleMenuItemClick(item.path)}
-        >
-          {item.isNotification ? (
-            <ProfileNotifications>
-              <SheetTrigger className="flex items-center justify-between w-full">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full ${item.color} flex items-center justify-center`}>
-                    <item.icon size={16} />
-                  </div>
-                  <span className="text-sm font-medium">{item.label}</span>
-                </div>
-                <ChevronRight size={16} className="text-gray-400" />
-              </SheetTrigger>
-            </ProfileNotifications>
-          ) : (
-            <>
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-full ${item.color} flex items-center justify-center`}>
-                  <item.icon size={16} />
-                </div>
-                <span className="text-sm font-medium">{item.label}</span>
-              </div>
-              <ChevronRight size={16} className="text-gray-400" />
-            </>
-          )}
-        </motion.div>
-      ))}
-    </motion.div>
+    <div className="mb-8">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {menuItems.map((item, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`flex items-center p-4 cursor-pointer border-b last:border-b-0 hover:bg-gray-50 transition-colors ${item.className || ""}`}
+            onClick={item.onClick}
+          >
+            <div className="flex-shrink-0 mr-4 text-gray-500">{item.icon}</div>
+            <div className="flex-1">
+              <h3 className={`font-medium ${item.className || ""}`}>{item.title}</h3>
+              <p className="text-sm text-gray-500">{item.description}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 };
 

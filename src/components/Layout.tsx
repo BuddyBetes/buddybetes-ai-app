@@ -2,6 +2,7 @@
 import React, { ReactNode } from 'react';
 import Navigation from './Navigation';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,13 +12,14 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const path = location.pathname;
+  const { isAuthenticated } = useAuth();
   
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 page-container pt-16">
         {children}
       </main>
-      <Navigation />
+      {isAuthenticated && <Navigation />}
     </div>
   );
 };

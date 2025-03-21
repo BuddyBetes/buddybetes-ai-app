@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,16 +25,32 @@ interface HealthDataEditProps {
 
 const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
   const { toast } = useToast();
+  const [localHealthData, setLocalHealthData] = useState({ ...healthData });
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleHealthDataChange = (field: string, value: string) => {
-    setHealthData(prev => ({ ...prev, [field]: value }));
+    setLocalHealthData(prev => ({ ...prev, [field]: value }));
   };
 
-  const saveHealthData = () => {
-    toast({
-      title: "Success",
-      description: "Your health data has been updated",
-    });
+  const saveHealthData = async () => {
+    setIsSaving(true);
+    try {
+      await setHealthData(localHealthData);
+      
+      toast({
+        title: "Success",
+        description: "Your health data has been updated",
+      });
+    } catch (error) {
+      console.error('Error saving health data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update your health data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -51,7 +67,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
             Gender
           </label>
           <Select 
-            value={healthData.gender} 
+            value={localHealthData.gender} 
             onValueChange={(value) => handleHealthDataChange('gender', value)}
           >
             <SelectTrigger className="col-span-3">
@@ -70,7 +86,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
           </label>
           <Input
             id="age"
-            value={healthData.age}
+            value={localHealthData.age}
             onChange={(e) => handleHealthDataChange('age', e.target.value)}
             className="col-span-3"
           />
@@ -81,7 +97,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
           </label>
           <Input
             id="height"
-            value={healthData.height}
+            value={localHealthData.height}
             onChange={(e) => handleHealthDataChange('height', e.target.value)}
             className="col-span-3"
           />
@@ -92,7 +108,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
           </label>
           <Input
             id="weight"
-            value={healthData.weight}
+            value={localHealthData.weight}
             onChange={(e) => handleHealthDataChange('weight', e.target.value)}
             className="col-span-3"
           />
@@ -102,7 +118,7 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
             Diabetes Type
           </label>
           <Select 
-            value={healthData.diabetesType} 
+            value={localHealthData.diabetesType} 
             onValueChange={(value) => handleHealthDataChange('diabetesType', value)}
           >
             <SelectTrigger className="col-span-3">
@@ -119,7 +135,12 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
       </div>
       <div className="flex justify-end mt-4">
         <SheetClose asChild>
-          <Button onClick={saveHealthData}>Save changes</Button>
+          <Button 
+            onClick={saveHealthData} 
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save changes"}
+          </Button>
         </SheetClose>
       </div>
     </SheetContent>

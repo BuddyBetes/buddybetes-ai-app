@@ -3,17 +3,30 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, hasCompletedOnboarding, loading } = useAuth();
 
   useEffect(() => {
-    // Automatically redirect to Dashboard after animation
-    const timer = setTimeout(() => {
-      navigate('/dashboard');
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+    // Wait for auth status to load, then redirect
+    if (!loading) {
+      const timer = setTimeout(() => {
+        if (isAuthenticated) {
+          if (hasCompletedOnboarding) {
+            navigate('/dashboard');
+          } else {
+            navigate('/onboarding');
+          }
+        } else {
+          navigate('/signin');
+        }
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [navigate, isAuthenticated, hasCompletedOnboarding, loading]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
