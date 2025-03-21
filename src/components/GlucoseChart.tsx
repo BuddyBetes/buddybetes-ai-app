@@ -74,7 +74,7 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
 
   return (
     <div className="w-full p-4 rounded-xl bg-white shadow-sm">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-2">
         {title && <div className="text-lg font-semibold">{title}</div>}
         
         {showControls && (
@@ -90,19 +90,19 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
       
       {chartData.length > 0 ? (
         <>
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-4">
-              <div className="px-3 py-1 bg-gray-100 rounded-lg">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex space-x-2">
+              <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Avg: </span>
-                <span className="text-xs font-semibold">{stats.avg} mg/dL</span>
+                <span className="text-xs font-medium">{stats.avg} mg/dL</span>
               </div>
-              <div className="px-3 py-1 bg-gray-100 rounded-lg">
+              <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Min: </span>
-                <span className="text-xs font-semibold">{stats.min} mg/dL</span>
+                <span className="text-xs font-medium">{stats.min} mg/dL</span>
               </div>
-              <div className="px-3 py-1 bg-gray-100 rounded-lg">
+              <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Max: </span>
-                <span className="text-xs font-semibold">{stats.max} mg/dL</span>
+                <span className="text-xs font-medium">{stats.max} mg/dL</span>
               </div>
             </div>
           </div>

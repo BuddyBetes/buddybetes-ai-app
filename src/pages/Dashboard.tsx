@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
@@ -50,7 +51,7 @@ const Dashboard = () => {
   return (
     <Layout>
       <AppHeader />
-      <div className="space-y-6 pb-28">
+      <div className="space-y-5 pb-20">
         <motion.div 
           className="grid grid-cols-2 gap-4"
           initial="hidden"
@@ -140,17 +141,16 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="bg-white rounded-xl shadow-sm p-4"
         >
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-2">
             <h3 className="text-lg font-semibold text-gray-800">Glucose Trend</h3>
-            <div className="flex space-x-2">
-              <button 
-                className="text-buddy-600 text-sm font-medium flex items-center"
-                onClick={navigateToLogs}
-              >
-                View All <ArrowUpRight size={14} className="ml-1" />
-              </button>
-            </div>
+            <button 
+              className="text-buddy-600 text-sm font-medium flex items-center"
+              onClick={navigateToLogs}
+            >
+              View All <ArrowUpRight size={14} className="ml-1" />
+            </button>
           </div>
           
           <Tabs 
@@ -159,19 +159,19 @@ const Dashboard = () => {
             onValueChange={(value) => setTimeRange(value as '24h' | '7d' | '30d')}
             className="w-full"
           >
-            <TabsList className="w-full bg-gray-100 mb-3">
+            <TabsList className="w-full bg-gray-100 mb-1">
               <TabsTrigger className="flex-1" value="24h">Last 24 Hours</TabsTrigger>
               <TabsTrigger className="flex-1" value="7d">Last 7 Days</TabsTrigger>
               <TabsTrigger className="flex-1" value="30d">Last 30 Days</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="24h" className="mt-0">
+            <TabsContent value="24h" className="mt-0 pt-2">
               <GlucoseChart data={glucoseLogs} showControls={false} />
             </TabsContent>
-            <TabsContent value="7d" className="mt-0">
+            <TabsContent value="7d" className="mt-0 pt-2">
               <GlucoseChart data={glucoseLogs} showControls={false} />
             </TabsContent>
-            <TabsContent value="30d" className="mt-0">
+            <TabsContent value="30d" className="mt-0 pt-2">
               <GlucoseChart data={glucoseLogs} showControls={false} />
             </TabsContent>
           </Tabs>
