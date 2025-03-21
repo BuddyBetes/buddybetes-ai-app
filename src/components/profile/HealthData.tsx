@@ -24,7 +24,7 @@ const HealthData = () => {
     height: '',
     heightUnit: 'cm',
     weight: '',
-    weightUnit: 'lbs',
+    weightUnit: 'kg',
     diabetesType: ''
   });
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,7 @@ const HealthData = () => {
             height: data.height || '',
             heightUnit: data.height_unit || 'cm',
             weight: data.weight || '',
-            weightUnit: data.weight_unit || 'lbs',
+            weightUnit: data.weight_unit || 'kg',
             diabetesType: data.diabetes_type || ''
           });
         }

@@ -2,7 +2,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
 
 const AIPreferences = () => {
   const itemVariants = {
@@ -33,29 +32,6 @@ const AIPreferences = () => {
             <span className="text-sm font-medium">English (US)</span>
           </div>
           <ChevronRight size={16} className="text-gray-400" />
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-buddy-100 flex items-center justify-center">
-              <span className="text-buddy-600 text-xs">📝</span>
-            </div>
-            <div>
-              <span className="text-sm font-medium">Insights & Tips</span>
-              <p className="text-xs text-gray-500">Get AI suggestions based on your data</p>
-            </div>
-          </div>
-          <Switch />
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-buddy-100 flex items-center justify-center">
-              <span className="text-buddy-600 text-xs">🔊</span>
-            </div>
-            <span className="text-sm font-medium">Voice assistant</span>
-          </div>
-          <Switch defaultChecked />
         </div>
       </div>
     </motion.div>

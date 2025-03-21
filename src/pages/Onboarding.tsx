@@ -34,7 +34,7 @@ const Onboarding = () => {
     height: '',
     heightUnit: 'cm',
     weight: '',
-    weightUnit: 'lbs',
+    weightUnit: 'kg',
     diabetesType: '',
   });
 

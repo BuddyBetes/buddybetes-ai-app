@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface HealthDataEditProps {
@@ -36,9 +36,33 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
   const { toast } = useToast();
   const [localHealthData, setLocalHealthData] = useState(healthData);
   const [isSaving, setIsSaving] = useState(false);
+  const [dateInputValue, setDateInputValue] = useState(
+    localHealthData.birthdate ? format(localHealthData.birthdate, 'yyyy-MM-dd') : ''
+  );
 
   const handleHealthDataChange = (field: string, value: string | Date) => {
     setLocalHealthData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDateInputValue(value);
+    
+    try {
+      // Try to parse the date
+      if (value) {
+        const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
+        // Check if the date is valid
+        if (!isNaN(parsedDate.getTime())) {
+          handleHealthDataChange('birthdate', parsedDate);
+        }
+      } else {
+        // If input is cleared, clear the date
+        handleHealthDataChange('birthdate', undefined as unknown as Date);
+      }
+    } catch (error) {
+      console.error("Error parsing date:", error);
+    }
   };
 
   const saveHealthData = async () => {
@@ -95,6 +119,12 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
             Date of Birth
           </label>
           <div className="col-span-3">
+            <Input
+              type="date"
+              value={dateInputValue}
+              onChange={handleDateInputChange}
+              className="mb-2"
+            />
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -116,7 +146,12 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
                 <Calendar
                   mode="single"
                   selected={localHealthData.birthdate}
-                  onSelect={(date) => handleHealthDataChange('birthdate', date as Date)}
+                  onSelect={(date) => {
+                    handleHealthDataChange('birthdate', date as Date);
+                    if (date) {
+                      setDateInputValue(format(date, 'yyyy-MM-dd'));
+                    }
+                  }}
                   disabled={(date) =>
                     date > new Date() || date < new Date("1900-01-01")
                   }
@@ -171,8 +206,8 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
                 <SelectValue placeholder="Unit" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="lbs">lbs</SelectItem>
                 <SelectItem value="kg">kg</SelectItem>
+                <SelectItem value="lbs">lbs</SelectItem>
               </SelectContent>
             </Select>
           </div>

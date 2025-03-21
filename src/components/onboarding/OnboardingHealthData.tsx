@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { format } from 'date-fns';
+import React, { useState } from 'react';
+import { format, parse } from 'date-fns';
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -40,6 +40,31 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
   const minDate = new Date();
   minDate.setFullYear(minDate.getFullYear() - 100);
 
+  const [dateInputValue, setDateInputValue] = useState(
+    healthData.birthdate ? format(healthData.birthdate, 'yyyy-MM-dd') : ''
+  );
+
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDateInputValue(value);
+    
+    try {
+      // Try to parse the date
+      if (value) {
+        const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
+        // Check if the date is valid and within range
+        if (!isNaN(parsedDate.getTime()) && parsedDate <= maxDate && parsedDate >= minDate) {
+          setHealthData({...healthData, birthdate: parsedDate});
+        }
+      } else {
+        // If input is cleared, clear the date
+        setHealthData({...healthData, birthdate: undefined});
+      }
+    } catch (error) {
+      console.error("Error parsing date:", error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold mb-4">Health Information</h3>
@@ -69,36 +94,53 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
 
         <div>
           <Label className="mb-2 block">Date of Birth</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !healthData.birthdate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {healthData.birthdate ? (
-                  format(healthData.birthdate, "PPP")
-                ) : (
-                  <span>Select your date of birth</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={healthData.birthdate}
-                onSelect={(date) => setHealthData({...healthData, birthdate: date || undefined})}
-                disabled={(date) => date > maxDate || date < minDate}
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={maxDate.getFullYear() - 100}
-                toYear={maxDate.getFullYear()}
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="space-y-2">
+            <Input
+              type="date"
+              value={dateInputValue}
+              onChange={handleDateInputChange}
+              max={format(maxDate, 'yyyy-MM-dd')}
+              min={format(minDate, 'yyyy-MM-dd')}
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500">Or select from calendar:</p>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !healthData.birthdate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {healthData.birthdate ? (
+                    format(healthData.birthdate, "PPP")
+                  ) : (
+                    <span>Select your date of birth</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={healthData.birthdate}
+                  onSelect={(date) => {
+                    setHealthData({...healthData, birthdate: date || undefined});
+                    if (date) {
+                      setDateInputValue(format(date, 'yyyy-MM-dd'));
+                    }
+                  }}
+                  disabled={(date) => date > maxDate || date < minDate}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={maxDate.getFullYear() - 100}
+                  toYear={maxDate.getFullYear()}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <div className="flex space-x-3">
