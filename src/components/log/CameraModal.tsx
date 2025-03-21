@@ -1,9 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTitle 
+} from '@/components/ui/sheet';
 import CameraCapture from '@/components/camera/CameraCapture';
 import ProcessingService from './ProcessingService';
 import { useToast } from '@/hooks/use-toast';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface CameraModalProps {
   open: boolean;
@@ -69,6 +74,12 @@ const CameraModal: React.FC<CameraModalProps> = ({
   return (
     <Sheet open={open} onOpenChange={handleCloseCamera} modal>
       <SheetContent side="bottom" className="h-[100dvh] p-0 z-50">
+        {/* Add SheetTitle for accessibility but hide it visually */}
+        <VisuallyHidden>
+          <SheetTitle>
+            {scanMode === 'food' ? 'Food Scanner' : 'Glucose Meter Scanner'}
+          </SheetTitle>
+        </VisuallyHidden>
         <div className="h-full bg-black overflow-hidden">
           <CameraCapture 
             mode={scanMode} 
