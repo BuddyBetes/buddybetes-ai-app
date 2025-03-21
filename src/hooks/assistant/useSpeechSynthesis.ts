@@ -16,6 +16,11 @@ export const useSpeechSynthesis = () => {
     audioRef.current.onended = () => {
       console.log("TTS audio playback finished");
       setIsPlayingResponse(false);
+      
+      // Play a notification sound after the response is complete
+      const notificationSound = new Audio('/message-sent.mp3');
+      notificationSound.volume = 0.3;
+      notificationSound.play().catch(err => console.error("Could not play notification sound:", err));
     };
     audioRef.current.onerror = (e) => {
       console.error("TTS audio playback error:", e);
@@ -53,9 +58,12 @@ export const useSpeechSynthesis = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       try {
-        // Try the Supabase Edge Function first
+        // Use the Supabase Edge Function with premium voice options
         const { data, error } = await supabase.functions.invoke('text-to-speech', {
-          body: { text: truncatedText }
+          body: { 
+            text: truncatedText,
+            voice: 'nova' // Using Nova as the default premium voice
+          }
         });
         
         if (error) {

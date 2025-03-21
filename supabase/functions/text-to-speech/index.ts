@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -30,6 +29,12 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
 
+    // Use the highest quality voice option available - 'nova' is one of the best natural-sounding voices
+    // Other premium options include 'shimmer', 'alloy', 'echo', 'fable', and 'onyx'
+    const selectedVoice = voice || 'nova';
+    
+    console.log(`Using premium voice: ${selectedVoice}`);
+
     // Generate speech from text
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
@@ -38,10 +43,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
+        model: 'tts-1-hd', // Using the high-definition model for better quality
         input: truncatedText,
-        voice: voice || 'nova', // Using 'nova' as default for a natural, friendly voice
+        voice: selectedVoice,
         response_format: 'mp3',
+        speed: 1.0, // Default speed for natural sounding voice
       }),
     });
 
