@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -173,29 +172,6 @@ const AppContent: React.FC = () => {
       />
     </Routes>
   );
-};
-
-const ProtectedRoute: React.FC<{ children: React.ReactNode; requireOnboarding?: boolean }> = ({ 
-  children,
-  requireOnboarding = true,
-}) => {
-  const { isAuthenticated, loading, hasCompletedOnboarding } = useAuth();
-  const location = useLocation();
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/signin" state={{ from: location }} replace />;
-  }
-  
-  // Only enforce onboarding if explicitly required
-  if (requireOnboarding && !hasCompletedOnboarding) {
-    return <Navigate to="/onboarding" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
