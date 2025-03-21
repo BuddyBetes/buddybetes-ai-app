@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Languages } from 'lucide-react';
+import { Languages } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useGlucoseInsights } from '@/hooks/useGlucoseInsights';
@@ -48,16 +48,6 @@ const AIPreferences = () => {
       <h3 className="text-sm font-medium text-gray-500 mb-4">AI Preferences</h3>
       
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-buddy-100 flex items-center justify-center">
-              <span className="text-buddy-600 text-xs">🇺🇸</span>
-            </div>
-            <span className="text-sm font-medium">English (US)</span>
-          </div>
-          <ChevronRight size={16} className="text-gray-400" />
-        </div>
-        
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
