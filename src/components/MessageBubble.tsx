@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { NutritionalInfo, GlucoseStats, TrendAnalysis } from '@/types';
 import NutritionalCard from './NutritionalCard';
-import { TrendUp, TrendDown, ArrowRight, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowRight, Activity } from 'lucide-react';
 
 interface MessageBubbleProps {
   text: string;
@@ -84,9 +84,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         <div className="ml-10 p-3 bg-gray-50 rounded-lg text-sm">
           <div className="font-medium mb-2 text-gray-700 flex items-center">
             {trendAnalysis.direction === 'increasing' ? (
-              <TrendUp size={14} className="mr-1 text-orange-500" />
+              <TrendingUp size={14} className="mr-1 text-orange-500" />
             ) : trendAnalysis.direction === 'decreasing' ? (
-              <TrendDown size={14} className="mr-1 text-green-500" />
+              <TrendingDown size={14} className="mr-1 text-green-500" />
             ) : (
               <ArrowRight size={14} className="mr-1 text-blue-500" />
             )}
