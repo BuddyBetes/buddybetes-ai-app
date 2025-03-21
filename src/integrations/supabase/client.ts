@@ -15,5 +15,17 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
+// Helper function to check for scheduled notifications
+export const checkScheduledNotifications = async () => {
+  try {
+    const { data, error } = await supabase.functions.invoke('notification-service');
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error checking scheduled notifications:', error);
+    return null;
+  }
+};
+
 // Export auth types for use in components
 export type { User } from '@supabase/supabase-js';

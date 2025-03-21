@@ -1,15 +1,21 @@
 
-import React, { useState } from 'react';
-import { Bell, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bell, X, Clock } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { format } from 'date-fns';
 
 export interface Notification {
-  id: number;
+  id: string;
   title: string;
   message: string;
   read: boolean;
+  type: string;
+  created_at: string;
+  scheduled_for: string | null;
 }
 
 interface ProfileNotificationsProps {
@@ -18,21 +24,135 @@ interface ProfileNotificationsProps {
 
 const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children }) => {
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: 1, title: 'Medication Reminder', message: 'Time to take your evening medication', read: false },
-    { id: 2, title: 'High Glucose Alert', message: 'Your glucose level was higher than usual after lunch', read: false }
-  ]);
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
-    toast({
-      title: "Notifications cleared",
-      description: "All notifications have been marked as read",
-    });
+  // Fetch notifications from Supabase
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchNotifications = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('user_notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        setNotifications(data || []);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        toast({
+          title: "Failed to load notifications",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchNotifications();
+    
+    // Subscribe to notification changes
+    const subscription = supabase
+      .channel('public:user_notifications')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'user_notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          // Refresh notifications when changes occur
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, toast]);
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('user_notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+      
+      if (error) {
+        throw error;
+      }
+      
+      setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+      
+      toast({
+        title: "Notifications cleared",
+        description: "All notifications have been marked as read",
+      });
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+      toast({
+        title: "Failed to update notifications",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteNotification = (id: number) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  const deleteNotification = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('user_notifications')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      setNotifications(prev => prev.filter(notification => notification.id !== id));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      toast({
+        title: "Failed to delete notification",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Format date for display
+  const formatNotificationDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return format(date, 'MMM d, h:mm a');
+  };
+
+  // Get notification icon based on type
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'reminder':
+        return <Clock size={16} className="text-blue-500" />;
+      case 'alert':
+        return <Bell size={16} className="text-red-500" />;
+      default:
+        return <Bell size={16} className="text-gray-500" />;
+    }
   };
 
   return (
@@ -43,7 +163,11 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>
         
-        {notifications.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+          </div>
+        ) : notifications.length > 0 ? (
           <>
             <div className="flex justify-between items-center mb-4">
               <span className="text-sm text-gray-500">{notifications.length} notifications</span>
@@ -59,7 +183,10 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
                   className={`p-3 rounded-lg border ${notification.read ? 'bg-gray-50' : 'bg-blue-50 border-blue-100'}`}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <div className="font-medium">{notification.title}</div>
+                    <div className="font-medium flex items-center gap-2">
+                      {getNotificationIcon(notification.type)}
+                      {notification.title}
+                    </div>
                     <button 
                       onClick={() => deleteNotification(notification.id)}
                       className="text-gray-400 hover:text-gray-600"
@@ -68,7 +195,9 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
                     </button>
                   </div>
                   <div className="text-sm text-gray-600 mb-2">{notification.message}</div>
-                  <div className="text-xs text-gray-500">Today</div>
+                  <div className="text-xs text-gray-500">
+                    {formatNotificationDate(notification.created_at)}
+                  </div>
                 </div>
               ))}
             </div>
