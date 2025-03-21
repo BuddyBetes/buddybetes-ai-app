@@ -54,6 +54,7 @@ export const useGlucoseLogging = (
   
   return {
     logCreated,
+    setLogCreated,
     askForTime,
     processGlucoseLogIntent,
     processViewLogsNavigation,

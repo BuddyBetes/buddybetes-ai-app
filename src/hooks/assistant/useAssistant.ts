@@ -36,6 +36,7 @@ export const useAssistant = () => {
   
   const {
     logCreated,
+    setLogCreated,
     askForTime,
     processGlucoseLogIntent,
     processViewLogsNavigation,
@@ -44,12 +45,16 @@ export const useAssistant = () => {
   
   // Custom speech result handler that first checks for glucose logging intents
   const handleSpeechResult = async (text: string) => {
+    console.log("Processing speech result:", text);
     // First check if this is a glucose logging intent
     const isGlucoseLog = await processGlucoseLogIntent(text);
     
     // If it's not a glucose log, handle it with the regular flow
     if (!isGlucoseLog) {
       await originalHandleSpeechResult(text);
+    } else {
+      // If it was a glucose log, mark it as created for notifications
+      setLogCreated(true);
     }
   };
 
@@ -83,10 +88,19 @@ export const useAssistant = () => {
 
   // Process message with possible navigation logic
   const processMessage = (text: string) => {
-    const shouldNavigate = processViewLogsNavigation(text);
-    if (!shouldNavigate) {
-      return handleUserMessage(text);
-    }
+    // Check first if this is a glucose logging intent
+    processGlucoseLogIntent(text).then(isGlucoseLog => {
+      if (!isGlucoseLog) {
+        // If not a glucose log, check for navigation or process as regular message
+        const shouldNavigate = processViewLogsNavigation(text);
+        if (!shouldNavigate) {
+          handleUserMessage(text);
+        }
+      } else {
+        // If it was a glucose log, mark it as created for notifications
+        setLogCreated(true);
+      }
+    });
   };
 
   return {

@@ -27,7 +27,10 @@ export const extractGlucoseInfo = (text: string): ExtractedLogInfo | null => {
     /(\d{2,3})(?:\s+mg\/dl|\s+mg|\s+points|\s+point|\s+level)/i,
     /my\s+(?:glucose|sugar|reading)\s+(?:is|was)\s+(\d{2,3})/i,
     /log\s+(\d{2,3})/i,  // Common pattern for "log 125"
-    /please\s+log\s+(\d{2,3})/i  // "please log 125"
+    /please\s+log\s+(\d{2,3})/i,  // "please log 125"
+    /add\s+(?:a|new)?\s+(?:glucose|sugar|reading|log)\s+(?:of)?\s+(\d{2,3})/i, // "add a glucose reading of 125"
+    /record\s+(?:a|my)?\s+(?:glucose|sugar|reading|log)\s+(?:of)?\s+(\d{2,3})/i, // "record my glucose of 125"
+    /(?:glucose|sugar|blood\s+sugar|reading)\s+(\d{2,3})/i // Simple "glucose 125"
   ];
   
   for (const pattern of glucosePatterns) {
@@ -94,7 +97,11 @@ export const isGlucoseLogIntent = (text: string): boolean => {
     /add (a|new) (reading|log|entry)/i,
     /glucose(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
     /blood\s+sugar(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
-    /reading(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i
+    /reading(?:\s+is|\s+was|\s+of)?\s+(\d{2,3})/i,
+    /record my (glucose|reading|sugar)/i,
+    /add a (glucose|reading|sugar)/i,
+    /enter (my|a) (glucose|reading|sugar)/i,
+    /save (my|a|this) (glucose|reading|sugar)/i
   ];
   
   return logPatterns.some(pattern => pattern.test(text));
