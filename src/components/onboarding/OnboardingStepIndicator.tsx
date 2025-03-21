@@ -11,6 +11,26 @@ const OnboardingStepIndicator: React.FC<OnboardingStepIndicatorProps> = ({
   steps, 
   currentStep 
 }) => {
+  // Function to break step text into multiple lines if needed
+  const formatStepLabel = (label: string) => {
+    if (label === "Personal Information") {
+      return (
+        <>
+          <div>Personal</div>
+          <div>Information</div>
+        </>
+      );
+    } else if (label === "Health Information") {
+      return (
+        <>
+          <div>Health</div>
+          <div>Information</div>
+        </>
+      );
+    }
+    return label;
+  };
+
   return (
     <div className="flex items-center justify-between mb-10 px-4">
       {steps.map((step, index) => (
@@ -38,7 +58,7 @@ const OnboardingStepIndicator: React.FC<OnboardingStepIndicatorProps> = ({
                 currentStep >= index ? "text-buddy-500" : "text-gray-400"
               )}
             >
-              {step}
+              {formatStepLabel(step)}
             </div>
           </div>
           
