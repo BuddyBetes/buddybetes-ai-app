@@ -29,7 +29,13 @@ export function useImageAnalysis() {
       }
 
       if (data && data.foodItems) {
+        // If we got an empty array back, show a user-friendly message
+        if (data.foodItems.length === 0) {
+          throw new Error('No food detected in this image. Please try again with a clearer photo.');
+        }
         setResult({ foodItems: data.foodItems });
+      } else if (data && data.error) {
+        throw new Error(data.error);
       } else {
         throw new Error('Invalid response format from food analysis');
       }

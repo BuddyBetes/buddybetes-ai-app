@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Edit, Check } from 'lucide-react';
+import { Loader2, Edit, Check, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
@@ -76,6 +76,28 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
           <div className="flex flex-col items-center justify-center py-6">
             <p className="text-center text-red-500 mb-4">{error}</p>
             <Button onClick={onCancel} variant="outline">Try Again</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Handle the case when no food items were detected
+  if (!foodItems || foodItems.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-xl">No Food Detected</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-6">
+            <Camera className="h-12 w-12 text-gray-400 mb-4" />
+            <p className="text-center text-gray-600 mb-4">
+              We couldn't identify any food in this image. Please try again with a clearer photo.
+            </p>
+            <Button onClick={onCancel} variant="outline">
+              Take Another Photo
+            </Button>
           </div>
         </CardContent>
       </Card>

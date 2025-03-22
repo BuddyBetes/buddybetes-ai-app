@@ -38,6 +38,16 @@ serve(async (req) => {
     const foods = await analyzeImageWithOpenAI(image);
     console.log('Detected food items:', foods);
     
+    if (!foods || foods.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'No food detected in the image',
+          foodItems: [] 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     // Step 2: Get nutritional information for each food item
     const foodItems = await Promise.all(
       foods.map(async (food) => {
@@ -59,7 +69,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in analyze-food-image function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, foodItems: [] }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -78,7 +88,7 @@ async function analyzeImageWithOpenAI(base64Image: string): Promise<string[]> {
         messages: [
           {
             role: 'system',
-            content: 'You are a food recognition expert. Identify the food items in the image. Return only a JSON array of food item names, with no additional text. For example: ["grilled chicken", "brown rice", "broccoli"]'
+            content: 'You are a food recognition expert. Identify the food items in the image. Return only a JSON array of food item names, with no additional text. For example: ["grilled chicken", "brown rice", "broccoli"]. If no food is visible, return an empty array [].'
           },
           {
             role: 'user',
@@ -110,11 +120,11 @@ async function analyzeImageWithOpenAI(base64Image: string): Promise<string[]> {
       // Fallback: Try to extract food items using regex if JSON parsing fails
       const content = data.choices[0].message.content;
       const matches = content.match(/"([^"]+)"/g);
-      return matches ? matches.map(m => m.replace(/"/g, '')) : ['Unknown food'];
+      return matches ? matches.map(m => m.replace(/"/g, '')) : [];
     }
   } catch (error) {
     console.error('Error analyzing image with OpenAI:', error);
-    return ['Unknown food'];
+    return [];
   }
 }
 
