@@ -34,14 +34,17 @@ serve(async (req) => {
       );
     }
 
+    console.log('Image data received, length:', image.length);
+    
     // Step 1: Analyze the image with OpenAI
     const foods = await analyzeImageWithOpenAI(image);
     console.log('Detected food items:', foods);
     
     if (!foods || foods.length === 0) {
+      console.log('No foods detected in the image');
       return new Response(
         JSON.stringify({ 
-          error: 'No food detected in the image',
+          error: 'No food detected in the image. Please try again with a clearer photo.',
           foodItems: [] 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -62,6 +65,8 @@ serve(async (req) => {
       })
     );
 
+    console.log('Final food items with nutrition:', foodItems);
+
     return new Response(
       JSON.stringify({ foodItems }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -77,6 +82,8 @@ serve(async (req) => {
 
 async function analyzeImageWithOpenAI(base64Image: string): Promise<string[]> {
   try {
+    console.log('Sending image to OpenAI, base64 length:', base64Image.length);
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -88,7 +95,7 @@ async function analyzeImageWithOpenAI(base64Image: string): Promise<string[]> {
         messages: [
           {
             role: 'system',
-            content: 'You are a food recognition expert. Identify the food items in the image. Return only a JSON array of food item names, with no additional text. For example: ["grilled chicken", "brown rice", "broccoli"]. If no food is visible, return an empty array [].'
+            content: 'You are a food recognition expert. Your task is to identify ALL food items visible in the image. Return ONLY a JSON array of food item names (strings), with no additional text or explanations. Example output format: ["grilled chicken", "brown rice", "broccoli"]. If no food is visible or you cannot identify any food with confidence, return an empty array [].'
           },
           {
             role: 'user',
@@ -108,19 +115,35 @@ async function analyzeImageWithOpenAI(base64Image: string): Promise<string[]> {
     const data = await response.json();
     
     if (data.error) {
+      console.error('OpenAI API error:', data.error);
       throw new Error(`OpenAI API error: ${data.error.message}`);
     }
     
+    console.log('Raw OpenAI response:', data.choices[0].message.content);
+    
     try {
       const content = data.choices[0].message.content;
+      // Parse the JSON response
       const parsedContent = JSON.parse(content);
-      return Array.isArray(parsedContent) ? parsedContent : parsedContent.foods || [];
+      // Check if it's an array or an object with a foods array
+      const foods = Array.isArray(parsedContent) ? parsedContent : parsedContent.foods || [];
+      
+      console.log('Parsed foods:', foods);
+      
+      // Ensure we have at least one food item
+      if (foods.length === 0) {
+        console.log('No foods found in the parsed response');
+      }
+      
+      return foods;
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
       // Fallback: Try to extract food items using regex if JSON parsing fails
       const content = data.choices[0].message.content;
       const matches = content.match(/"([^"]+)"/g);
-      return matches ? matches.map(m => m.replace(/"/g, '')) : [];
+      const extracted = matches ? matches.map(m => m.replace(/"/g, '')) : [];
+      console.log('Extracted via regex fallback:', extracted);
+      return extracted;
     }
   } catch (error) {
     console.error('Error analyzing image with OpenAI:', error);

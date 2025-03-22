@@ -17,14 +17,20 @@ export function useImageAnalysis() {
     setError(null);
     
     try {
+      console.log('Starting image analysis, image data length:', imageData.length);
+      
       // Remove data URL prefix to get just the base64 data
       const base64Image = imageData.split(',')[1];
+      console.log('Base64 image length:', base64Image.length);
       
       const { data, error: apiError } = await supabase.functions.invoke('analyze-food-image', {
         body: { image: base64Image }
       });
 
+      console.log('API response:', data);
+
       if (apiError) {
+        console.error('Supabase function error:', apiError);
         throw new Error(apiError.message);
       }
 
@@ -33,10 +39,13 @@ export function useImageAnalysis() {
         if (data.foodItems.length === 0) {
           throw new Error('No food detected in this image. Please try again with a clearer photo.');
         }
+        console.log('Food items detected:', data.foodItems);
         setResult({ foodItems: data.foodItems });
       } else if (data && data.error) {
+        console.error('Error in response:', data.error);
         throw new Error(data.error);
       } else {
+        console.error('Invalid response format:', data);
         throw new Error('Invalid response format from food analysis');
       }
     } catch (err) {

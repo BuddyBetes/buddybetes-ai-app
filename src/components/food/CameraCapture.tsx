@@ -14,21 +14,31 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCapturing, setIsCapturing] = useState(true);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize camera
   useEffect(() => {
     const startCamera = async () => {
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
+        const constraints = {
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+        
+        console.log('Requesting camera with constraints:', constraints);
+        const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
           setStream(mediaStream);
+          console.log('Camera started successfully');
         }
       } catch (error) {
         console.error('Error accessing camera:', error);
+        setError('Could not access camera. Please ensure camera permissions are granted.');
       }
     };
 
@@ -53,11 +63,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
+        console.log(`Capturing image at resolution: ${canvas.width}x${canvas.height}`);
+        
         // Draw the current video frame to the canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert canvas to data URL
-        const imageData = canvas.toDataURL('image/jpeg');
+        // Convert canvas to data URL with high quality
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+        console.log('Image captured, data URL length:', imageData.length);
+        
         setCapturedImage(imageData);
         setIsCapturing(false);
       }
@@ -66,6 +80,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
 
   const confirmImage = () => {
     if (capturedImage) {
+      console.log('Confirming image, data URL length:', capturedImage.length);
       onCapture(capturedImage);
     }
   };
@@ -74,6 +89,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
     setCapturedImage(null);
     setIsCapturing(true);
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-4">
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button onClick={onClose} variant="outline">Close</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center space-y-4 p-2">
