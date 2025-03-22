@@ -28,6 +28,7 @@ const AddLog: React.FC = () => {
       // Create a food log with the analyzed items
       await addLog({
         timestamp: new Date(),
+        glucoseLevel: undefined, // Add this to match the type requirements
         food: foodItems.map(item => item.name).join(', '),
         notes: `Carbs: ${foodItems.reduce((sum, item) => sum + item.carbs, 0)}g, ` +
                `Protein: ${foodItems.reduce((sum, item) => sum + item.protein, 0)}g, ` +
