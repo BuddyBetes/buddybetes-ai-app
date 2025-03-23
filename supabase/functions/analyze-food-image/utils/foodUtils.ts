@@ -24,6 +24,6 @@ export function createDefaultFoodItem(foodName: string): FoodItem {
     protein: 5,
     fat: 3,
     calories: 100,
-    serving_description: "Estimated serving"
+    serving_description: "Estimated serving (actual data unavailable)"
   };
 }

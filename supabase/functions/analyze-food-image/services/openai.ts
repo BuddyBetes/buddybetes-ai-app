@@ -20,11 +20,11 @@ export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${btoa(fatSecretApiKey + ':' + 'no_secret_needed')}` // FatSecret API uses client_id:client_secret
         },
         body: new URLSearchParams({
           'grant_type': 'client_credentials',
-          'scope': 'image-recognition'
+          'scope': 'image-recognition',
+          'client_id': fatSecretApiKey
         })
       }
     );
@@ -57,6 +57,13 @@ export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
     );
 
     const recognitionData = await recognitionResponse.json();
+    console.log('FatSecret Image Recognition response status:', recognitionResponse.status);
+    console.log('FatSecret Image Recognition response:', JSON.stringify(recognitionData).substring(0, 200) + '...');
+    
+    if (recognitionResponse.status !== 200) {
+      console.error('FatSecret API error:', recognitionData);
+      throw new Error(`FatSecret API error: ${recognitionData.message || 'Unknown error'}`);
+    }
     
     if (!recognitionData.foods || !recognitionData.foods.length) {
       console.log('No food items detected in image');
@@ -70,6 +77,6 @@ export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
     return foods;
   } catch (error) {
     console.error('Error analyzing image with FatSecret Image Recognition:', error);
-    return [];
+    throw error; // Re-throw to handle in the main function
   }
 }

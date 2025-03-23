@@ -19,11 +19,11 @@ export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${btoa(fatSecretApiKey + ':' + 'no_secret_needed')}` // FatSecret API uses client_id:client_secret
         },
         body: new URLSearchParams({
           'grant_type': 'client_credentials',
-          'scope': 'basic premier'
+          'scope': 'basic premier',
+          'client_id': fatSecretApiKey
         })
       }
     );
@@ -48,8 +48,9 @@ export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
     );
 
     const searchData = await searchResponse.json();
+    console.log(`Search results for ${foodName}:`, JSON.stringify(searchData).substring(0, 200) + '...');
     
-    if (!searchData.foods || !searchData.foods.food || searchData.foods.food.length === 0) {
+    if (!searchData.foods || !searchData.foods.food || searchData.foods.total_results === 0) {
       console.log(`No nutrition data found for ${foodName}`);
       throw new Error(`No nutrition data found for ${foodName}`);
     }
@@ -72,6 +73,7 @@ export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
     );
 
     const detailData = await detailResponse.json();
+    console.log(`Detail results for food_id ${foodId}:`, JSON.stringify(detailData).substring(0, 200) + '...');
     
     if (!detailData.food || !detailData.food.servings || !detailData.food.servings.serving) {
       console.log(`No serving data found for ${foodName}`);

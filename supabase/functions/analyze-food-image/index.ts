@@ -29,40 +29,50 @@ serve(async (req) => {
     console.log('Image data received, length:', image.length);
     
     // Step 1: Get food suggestions using FatSecret Image Recognition API
-    const foods = await analyzeFoodImage(image);
-    console.log('Detected food items:', foods);
-    
-    if (!foods || foods.length === 0) {
-      console.log('No foods detected');
-      return new Response(
-        JSON.stringify({ 
-          error: 'No food detected. Please try again with a clearer photo or enter food manually.',
-          foodItems: [] 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Step 2: Get nutritional information for each food item
-    const foodItems = await Promise.all(
-      foods.map(async (food) => {
+    try {
+      const foods = await analyzeFoodImage(image);
+      console.log('Detected food items:', foods);
+      
+      if (!foods || foods.length === 0) {
+        console.log('No foods detected');
+        return new Response(
+          JSON.stringify({ 
+            error: 'No food detected. Please try again with a clearer photo or enter food manually.',
+            foodItems: [] 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Step 2: Get nutritional information for each food item
+      const foodItems: FoodItem[] = [];
+      for (const food of foods) {
         try {
           const nutritionInfo = await getFoodNutrition(food);
-          return nutritionInfo;
+          foodItems.push(nutritionInfo);
         } catch (err) {
           console.error(`Error getting nutrition for ${food}:`, err);
           // Return default placeholder data if we can't get nutrition info
-          return createDefaultFoodItem(food);
+          foodItems.push(createDefaultFoodItem(food));
         }
-      })
-    );
+      }
 
-    console.log('Final food items with nutrition:', foodItems);
+      console.log('Final food items with nutrition:', foodItems);
 
-    return new Response(
-      JSON.stringify({ foodItems }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      return new Response(
+        JSON.stringify({ foodItems }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (apiError) {
+      console.error('API error:', apiError);
+      return new Response(
+        JSON.stringify({ 
+          error: `Error analyzing food: ${apiError.message}`,
+          foodItems: [] 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
   } catch (error) {
     console.error('Error in analyze-food-image function:', error);
     return new Response(
