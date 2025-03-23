@@ -38,13 +38,20 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
   const handleItemChange = (index: number, field: keyof FoodItem, value: string) => {
     const newItems = [...editedItems];
     
-    if (field === 'name') {
-      newItems[index][field] = value;
+    if (field === 'name' || field === 'serving_description') {
+      // Handle string fields
+      newItems[index] = { 
+        ...newItems[index], 
+        [field]: value 
+      };
     } else {
-      // Convert to number for numeric fields
+      // Handle numeric fields (carbs, protein, fat, calories)
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        newItems[index][field] = numValue;
+        newItems[index] = { 
+          ...newItems[index], 
+          [field]: numValue 
+        };
       }
     }
     
