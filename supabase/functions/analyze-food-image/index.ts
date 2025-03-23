@@ -28,15 +28,15 @@ serve(async (req) => {
 
     console.log('Image data received, length:', image.length);
     
-    // Step 1: Analyze the image with OpenAI
+    // Step 1: Get food suggestions using FatSecret (via our modified service)
     const foods = await analyzeFoodImage(image);
     console.log('Detected food items:', foods);
     
     if (!foods || foods.length === 0) {
-      console.log('No foods detected in the image');
+      console.log('No foods detected');
       return new Response(
         JSON.stringify({ 
-          error: 'No food detected in the image. Please try again with a clearer photo.',
+          error: 'No food detected. Please try again with a clearer photo or enter food manually.',
           foodItems: [] 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

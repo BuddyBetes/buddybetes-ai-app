@@ -10,6 +10,7 @@ const fatSecretApiKey = Deno.env.get('FATSECRET_API_KEY');
  */
 export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
   try {
+    console.log(`Getting nutrition for: ${foodName}`);
     const searchResponse = await fetch(
       `https://platform.fatsecret.com/rest/server.api?method=foods.search&search_expression=${encodeURIComponent(foodName)}&format=json`,
       {
@@ -24,6 +25,7 @@ export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
     const searchData = await searchResponse.json();
     
     if (!searchData.foods || !searchData.foods.food || searchData.foods.food.length === 0) {
+      console.log(`No nutrition data found for ${foodName}`);
       throw new Error(`No nutrition data found for ${foodName}`);
     }
 
@@ -47,6 +49,7 @@ export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
     const detailData = await detailResponse.json();
     
     if (!detailData.food || !detailData.food.servings || !detailData.food.servings.serving) {
+      console.log(`No serving data found for ${foodName}`);
       throw new Error(`No serving data found for ${foodName}`);
     }
 
