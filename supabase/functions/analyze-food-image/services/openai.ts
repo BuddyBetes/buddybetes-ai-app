@@ -1,52 +1,75 @@
 
+// This file now uses FatSecret Image Recognition API instead of OpenAI
+// FatSecret is used for direct image-to-food detection
+
 const fatSecretApiKey = Deno.env.get('FATSECRET_API_KEY');
 
 /**
- * Uses FatSecret to search for food items based on keywords extracted from the image name
- * This replaces the previous OpenAI image analysis
- * @param base64Image - Not used in this implementation, kept for API compatibility
+ * Uses FatSecret Image Recognition API to analyze food images
+ * @param base64Image - Base64 encoded image data
  * @returns Array of detected food items
  */
-export async function analyzeFoodImage(_base64Image: string): Promise<string[]> {
+export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
   try {
-    console.log('Using FatSecret API for food detection');
+    console.log('Using FatSecret Image Recognition API for food detection');
     
-    // Use some common food terms for the search since we can't analyze the image directly
-    const searchTerms = ["apple", "banana", "chicken", "rice", "salad", "pasta"];
-    
-    // Randomly select one search term to simulate food detection
-    // In a real implementation, this would be replaced with actual image-to-text or 
-    // you would ask the user to input what they're eating
-    const searchTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)];
-    
-    // Search for foods using FatSecret API
-    const response = await fetch(
-      `https://platform.fatsecret.com/rest/server.api?method=foods.search&search_expression=${encodeURIComponent(searchTerm)}&format=json&max_results=3`,
+    // First, get an OAuth token for the API request
+    const tokenResponse = await fetch(
+      "https://oauth.fatsecret.com/connect/token",
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${fatSecretApiKey}`,
-          'Content-Type': 'application/json',
-        }
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${btoa(fatSecretApiKey + ':' + 'no_secret_needed')}` // FatSecret API uses client_id:client_secret
+        },
+        body: new URLSearchParams({
+          'grant_type': 'client_credentials',
+          'scope': 'image-recognition'
+        })
       }
     );
 
-    const data = await response.json();
+    const tokenData = await tokenResponse.json();
     
-    if (!data.foods || !data.foods.food) {
-      console.log('No food items found in FatSecret search');
+    if (!tokenData.access_token) {
+      console.error('Failed to get OAuth token:', tokenData);
+      throw new Error('Failed to authenticate with FatSecret API');
+    }
+    
+    console.log('Successfully obtained OAuth token');
+    
+    // Now call the Image Recognition API
+    const recognitionResponse = await fetch(
+      "https://platform.fatsecret.com/rest/image-recognition/v1",
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenData.access_token}`
+        },
+        body: JSON.stringify({
+          image_b64: base64Image,
+          region: "US",
+          language: "en",
+          include_food_data: true
+        })
+      }
+    );
+
+    const recognitionData = await recognitionResponse.json();
+    
+    if (!recognitionData.foods || !recognitionData.foods.length) {
+      console.log('No food items detected in image');
       return [];
     }
     
-    // Extract food names from results
-    const foods = Array.isArray(data.foods.food) 
-      ? data.foods.food.map(food => food.food_name)
-      : [data.foods.food.food_name];
+    // Extract food names from the response
+    const foods = recognitionData.foods.map(food => food.food_name);
     
-    console.log('FatSecret detected foods:', foods);
+    console.log('FatSecret Image Recognition detected foods:', foods);
     return foods;
   } catch (error) {
-    console.error('Error searching foods with FatSecret:', error);
+    console.error('Error analyzing image with FatSecret Image Recognition:', error);
     return [];
   }
 }

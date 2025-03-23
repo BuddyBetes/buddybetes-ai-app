@@ -5,4 +5,8 @@ export interface FoodItem {
   protein: number;
   fat: number;
   calories: number;
+  // FatSecret specific fields
+  food_id?: string | number;
+  serving_id?: string | number;
+  serving_description?: string;
 }

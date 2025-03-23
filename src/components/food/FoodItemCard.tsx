@@ -24,6 +24,13 @@ const FoodItemCard: React.FC<FoodItemCardProps> = ({ item, onEdit }) => {
           <Edit className="h-4 w-4" />
         </Button>
       </div>
+      
+      {item.serving_description && (
+        <div className="text-sm text-gray-600 mb-2">
+          Serving: {item.serving_description}
+        </div>
+      )}
+      
       <div className="flex flex-wrap gap-2">
         <Badge variant="outline" className="bg-amber-50">
           {item.carbs}g carbs

@@ -5,6 +5,10 @@ export interface FoodItem {
   protein: number;
   fat: number;
   calories: number;
+  // FatSecret specific fields
+  food_id?: string | number;
+  serving_id?: string | number;
+  serving_description?: string;
 }
 
 /**
@@ -19,6 +23,7 @@ export function createDefaultFoodItem(foodName: string): FoodItem {
     carbs: 15,
     protein: 5,
     fat: 3,
-    calories: 100
+    calories: 100,
+    serving_description: "Estimated serving"
   };
 }

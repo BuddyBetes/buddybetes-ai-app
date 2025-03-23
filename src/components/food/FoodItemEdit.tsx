@@ -25,6 +25,17 @@ const FoodItemEdit: React.FC<FoodItemEditProps> = ({
           onChange={(e) => onChange('name', e.target.value)}
         />
       </div>
+      
+      {item.serving_description && (
+        <div>
+          <label className="text-sm font-medium block mb-1">Serving</label>
+          <Input 
+            value={item.serving_description} 
+            onChange={(e) => onChange('serving_description', e.target.value)}
+          />
+        </div>
+      )}
+      
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="text-sm font-medium block mb-1">Carbs (g)</label>
