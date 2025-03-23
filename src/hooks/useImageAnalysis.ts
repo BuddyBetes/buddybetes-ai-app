@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { FoodItem } from '@/components/food/FoodAnalysisResult';
+import { FoodItem } from '@/components/food/types';
 
 export interface AnalysisResult {
   foodItems: FoodItem[];

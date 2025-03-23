@@ -1,18 +1,13 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Edit, Check, Camera } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-
-export interface FoodItem {
-  name: string;
-  carbs: number;
-  protein: number;
-  fat: number;
-  calories: number;
-}
+import { Button } from '@/components/ui/button';
+import { FoodItem } from './types';
+import FoodItemCard from './FoodItemCard';
+import FoodItemEdit from './FoodItemEdit';
+import LoadingState from './LoadingState';
+import ErrorState from './ErrorState';
+import NoFoodState from './NoFoodState';
 
 interface FoodAnalysisResultProps {
   isLoading: boolean;
@@ -57,51 +52,16 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 text-buddy-500 animate-spin mb-4" />
-            <p className="text-center text-gray-600">Analyzing your food image...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center py-6">
-            <p className="text-center text-red-500 mb-4">{error}</p>
-            <Button onClick={onCancel} variant="outline">Try Again</Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <ErrorState error={error} onRetry={onCancel} />;
   }
 
   // Handle the case when no food items were detected
   if (!foodItems || foodItems.length === 0) {
-    return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-xl">No Food Detected</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-6">
-            <Camera className="h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-center text-gray-600 mb-4">
-              We couldn't identify any food in this image. Please try again with a clearer photo.
-            </p>
-            <Button onClick={onCancel} variant="outline">
-              Take Another Photo
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <NoFoodState onRetry={onCancel} />;
   }
 
   return (
@@ -114,84 +74,16 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
           {editedItems.map((item, index) => (
             <div key={index} className="border rounded-lg p-3">
               {editingItem === index ? (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium block mb-1">Food Name</label>
-                    <Input 
-                      value={item.name} 
-                      onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-sm font-medium block mb-1">Carbs (g)</label>
-                      <Input 
-                        type="number" 
-                        value={item.carbs} 
-                        onChange={(e) => handleItemChange(index, 'carbs', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium block mb-1">Protein (g)</label>
-                      <Input 
-                        type="number" 
-                        value={item.protein} 
-                        onChange={(e) => handleItemChange(index, 'protein', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium block mb-1">Fat (g)</label>
-                      <Input 
-                        type="number" 
-                        value={item.fat} 
-                        onChange={(e) => handleItemChange(index, 'fat', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium block mb-1">Calories</label>
-                      <Input 
-                        type="number" 
-                        value={item.calories} 
-                        onChange={(e) => handleItemChange(index, 'calories', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={handleSaveEdit} 
-                    size="sm" 
-                    className="w-full mt-2"
-                  >
-                    <Check className="h-4 w-4 mr-2" /> Save Changes
-                  </Button>
-                </div>
+                <FoodItemEdit 
+                  item={item}
+                  onChange={(field, value) => handleItemChange(index, field, value)}
+                  onSave={handleSaveEdit}
+                />
               ) : (
-                <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium">{item.name}</h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0" 
-                      onClick={() => handleEdit(index)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="bg-amber-50">
-                      {item.carbs}g carbs
-                    </Badge>
-                    <Badge variant="outline" className="bg-blue-50">
-                      {item.protein}g protein
-                    </Badge>
-                    <Badge variant="outline" className="bg-red-50">
-                      {item.fat}g fat
-                    </Badge>
-                    <Badge variant="outline" className="bg-gray-100">
-                      {item.calories} cal
-                    </Badge>
-                  </div>
-                </div>
+                <FoodItemCard 
+                  item={item} 
+                  onEdit={() => handleEdit(index)} 
+                />
               )}
             </div>
           ))}
