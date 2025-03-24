@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mic, ArrowRight } from 'lucide-react';
+import { Mic, ArrowRight, AlertTriangle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 import { useAuth } from '@/context/AuthContext';
 import ForgotPassword from '@/components/auth/ForgotPassword';
@@ -33,6 +34,7 @@ const SignIn = () => {
   const { signIn, isAuthenticated, hasCompletedOnboarding } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [authError, setAuthError] = useState<{ title: string; message: string } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,8 +46,37 @@ const SignIn = () => {
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
+    setAuthError(null);
+    
     try {
-      await signIn(values.email, values.password);
+      const { error } = await signIn(values.email, values.password);
+      
+      if (error) {
+        // Handle specific error codes and provide meaningful messages
+        const errorCode = error.message;
+        
+        if (errorCode.includes('Invalid login credentials')) {
+          setAuthError({
+            title: 'Authentication Failed',
+            message: 'Incorrect email or password. Please try again.'
+          });
+        } else if (errorCode.includes('Email not confirmed')) {
+          setAuthError({
+            title: 'Email Not Confirmed',
+            message: 'Please check your inbox and confirm your email before logging in.'
+          });
+        } else if (errorCode.includes('User not found')) {
+          setAuthError({
+            title: 'Account Not Found',
+            message: "We couldn't find an account with this email. Please sign up instead."
+          });
+        } else {
+          setAuthError({
+            title: 'Login Error',
+            message: error.message
+          });
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -97,6 +128,22 @@ const SignIn = () => {
             </p>
           </div>
         </div>
+
+        {authError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Alert variant="destructive" className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <AlertTitle className="text-red-700">{authError.title}</AlertTitle>
+              <AlertDescription className="text-red-600">
+                {authError.message}
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
 
         <Card className="border-none shadow-lg">
           <CardContent className="p-6 pt-6">

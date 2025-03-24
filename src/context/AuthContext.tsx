@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -129,11 +128,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return { user: data.user, error: null };
     } catch (error) {
-      toast({
-        title: "Sign Up Failed",
-        description: (error as Error).message,
-        variant: "destructive",
-      });
+      console.error('Sign up error:', error);
+      // Don't show toast here, we'll handle the error in the component
       return { user: null, error: error as Error };
     }
   };
@@ -149,11 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return { error: null };
     } catch (error) {
-      toast({
-        title: "Sign In Failed",
-        description: (error as Error).message,
-        variant: "destructive",
-      });
+      console.error('Sign in error:', error);
+      // We'll handle the error display in the component
       return { error: error as Error };
     }
   };
