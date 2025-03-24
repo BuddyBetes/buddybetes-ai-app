@@ -35,15 +35,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const hash = url.hash;
       const query = url.search;
       
+      // Extract tokens directly
+      const hashParams = new URLSearchParams(hash.replace('#', ''));
+      const accessToken = hashParams.get('access_token');
+      const typeParam = hashParams.get('type');
+      
+      const queryParams = new URLSearchParams(query);
+      const queryAccessToken = queryParams.get('access_token');
+      const queryTypeParam = queryParams.get('type');
+      
       // Check for password recovery tokens in different formats
-      // Look for type=recovery or access_token in hash or query parameters
       const isRecoveryFlow = 
-        (hash && (hash.includes('type=recovery') || hash.includes('access_token'))) || 
-        (query && (query.includes('type=recovery') || query.includes('access_token')));
+        (accessToken !== null) || 
+        (queryAccessToken !== null) || 
+        (typeParam === 'recovery') || 
+        (queryTypeParam === 'recovery');
       
       if (isRecoveryFlow) {
-        console.log('Password recovery flow detected from URL');
+        console.log('Password recovery flow detected from URL with tokens:', { 
+          hasAccessToken: !!accessToken || !!queryAccessToken,
+          hasRecoveryType: typeParam === 'recovery' || queryTypeParam === 'recovery'
+        });
         setIsPasswordRecovery(true);
+        
+        // If we have the access token, attempt to set the session directly
+        // This helps when the token might get lost in navigation
+        if (accessToken || queryAccessToken) {
+          const token = accessToken || queryAccessToken;
+          const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token') || '';
+          
+          console.log('Found access token, attempting to set session directly');
+          supabase.auth.setSession({
+            access_token: token!,
+            refresh_token: refreshToken
+          }).then(({ data, error }) => {
+            if (error) {
+              console.error('Error setting session directly:', error);
+            } else if (data.session) {
+              console.log('Successfully set session directly from URL tokens');
+            }
+          });
+        }
       }
     };
     

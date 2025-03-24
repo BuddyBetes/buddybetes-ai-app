@@ -1,12 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mic } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -27,10 +28,30 @@ const Index = () => {
     
     console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding, isPasswordRecovery });
     
-    // If in password recovery flow, immediately redirect to reset password page and don't set any other redirects
-    if (isPasswordRecovery) {
-      console.log('Redirecting to reset password page immediately');
-      navigate('/reset-password');
+    // Capture the tokens from URL if they exist - before any redirection happens
+    const url = new URL(window.location.href);
+    const hash = url.hash;
+    const query = url.search;
+    
+    // Extract tokens from URL if present
+    const hashParams = new URLSearchParams(hash.replace('#', ''));
+    const accessToken = hashParams.get('access_token') || new URLSearchParams(query).get('access_token');
+    const refreshToken = hashParams.get('refresh_token') || new URLSearchParams(query).get('refresh_token');
+    const recoveryToken = hashParams.get('type') === 'recovery' || new URLSearchParams(query).get('type') === 'recovery';
+    
+    // If in password recovery flow, immediately redirect to reset password page with token info
+    if (isPasswordRecovery || accessToken || recoveryToken) {
+      console.log('Redirecting to reset password page immediately with token state');
+      // Pass tokens as state to preserve them during navigation
+      navigate('/reset-password', { 
+        state: { 
+          fromReset: true,
+          accessToken: accessToken || null,
+          refreshToken: refreshToken || null,
+          recoveryToken: recoveryToken || null
+        },
+        replace: true  // Replace the current entry in history to prevent back navigation issues
+      });
       return; // Important: exit early to prevent other redirects
     }
     

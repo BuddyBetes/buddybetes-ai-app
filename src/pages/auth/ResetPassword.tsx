@@ -14,19 +14,86 @@ import PasswordResetForm from '@/components/auth/PasswordResetForm';
 import PasswordResetLoading from '@/components/auth/PasswordResetLoading';
 import PasswordResetSuccess from '@/components/auth/PasswordResetSuccess';
 
+interface ResetLocationState {
+  fromReset?: boolean;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  recoveryToken?: boolean | null;
+}
+
 const ResetPassword = () => {
   const { isAuthenticated, loading, signOut, isPasswordRecovery } = useAuth();
   const [mode, setMode] = useState<'request' | 'reset'>('request'); // Default to request mode
   const [resetComplete, setResetComplete] = useState(false);
   const [isValidResetLink, setIsValidResetLink] = useState(false);
   const [isCheckingLink, setIsCheckingLink] = useState(true);
+  const [processingTokens, setProcessingTokens] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if we're coming from a password reset link
+  // Get location state from navigation, if any
+  const locationState = location.state as ResetLocationState | null;
+
+  // Process tokens from location state or URL
+  useEffect(() => {
+    const processTokens = async () => {
+      try {
+        setProcessingTokens(true);
+        
+        // Check if we have tokens in state from navigation
+        if (locationState?.fromReset) {
+          console.log('Found reset token state from navigation:', {
+            hasAccessToken: !!locationState.accessToken,
+            hasRecoveryToken: !!locationState.recoveryToken
+          });
+          
+          // If we have an access token in state, try to set the session directly
+          if (locationState.accessToken) {
+            console.log('Setting session from navigation state token');
+            const { data, error } = await supabase.auth.setSession({
+              access_token: locationState.accessToken,
+              refresh_token: locationState.refreshToken || ''
+            });
+            
+            if (error) {
+              console.error('Error setting session from navigation state:', error);
+              setIsValidResetLink(false);
+              setMode('request');
+            } else if (data.session) {
+              console.log('Successfully set session from navigation state');
+              setIsValidResetLink(true);
+              setMode('reset');
+              return;
+            }
+          } else if (locationState.recoveryToken || isPasswordRecovery) {
+            // If we have a recovery flag but no token, check if we're in recovery context
+            console.log('Found recovery context, checking session');
+            setIsValidResetLink(true);
+            setMode('reset');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error processing tokens from state:', err);
+      } finally {
+        setProcessingTokens(false);
+      }
+    };
+    
+    if (locationState?.fromReset) {
+      processTokens();
+    }
+  }, [locationState, isPasswordRecovery]);
+
+  // Check if we're coming from a password reset link (backup for direct URL access)
   useEffect(() => {
     const checkResetToken = async () => {
+      // Skip if we already processed tokens from state
+      if (processingTokens || (locationState?.fromReset && isValidResetLink)) {
+        return;
+      }
+      
       try {
         setIsCheckingLink(true);
         
@@ -159,16 +226,16 @@ const ResetPassword = () => {
     // Force a small delay to ensure the URL is fully processed
     setTimeout(() => {
       checkResetToken();
-    }, 100);
-  }, [location, toast, isAuthenticated, loading, isPasswordRecovery]);
+    }, 150); // Slightly increased delay to ensure token processing
+  }, [location, toast, isAuthenticated, loading, isPasswordRecovery, locationState, processingTokens, isValidResetLink]);
 
   // Prevent redirecting to dashboard if we're in password recovery mode
   useEffect(() => {
-    if (isPasswordRecovery && isAuthenticated && !loading && !isCheckingLink) {
+    if ((isPasswordRecovery || isValidResetLink) && isAuthenticated && !loading && !isCheckingLink) {
       console.log('In password recovery mode, preventing dashboard redirect');
-      // Don't navigate away from reset password page when in password recovery flow
+      // Stay on reset password page when in password recovery flow
     }
-  }, [isPasswordRecovery, isAuthenticated, navigate, loading, isCheckingLink]);
+  }, [isPasswordRecovery, isAuthenticated, navigate, loading, isCheckingLink, isValidResetLink]);
 
   // Handle reset completion
   const handleResetComplete = () => {
@@ -176,7 +243,7 @@ const ResetPassword = () => {
   };
 
   // Show loading state while checking the reset link
-  if (loading || isCheckingLink) {
+  if (loading || isCheckingLink || processingTokens) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F8F8] p-4">
         <PasswordResetLoading />
