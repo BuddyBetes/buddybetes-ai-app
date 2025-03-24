@@ -5,22 +5,16 @@ import { useLogContext } from '../context/LogContext';
 import { GlucoseLog } from '@/types/logs';
 import AppHeader from '@/components/AppHeader';
 import LogDetailView from '@/components/log/LogDetailView';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import LogsLoadingState from '@/components/log/LogsLoadingState';
 import LogsEmptyState from '@/components/log/LogsEmptyState';
 import LogsByDate from '@/components/log/LogsByDate';
-import DeleteLogDialog from '@/components/log/DeleteLogDialog';
 
 const Logs = () => {
   const { user } = useAuth();
-  const { logs, isLoading, updateLog, deleteLog, fetchLogs } = useLogContext();
-  const { toast } = useToast();
+  const { logs, isLoading } = useLogContext();
   const [selectedLog, setSelectedLog] = useState<GlucoseLog | null>(null);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [logToDelete, setLogToDelete] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     console.log('Logs page - Auth state:', user ? 'Authenticated' : 'Not authenticated');
@@ -63,68 +57,6 @@ const Logs = () => {
     }, 300);
   };
 
-  const handleEditLog = (log: GlucoseLog) => {
-    updateLog(log)
-      .then(() => {
-        setDetailViewOpen(false);
-        setTimeout(() => {
-          setSelectedLog(null);
-        }, 300);
-      })
-      .catch((error) => {
-        console.error('Error updating log:', error);
-      });
-  };
-
-  const handleDeleteConfirm = (logId: string) => {
-    setLogToDelete(logId);
-    setDeleteDialogOpen(true);
-    setDetailViewOpen(false);
-  };
-
-  // Simplified delete execution function with auto-refresh
-  const handleDeleteExecution = async () => {
-    if (!logToDelete) return;
-    
-    // Set deleting state
-    setIsDeleting(true);
-    
-    try {
-      // Execute the deletion
-      await deleteLog(logToDelete);
-      
-      // Show success message
-      toast({
-        title: "Log deleted",
-        description: "The log has been successfully deleted",
-      });
-
-      // Explicitly refresh logs from the database
-      await fetchLogs();
-    } catch (error) {
-      console.error('Error deleting log:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete the log",
-        variant: "destructive",
-      });
-    } finally {
-      // Clean up all states in a single finally block
-      // Order matters: first reset deleting state, then close dialog, then clear ID
-      setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setLogToDelete(null);
-    }
-  };
-
-  // Simple close function
-  const handleCloseDeleteDialog = () => {
-    if (!isDeleting) {
-      setDeleteDialogOpen(false);
-      setLogToDelete(null);
-    }
-  };
-
   if (isLoading) {
     return (
       <Layout>
@@ -157,15 +89,6 @@ const Logs = () => {
         log={selectedLog}
         isOpen={detailViewOpen}
         onClose={handleCloseDetail}
-        onEdit={handleEditLog}
-        onDelete={handleDeleteConfirm}
-      />
-
-      <DeleteLogDialog 
-        isOpen={deleteDialogOpen}
-        isDeleting={isDeleting}
-        onClose={handleCloseDeleteDialog}
-        onConfirm={handleDeleteExecution}
       />
     </Layout>
   );

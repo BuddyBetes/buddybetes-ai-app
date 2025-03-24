@@ -1,26 +1,20 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { GlucoseLog } from '@/types/logs';
-import { Info, Edit, Trash2, AlertCircle, Utensils, Calendar, Clock, Tag } from 'lucide-react';
+import { Info, Utensils, Calendar, Clock, Tag, AlertCircle } from 'lucide-react';
 
 interface LogDetailViewProps {
   log: GlucoseLog | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit?: (log: GlucoseLog) => void;
-  onDelete?: (logId: string) => void;
 }
 
 const LogDetailView: React.FC<LogDetailViewProps> = ({ 
   log, 
   isOpen, 
-  onClose,
-  onEdit,
-  onDelete
+  onClose
 }) => {
   if (!log) return null;
 
@@ -77,20 +71,6 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({
       case 'after': return 'bg-violet-100 text-violet-800';
       case 'fasting': return 'bg-amber-100 text-amber-800';
       default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Handle edit button click
-  const handleEdit = () => {
-    if (onEdit) {
-      onEdit(log);
-    }
-  };
-
-  // Handle delete button click
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(log.id);
     }
   };
 
@@ -177,29 +157,6 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({
             </div>
           )}
         </div>
-
-        <Separator />
-
-        <DialogFooter className="p-4">
-          <div className="flex w-full gap-3">
-            {onDelete && (
-              <Button 
-                variant="outline" 
-                onClick={handleDelete} 
-                className="flex-1 text-red-500 hover:text-red-600 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-            )}
-            {onEdit && (
-              <Button variant="default" onClick={handleEdit} className="flex-1 bg-buddy-500 hover:bg-buddy-600">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            )}
-          </div>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
