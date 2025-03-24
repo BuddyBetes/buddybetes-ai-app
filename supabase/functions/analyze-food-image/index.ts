@@ -17,7 +17,26 @@ serve(async (req) => {
   }
 
   try {
-    const { image } = await req.json();
+    // Validate request
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed' }),
+        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    let reqBody;
+    try {
+      reqBody = await req.json();
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { image } = reqBody;
     
     if (!image) {
       return new Response(
@@ -65,9 +84,15 @@ serve(async (req) => {
       );
     } catch (apiError) {
       console.error('API error:', apiError);
+      let errorMessage = 'Error analyzing food image';
+      
+      if (apiError instanceof Error) {
+        errorMessage = apiError.message;
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: `Error analyzing food: ${apiError.message}`,
+          error: errorMessage,
           foodItems: [] 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -75,8 +100,14 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Error in analyze-food-image function:', error);
+    let errorMessage = 'Internal server error';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message, foodItems: [] }),
+      JSON.stringify({ error: errorMessage, foodItems: [] }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

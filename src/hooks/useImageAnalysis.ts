@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FoodItem } from '@/components/food/types';
+import { useToast } from '@/hooks/use-toast';
 
 export interface AnalysisResult {
   foodItems: FoodItem[];
@@ -11,6 +12,7 @@ export function useImageAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const analyzeImage = async (imageData: string) => {
     setIsAnalyzing(true);
@@ -22,6 +24,11 @@ export function useImageAnalysis() {
       // Remove data URL prefix to get just the base64 data
       const base64Image = imageData.split(',')[1];
       console.log('Base64 image length:', base64Image.length);
+      
+      // Handle possible empty or invalid base64 data
+      if (!base64Image || base64Image.length < 100) {
+        throw new Error('Invalid image data. Please try taking another photo.');
+      }
       
       const { data, error: apiError } = await supabase.functions.invoke('analyze-food-image', {
         body: { image: base64Image }
@@ -51,6 +58,11 @@ export function useImageAnalysis() {
     } catch (err) {
       console.error('Error analyzing image:', err);
       setError(err instanceof Error ? err.message : 'Failed to analyze food image');
+      toast({
+        title: "Analysis Failed",
+        description: err instanceof Error ? err.message : 'Failed to analyze food image',
+        variant: "destructive"
+      });
     } finally {
       setIsAnalyzing(false);
     }
