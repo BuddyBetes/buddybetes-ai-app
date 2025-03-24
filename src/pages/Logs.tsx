@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext } from '../context/LogContext';
 import { GlucoseLog } from '@/types/logs';
@@ -8,14 +9,23 @@ import AppHeader from '@/components/AppHeader';
 import LogDetailView from '@/components/log/LogDetailView';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/context/AuthContext';
 
 const Logs = () => {
+  const { user } = useAuth();
   const { logs, isLoading, updateLog, deleteLog } = useLogContext();
   const { toast } = useToast();
   const [selectedLog, setSelectedLog] = useState<GlucoseLog | null>(null);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState<string | null>(null);
+
+  // Log the authentication and loading state for debugging
+  useEffect(() => {
+    console.log('Logs page - Auth state:', user ? 'Authenticated' : 'Not authenticated');
+    console.log('Logs page - Loading state:', isLoading);
+    console.log('Logs page - Logs count:', logs.length);
+  }, [user, isLoading, logs]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, { 
@@ -113,6 +123,9 @@ const Logs = () => {
         <div className="flex flex-col items-center justify-center h-full py-12">
           <Loader2 className="h-8 w-8 animate-spin text-buddy-500" />
           <p className="mt-4 text-gray-500">Loading your glucose logs...</p>
+          <p className="mt-2 text-xs text-gray-400">
+            {user ? 'Fetching logs from your account' : 'Waiting for authentication...'}
+          </p>
         </div>
       </Layout>
     );
