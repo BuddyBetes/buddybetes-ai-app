@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 const Index = () => {
   const navigate = useNavigate();
   const { isAuthenticated, hasCompletedOnboarding, loading } = useAuth();
+  const [isInitializing, setIsInitializing] = useState(true);
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -16,37 +17,46 @@ const Index = () => {
       clearTimeout(redirectTimeout);
     }
 
-    // Wait for auth status to load, then redirect
-    if (!loading) {
-      console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding });
-      
-      const timer = setTimeout(() => {
-        if (isAuthenticated) {
-          if (hasCompletedOnboarding) {
-            console.log('Redirecting to dashboard');
-            navigate('/dashboard');
-          } else {
-            console.log('Redirecting to onboarding');
-            navigate('/onboarding');
-          }
-        } else {
-          console.log('Redirecting to signin');
-          navigate('/signin');
-        }
-      }, 3000);
-      
-      setRedirectTimeout(timer);
-      return () => clearTimeout(timer);
+    // Don't redirect while still loading authentication state
+    if (loading) {
+      return;
     }
 
-    // Fallback - if loading takes too long, redirect to signin
-    const fallbackTimer = setTimeout(() => {
-      console.log('Fallback timeout triggered, redirecting to signin');
-      navigate('/signin');
-    }, 10000);
-
-    return () => clearTimeout(fallbackTimer);
+    // Set initializing to false after loading is complete
+    setIsInitializing(false);
+    
+    console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding });
+    
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        if (hasCompletedOnboarding) {
+          console.log('Redirecting to dashboard');
+          navigate('/dashboard');
+        } else {
+          console.log('Redirecting to onboarding');
+          navigate('/onboarding');
+        }
+      } else {
+        console.log('Redirecting to signin');
+        navigate('/signin');
+      }
+    }, 2000); // Reduced from 3000ms to 2000ms for faster redirect
+    
+    setRedirectTimeout(timer);
+    return () => clearTimeout(timer);
   }, [navigate, isAuthenticated, hasCompletedOnboarding, loading]);
+
+  // Don't render splash screen if we're still determining auth state
+  // This prevents the flash of content before redirect
+  if (loading || isInitializing) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+        <div className="w-20 h-20 rounded-full bg-buddy-500 flex items-center justify-center">
+          <Mic size={32} className="text-white animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
