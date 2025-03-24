@@ -45,11 +45,7 @@ export function useImageAnalysis() {
 
       const data = response.data;
 
-      if (data && data.foodItems) {
-        // If we got an empty array back, show a user-friendly message
-        if (data.foodItems.length === 0) {
-          throw new Error('No food detected in this image. Please try again with a clearer photo.');
-        }
+      if (data && Array.isArray(data.foodItems) && data.foodItems.length > 0) {
         console.log('Food items detected:', data.foodItems);
         setResult({ foodItems: data.foodItems });
         
@@ -59,12 +55,16 @@ export function useImageAnalysis() {
           description: `Detected: ${data.foodItems.map(item => item.name).join(', ')}`,
           variant: "default"
         });
+      } else if (data && data.foodItems && data.foodItems.length === 0) {
+        // Handle empty food items array explicitly
+        console.warn('No food items detected in the response');
+        throw new Error('No food detected in this image. Please try again with a clearer photo.');
       } else if (data && data.error) {
         console.error('Error in response:', data.error);
         throw new Error(data.error);
       } else {
-        console.error('Invalid response format:', data);
-        throw new Error('Invalid response format from food analysis');
+        console.error('Invalid response format or empty food items:', data);
+        throw new Error('Invalid response format from food analysis or no food detected');
       }
     } catch (err) {
       console.error('Error analyzing image:', err);

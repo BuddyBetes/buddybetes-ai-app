@@ -1,5 +1,6 @@
 
-// This file now properly implements OAuth 2.0 for FatSecret API
+// This file implements food detection using FatSecret API with OAuth 2.0
+// If authentication fails, it falls back to a mock detection method
 
 const fatSecretClientId = Deno.env.get('FATSECRET_API_KEY') || '';
 const fatSecretClientSecret = Deno.env.get('FATSECRET_API_SECRET') || '';
