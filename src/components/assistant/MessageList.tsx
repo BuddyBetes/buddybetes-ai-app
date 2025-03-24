@@ -44,7 +44,12 @@ const MessageList: React.FC<MessageListProps> = ({
     yesterday.setDate(yesterday.getDate() - 1);
     
     messages.forEach(message => {
-      const messageDate = new Date(message.timestamp);
+      // Ensure we have a valid timestamp
+      const messageTimestamp = message.timestamp || Date.now();
+      console.log(`Grouping message: "${message.text.substring(0, 20)}..." with timestamp:`, messageTimestamp);
+      
+      const messageDate = new Date(messageTimestamp);
+      console.log('As date object for grouping:', messageDate);
       
       if (now.getTime() - messageDate.getTime() < 5 * 60 * 1000) {
         grouped[timeGroups.NOW].push(message);

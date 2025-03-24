@@ -30,6 +30,7 @@ export const useMessagePersistence = () => {
         if (conversationData && conversationData.length > 0) {
           currentConversationId = conversationData[0].id;
           setConversationId(currentConversationId);
+          console.log('Found existing conversation with ID:', currentConversationId);
           
           const { data: messageData, error: messageError } = await supabase
             .from('assistant_messages')
@@ -43,6 +44,8 @@ export const useMessagePersistence = () => {
           }
           
           if (messageData && messageData.length > 0) {
+            console.log(`Found ${messageData.length} messages for conversation ${currentConversationId}`);
+            
             const loadedMessages: Message[] = messageData.map(msg => {
               let nutritionalInfo = undefined;
               if (msg.nutritional_info) {
@@ -55,22 +58,22 @@ export const useMessagePersistence = () => {
                 };
               }
               
-              // Ensure we always have a valid timestamp - fallback to current time if missing
-              const messageTimestamp = msg.timestamp 
-                ? new Date(msg.timestamp).getTime() 
-                : Date.now();
+              // For consistent handling, always convert to milliseconds since epoch
+              const parsedDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+              const timestamp = parsedDate.getTime();
               
               return {
                 text: msg.content,
                 type: msg.message_type as 'user' | 'assistant',
-                timestamp: messageTimestamp,
+                timestamp: timestamp,
                 nutritionalInfo
               };
             });
             
             return loadedMessages;
           } else {
-            // No messages found for this conversation, create a welcome message with current timestamp
+            // No messages found for this conversation, create a welcome message
+            console.log('No messages found for conversation, creating welcome message');
             const currentTimestamp = Date.now();
             const welcomeMessage: Message = {
               text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
@@ -82,7 +85,8 @@ export const useMessagePersistence = () => {
             return [welcomeMessage];
           }
         } else {
-          // No conversation found, create a new one with current timestamp
+          // No conversation found, create a new one
+          console.log('No conversation found, creating new conversation');
           const currentTimestamp = Date.now();
           const newConversationId = `conv-${currentTimestamp}`;
           const { data: newConv, error: createError } = await supabase
@@ -101,6 +105,7 @@ export const useMessagePersistence = () => {
           
           currentConversationId = newConv.id;
           setConversationId(currentConversationId);
+          console.log('Created new conversation with ID:', currentConversationId);
           
           const welcomeMessage: Message = {
             text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
@@ -128,14 +133,21 @@ export const useMessagePersistence = () => {
     if (!user || !convId) return;
     
     try {
-      // Ensure timestamp is valid before converting to ISO
-      const timestamp = message.timestamp 
-        ? new Date(message.timestamp).toISOString() 
-        : new Date().toISOString();
+      // Ensure we're working with a numeric timestamp
+      const timestampNum = typeof message.timestamp === 'string' 
+        ? parseInt(message.timestamp, 10) 
+        : (message.timestamp || Date.now());
       
-      console.log('Saving message with timestamp:', timestamp);
-      console.log('Original message timestamp:', message.timestamp);
-      console.log('As date object:', new Date(message.timestamp || Date.now()));
+      // Convert to ISO string for database storage
+      const timestamp = new Date(timestampNum).toISOString();
+      
+      console.log('Saving message to Supabase:');
+      console.log('  Content:', message.text.substring(0, 20) + '...');
+      console.log('  Type:', message.type);
+      console.log('  Original timestamp:', message.timestamp);
+      console.log('  Timestamp as number:', timestampNum);
+      console.log('  ISO timestamp for DB:', timestamp);
+      console.log('  As Date object:', new Date(timestampNum));
       
       const messageData = {
         conversation_id: convId,
@@ -156,6 +168,8 @@ export const useMessagePersistence = () => {
         
       if (error) {
         console.error('Error saving message:', error);
+      } else {
+        console.log('Message saved successfully to Supabase');
       }
       
       // Update the conversation's updated_at timestamp

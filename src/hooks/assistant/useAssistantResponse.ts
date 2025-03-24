@@ -64,10 +64,13 @@ export const useAssistantResponse = () => {
         });
         
         const errorMessage = "Sorry, having trouble connecting. Try again soon.";
+        const currentTimestamp = Date.now();
+        console.log("Creating error message with timestamp:", currentTimestamp);
+        
         const assistantErrorMsg: Message = { 
           text: errorMessage, 
           type: 'assistant',
-          timestamp: Date.now(),
+          timestamp: currentTimestamp,
           isNew: true
         };
         
@@ -95,7 +98,8 @@ export const useAssistantResponse = () => {
         const stats = showStats ? (data.stats || undefined) : undefined;
         
         const currentTimestamp = Date.now();
-        console.log("Creating message with timestamp:", currentTimestamp);
+        console.log("Creating assistant response with timestamp:", currentTimestamp);
+        console.log("As Date object:", new Date(currentTimestamp));
         
         const assistantMessage: Message = { 
           text: data.response, 
@@ -130,10 +134,12 @@ export const useAssistantResponse = () => {
     } catch (err) {
       console.error('❌ Error in requesting assistant response:', err);
       const fallbackMessage = "Sorry, I encountered an error. Please try again.";
+      const currentTimestamp = Date.now();
+      
       const errorMsg: Message = { 
         text: fallbackMessage, 
         type: 'assistant',
-        timestamp: Date.now(),
+        timestamp: currentTimestamp,
         isNew: true
       };
       

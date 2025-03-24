@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Message } from '@/types';
 import { useMessagePersistence } from './useMessagePersistence';
@@ -50,14 +51,14 @@ export const useMessageHandling = (
               }
               
               // Ensure we have a valid timestamp
-              // Convert database timestamp string to numeric timestamp (milliseconds)
-              const timestamp = msg.timestamp 
-                ? new Date(msg.timestamp).getTime() 
-                : Date.now();
-                
-              console.log('Message timestamp from DB:', msg.timestamp);
-              console.log('Converted timestamp:', timestamp);
-              console.log('Date object:', new Date(timestamp));
+              // For consistent handling, always convert to milliseconds since epoch
+              const parsedDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+              const timestamp = parsedDate.getTime();
+              
+              console.log('Loading message from DB:', msg.content.substring(0, 20) + '...');
+              console.log('Original timestamp from DB:', msg.timestamp);
+              console.log('Parsed as Date object:', parsedDate);
+              console.log('Converted to milliseconds:', timestamp);
               
               return {
                 text: msg.content,
@@ -72,6 +73,9 @@ export const useMessageHandling = (
           } else if (!isInitialized) {
             // If no messages, add welcome message with current timestamp
             const currentTimestamp = Date.now();
+            console.log('Creating welcome message with timestamp:', currentTimestamp);
+            console.log('As Date object:', new Date(currentTimestamp));
+            
             const welcomeMessage: Message = {
               text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
               type: 'assistant',
@@ -116,10 +120,14 @@ export const useMessageHandling = (
     
     // If it's not a glucose log, process as a regular message
     if (!isGlucoseLog) {
+      const currentTimestamp = Date.now();
+      console.log('Creating user message with timestamp:', currentTimestamp);
+      console.log('As Date object:', new Date(currentTimestamp));
+      
       const newMessage: Message = { 
         text: message, 
         type: 'user',
-        timestamp: Date.now(),
+        timestamp: currentTimestamp,
         isNew: true
       };
       

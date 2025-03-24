@@ -83,11 +83,15 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
     
     try {
-      console.log('Formatting timestamp:', timestamp);
-      console.log('As Date object:', new Date(timestamp));
+      // Ensure timestamp is treated as a number
+      const timestampNum = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+      
+      console.log('Formatting timestamp (original):', timestamp);
+      console.log('Formatting timestamp (as number):', timestampNum);
+      console.log('As Date object:', new Date(timestampNum));
       
       // Make sure we're working with a valid date
-      const date = new Date(timestamp);
+      const date = new Date(timestampNum);
       if (isNaN(date.getTime())) {
         console.error('Invalid date from timestamp:', timestamp);
         return 'Just now';
