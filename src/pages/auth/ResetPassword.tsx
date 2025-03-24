@@ -237,10 +237,22 @@ const ResetPassword = () => {
     }
   }, [isPasswordRecovery, isAuthenticated, navigate, loading, isCheckingLink, isValidResetLink]);
 
-  // Handle reset completion
+  // Handle reset completion - redirect to signin when complete
   const handleResetComplete = () => {
     setResetComplete(true);
   };
+
+  // Effect to handle redirection after reset is complete
+  useEffect(() => {
+    if (resetComplete) {
+      // Give time for the success message to be seen, then redirect
+      const redirectTimer = setTimeout(() => {
+        navigate('/signin', { replace: true });
+      }, 3000);
+      
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [resetComplete, navigate]);
 
   // Show loading state while checking the reset link
   if (loading || isCheckingLink || processingTokens) {
@@ -272,7 +284,9 @@ const ResetPassword = () => {
             <p className="text-gray-500 text-lg">
               {mode === 'request' 
                 ? "Enter your email to receive a password reset link" 
-                : "Enter your new password below"}
+                : resetComplete 
+                  ? "Password reset successful!" 
+                  : "Enter your new password below"}
             </p>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -83,7 +84,7 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
       } else {
         toast({
           title: "Password Reset Successful",
-          description: "Your password has been updated. You can now log in with your new password.",
+          description: "Your password has been updated. You will be redirected to the sign in page.",
           duration: 5000,
         });
         
@@ -95,7 +96,7 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
         
         // Redirect to signin page after 3 seconds
         setTimeout(() => {
-          navigate('/signin');
+          navigate('/signin', { replace: true });
         }, 3000);
       }
     } catch (error: any) {
