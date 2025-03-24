@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -16,9 +16,9 @@ import {
   FormLabel, 
   FormMessage 
 } from '@/components/ui/form';
-import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 // Form validation schema
 const formSchema = z.object({
@@ -38,6 +38,7 @@ interface PasswordResetFormProps {
 
 const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -49,6 +50,16 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
       confirmPassword: '',
     },
   });
+
+  // Update current password when form value changes
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      if (value.password !== undefined) {
+        setCurrentPassword(value.password);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   // Handle password reset submission
   const onSubmit = async (values: FormValues) => {
@@ -112,6 +123,7 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
                   className="h-12 text-base border-gray-200 focus:border-buddy-500"
                 />
               </FormControl>
+              <PasswordStrengthIndicator password={currentPassword} />
               <FormMessage />
             </FormItem>
           )}
