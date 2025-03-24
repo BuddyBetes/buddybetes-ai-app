@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useLogAPI } from '@/hooks/useLogAPI';
 import { useLogUtils } from '@/hooks/useLogUtils';
 import { GlucoseLog, LogContextType } from '@/types/logs';
-import { useAuth } from '@/context/AuthContext';
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
@@ -20,17 +19,12 @@ interface LogProviderProps {
 }
 
 export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
-  const { user } = useAuth();
   const { logs, isLoading, fetchLogs, addLog, updateLog, deleteLog } = useLogAPI();
   const { getRecentLogs, getGlucoseLogsOnly, getLogsForToday, getAverageGlucose } = useLogUtils(logs);
 
-  // Refetch logs when the user changes
   useEffect(() => {
-    if (user) {
-      console.log('User authenticated, fetching logs');
-      fetchLogs();
-    }
-  }, [user, fetchLogs]);
+    fetchLogs();
+  }, []);
 
   const contextValue: LogContextType = {
     logs,

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -12,16 +12,14 @@ export const useLogAPI = () => {
   const { toast } = useToast();
   const { validateMealContext } = useLogUtils(logs);
 
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = async () => {
     if (!user) {
-      console.log('No user found, clearing logs');
       setLogs([]);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log('Fetching logs for user:', user.id);
       setIsLoading(true);
       const { data, error } = await supabase
         .from('glucose_logs')
@@ -37,7 +35,6 @@ export const useLogAPI = () => {
           variant: "destructive",
         });
       } else if (data) {
-        console.log('Fetched logs data:', data);
         const glucoseLogs: GlucoseLog[] = data.map(row => ({
           id: row.id,
           timestamp: new Date(row.timestamp),
@@ -53,7 +50,7 @@ export const useLogAPI = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast, validateMealContext]);
+  };
 
   const addLog = async (log: Omit<GlucoseLog, 'id'>) => {
     if (!user) {
@@ -239,4 +236,3 @@ export const useLogAPI = () => {
     deleteLog
   };
 };
-
