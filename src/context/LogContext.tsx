@@ -40,6 +40,7 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
     addLog,
     updateLog, 
     deleteLog,
+    fetchLogs,
     getRecentLogs,
     getGlucoseLogsOnly,
     getLogsForToday,

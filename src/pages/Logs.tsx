@@ -14,7 +14,7 @@ import DeleteLogDialog from '@/components/log/DeleteLogDialog';
 
 const Logs = () => {
   const { user } = useAuth();
-  const { logs, isLoading, updateLog, deleteLog } = useLogContext();
+  const { logs, isLoading, updateLog, deleteLog, fetchLogs } = useLogContext();
   const { toast } = useToast();
   const [selectedLog, setSelectedLog] = useState<GlucoseLog | null>(null);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
@@ -82,7 +82,7 @@ const Logs = () => {
     setDetailViewOpen(false);
   };
 
-  // Simplified delete execution function
+  // Simplified delete execution function with auto-refresh
   const handleDeleteExecution = async () => {
     if (!logToDelete) return;
     
@@ -98,6 +98,9 @@ const Logs = () => {
         title: "Log deleted",
         description: "The log has been successfully deleted",
       });
+
+      // Explicitly refresh logs from the database
+      await fetchLogs();
     } catch (error) {
       console.error('Error deleting log:', error);
       toast({
