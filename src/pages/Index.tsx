@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -7,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, hasCompletedOnboarding, loading } = useAuth();
+  const { isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -25,10 +24,14 @@ const Index = () => {
     // Set initializing to false after loading is complete
     setIsInitializing(false);
     
-    console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding });
+    console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding, isPasswordRecovery });
     
     const timer = setTimeout(() => {
-      if (isAuthenticated) {
+      // If in password recovery flow, redirect to reset password page
+      if (isPasswordRecovery) {
+        console.log('Redirecting to reset password page');
+        navigate('/reset-password');
+      } else if (isAuthenticated) {
         if (hasCompletedOnboarding) {
           console.log('Redirecting to dashboard');
           navigate('/dashboard');
@@ -44,7 +47,7 @@ const Index = () => {
     
     setRedirectTimeout(timer);
     return () => clearTimeout(timer);
-  }, [navigate, isAuthenticated, hasCompletedOnboarding, loading]);
+  }, [navigate, isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery]);
 
   // Don't render splash screen if we're still determining auth state
   // This prevents the flash of content before redirect
