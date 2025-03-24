@@ -34,6 +34,9 @@ All notable changes to this project will be documented in this file.
 - Streamlined log entry process
 - Re-implemented delete log functionality with improved UX
 - Enhanced log detail view with better formatting and improved UI
+- Added consistent color-coded meal context tags
+- Improved visual hierarchy in log details with colored sections and icons
+- Larger and more readable glucose values with enhanced status indicators
 
 ### Fixed
 - Various UI/UX improvements
