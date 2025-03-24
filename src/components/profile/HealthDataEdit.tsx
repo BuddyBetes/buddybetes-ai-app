@@ -5,11 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
 import { format, parse } from 'date-fns';
-import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
@@ -91,89 +87,52 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
   return (
     <SheetContent>
       <SheetHeader>
-        <SheetTitle>Edit Health Data</SheetTitle>
-        <SheetDescription>
+        <SheetTitle className="text-base">Edit Health Data</SheetTitle>
+        <SheetDescription className="text-xs">
           Make changes to your health profile here.
         </SheetDescription>
       </SheetHeader>
-      <div className="space-y-5 py-4">
+      <div className="space-y-4 py-3">
         <div>
-          <Label htmlFor="gender" className="block mb-2">
+          <Label htmlFor="gender" className="block mb-1.5 text-sm">
             Gender
           </Label>
           <RadioGroup 
             value={localHealthData.gender} 
             onValueChange={(value) => handleHealthDataChange('gender', value)}
-            className="flex flex-col space-y-2"
+            className="flex flex-col space-y-1.5"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="Female" id="female-edit" />
-              <Label htmlFor="female-edit" className="font-normal">Female</Label>
+              <Label htmlFor="female-edit" className="font-normal text-sm">Female</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="Male" id="male-edit" />
-              <Label htmlFor="male-edit" className="font-normal">Male</Label>
+              <Label htmlFor="male-edit" className="font-normal text-sm">Male</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="Other" id="other-edit" />
-              <Label htmlFor="other-edit" className="font-normal">Other</Label>
+              <Label htmlFor="other-edit" className="font-normal text-sm">Other</Label>
             </div>
           </RadioGroup>
         </div>
         
         <div>
-          <Label htmlFor="birthdate" className="block mb-2">
+          <Label htmlFor="birthdate" className="block mb-1.5 text-sm">
             Date of Birth
           </Label>
-          <div className="space-y-2">
-            <Input
-              id="birthdate"
-              type="date"
-              value={dateInputValue}
-              onChange={handleDateInputChange}
-              className="w-full"
-            />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !localHealthData.birthdate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {localHealthData.birthdate ? (
-                    format(localHealthData.birthdate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={localHealthData.birthdate}
-                  onSelect={(date) => {
-                    handleHealthDataChange('birthdate', date as Date);
-                    if (date) {
-                      setDateInputValue(format(date, 'yyyy-MM-dd'));
-                    }
-                  }}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          <Input
+            id="birthdate"
+            type="date"
+            value={dateInputValue}
+            onChange={handleDateInputChange}
+            className="w-full text-sm"
+          />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="height" className="block mb-2">
+            <Label htmlFor="height" className="block mb-1.5 text-sm">
               Height
             </Label>
             <div className="flex gap-2">
@@ -181,25 +140,25 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
                 id="height"
                 value={localHealthData.height}
                 onChange={(e) => handleHealthDataChange('height', e.target.value)}
-                className="flex-1"
+                className="flex-1 text-sm"
               />
               <Select 
                 value={localHealthData.heightUnit} 
                 onValueChange={(value) => handleHealthDataChange('heightUnit', value)}
               >
-                <SelectTrigger className="w-24">
+                <SelectTrigger className="w-20 text-sm">
                   <SelectValue placeholder="Unit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cm">cm</SelectItem>
-                  <SelectItem value="in">in</SelectItem>
+                  <SelectItem value="cm" className="text-sm">cm</SelectItem>
+                  <SelectItem value="in" className="text-sm">in</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           
           <div>
-            <Label htmlFor="weight" className="block mb-2">
+            <Label htmlFor="weight" className="block mb-1.5 text-sm">
               Weight
             </Label>
             <div className="flex gap-2">
@@ -207,18 +166,18 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
                 id="weight"
                 value={localHealthData.weight}
                 onChange={(e) => handleHealthDataChange('weight', e.target.value)}
-                className="flex-1"
+                className="flex-1 text-sm"
               />
               <Select 
                 value={localHealthData.weightUnit} 
                 onValueChange={(value) => handleHealthDataChange('weightUnit', value)}
               >
-                <SelectTrigger className="w-24">
+                <SelectTrigger className="w-20 text-sm">
                   <SelectValue placeholder="Unit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="kg">kg</SelectItem>
-                  <SelectItem value="lbs">lbs</SelectItem>
+                  <SelectItem value="kg" className="text-sm">kg</SelectItem>
+                  <SelectItem value="lbs" className="text-sm">lbs</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -226,30 +185,32 @@ const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
         </div>
         
         <div>
-          <Label htmlFor="diabetesType" className="block mb-2">
+          <Label htmlFor="diabetesType" className="block mb-1.5 text-sm">
             Diabetes Type
           </Label>
           <Select 
             value={localHealthData.diabetesType} 
             onValueChange={(value) => handleHealthDataChange('diabetesType', value)}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full text-sm">
               <SelectValue placeholder="Select diabetes type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Type 1">Type 1</SelectItem>
-              <SelectItem value="Type 2">Type 2</SelectItem>
-              <SelectItem value="Gestational">Gestational</SelectItem>
-              <SelectItem value="Pre-diabetes">Pre-diabetes</SelectItem>
+              <SelectItem value="Type 1" className="text-sm">Type 1</SelectItem>
+              <SelectItem value="Type 2" className="text-sm">Type 2</SelectItem>
+              <SelectItem value="Gestational" className="text-sm">Gestational</SelectItem>
+              <SelectItem value="Pre-diabetes" className="text-sm">Pre-diabetes</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
-      <div className="flex justify-end mt-4">
+      <div className="flex justify-end mt-3">
         <SheetClose asChild>
           <Button 
             onClick={saveHealthData} 
             disabled={isSaving}
+            size="sm"
+            className="text-sm"
           >
             {isSaving ? "Saving..." : "Save changes"}
           </Button>

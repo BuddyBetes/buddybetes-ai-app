@@ -43,10 +43,6 @@ const Dashboard = () => {
     navigate('/logs');
   };
 
-  const navigateToAssistant = () => {
-    navigate('/assistant');
-  };
-
   return (
     <Layout>
       <AppHeader />
@@ -172,7 +168,7 @@ const Dashboard = () => {
         >
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">AI Insights</h3>
-            <div className="flex space-x-2 mb-4">
+            <div className="mb-4">
               {isLoading ? null : (
                 <Button 
                   variant="ghost" 
@@ -183,13 +179,6 @@ const Dashboard = () => {
                   Refresh
                 </Button>
               )}
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={navigateToAssistant}
-              >
-                Ask Assistant <ArrowUpRight size={14} className="ml-1" />
-              </Button>
             </div>
           </div>
           

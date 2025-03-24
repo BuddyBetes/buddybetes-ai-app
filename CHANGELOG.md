@@ -40,6 +40,9 @@ All notable changes to this project will be documented in this file.
 - Enhanced notes section with properly vertically aligned icons
 - Improved empty state for Glucose Trend charts with better visual cues
 - Reduced font size of time range tabs for better mobile display
+- Removed "Ask Assistant" button from Dashboard and aligned refresh button
+- Reduced font sizes in Log Detail view for more balanced text hierarchy
+- Simplified Health Data edit form with smaller fonts and removed redundant calendar
 
 ### Fixed
 - Various UI/UX improvements
@@ -51,4 +54,3 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.0] - Initial Release
 - Core functionality established
-
