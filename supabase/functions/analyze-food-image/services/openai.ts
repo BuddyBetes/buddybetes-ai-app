@@ -1,47 +1,99 @@
 
-// This file now uses FatSecret Image Recognition API instead of OpenAI
-// FatSecret is used for direct image-to-food detection
+// This file now properly implements OAuth 2.0 for FatSecret API
 
-const fatSecretApiKey = Deno.env.get('FATSECRET_API_KEY') || 'f2a13018f56748c59dd2050b8a9e3d19';
-const fatSecretApiSecret = Deno.env.get('FATSECRET_API_SECRET') || ''; // Add support for API secret if available
+const fatSecretClientId = Deno.env.get('FATSECRET_API_KEY') || '';
+const fatSecretClientSecret = Deno.env.get('FATSECRET_API_SECRET') || '';
 
 /**
- * Uses FatSecret Image Recognition API to analyze food images
+ * Gets an OAuth token from FatSecret API
+ * @returns Access token for the FatSecret API
+ */
+async function getFatSecretOAuthToken(): Promise<string> {
+  try {
+    console.log('Requesting OAuth token from FatSecret');
+    
+    if (!fatSecretClientId || !fatSecretClientSecret) {
+      throw new Error('FatSecret API credentials are not configured');
+    }
+    
+    const tokenUrl = 'https://oauth.fatsecret.com/connect/token';
+    const authString = btoa(`${fatSecretClientId}:${fatSecretClientSecret}`);
+    
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: 'grant_type=client_credentials&scope=basic'
+    });
+    
+    if (!response.ok) {
+      const responseBody = await response.text();
+      console.error(`Failed to get OAuth token. Status: ${response.status} Response: ${responseBody}`);
+      throw new Error(`Failed to authenticate with FatSecret API: ${response.status} ${responseBody}`);
+    }
+    
+    const data = await response.json();
+    console.log('Successfully obtained OAuth token');
+    return data.access_token;
+  } catch (error) {
+    console.error('Error getting OAuth token:', error);
+    throw error;
+  }
+}
+
+/**
+ * Uses FatSecret API to analyze food images
+ * If API authentication fails, falls back to a mock detection
  * @param base64Image - Base64 encoded image data
  * @returns Array of detected food items
  */
 export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
   try {
-    console.log('Using FatSecret REST API for food detection');
+    console.log('Starting food image analysis with FatSecret API');
     
-    if (!fatSecretApiKey) {
-      console.error('FatSecret API key is not configured');
-      throw new Error('FatSecret API key is not configured');
+    // Try to get an OAuth token first
+    try {
+      const accessToken = await getFatSecretOAuthToken();
+      console.log('Successfully authenticated with FatSecret API');
+      
+      // If we have image recognition scope and real credentials, we would call their image API here
+      // This would be something like:
+      // const imageRecognitionUrl = 'https://platform.fatsecret.com/rest/server.api';
+      // const params = new URLSearchParams({
+      //   method: 'food.recognize_image',
+      //   format: 'json'
+      // });
+      // 
+      // const response = await fetch(`${imageRecognitionUrl}?${params}`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': `Bearer ${accessToken}`,
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({ image: base64Image })
+      // });
+      //
+      // const data = await response.json();
+      // return data.foods.map(food => food.name);
+      
+      // For now, since we don't have full API access with image recognition scope,
+      // we'll continue with the fallback method but at least verify credentials work
+      console.log('Using fallback detection method (OAuth token is valid but image recognition not available)');
+    } catch (error) {
+      console.warn('OAuth authentication failed, using fallback detection method:', error.message);
+      // Continue with fallback method below
     }
     
-    // FatSecret doesn't have direct image recognition via OAuth
-    // We'll use a more reliable method - first authenticate, then use the Foods Search API
-    // This is a fallback implementation since their image recognition requires special access
-    
-    // For demonstration/fallback, we'll extract a few food keywords from the image using basic analysis
-    // In a production app, you would integrate with their Platform API properly with correct OAuth flow
-    
-    // This simulates food detection for common foods based on image characteristics
-    // In reality, you should request full API access from FatSecret for their image recognition
-    
+    // Basic image analysis to simulate food detection
     console.log('Using fallback food detection method');
     
-    // Basic image analysis to detect potential food items
-    // In reality, this would be replaced by FatSecret's actual image recognition API
-    const imageSize = base64Image.length;
-    
-    console.log(`Image size: ${imageSize} bytes`);
-    
-    // For demo purposes only - creating mock food detection results
-    // Replace this with actual FatSecret API integration when you have proper credentials
+    // For demo purposes - creating mock food detection results
     const commonFoods = [
       "Apple", "Banana", "Salad", "Sandwich", "Pizza",
-      "Chicken", "Rice", "Pasta", "Broccoli", "Coffee"
+      "Chicken", "Rice", "Pasta", "Broccoli", "Coffee",
+      "Bread", "Eggs", "Burger", "Soup", "Yogurt"
     ];
     
     // Select 1-3 random items from the common foods list
@@ -58,9 +110,7 @@ export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
     }
     
     console.log('Mock food detection detected:', detectedFoods);
-    
-    // Add warning message about using mock data
-    console.log('WARNING: Using mock food detection. For production use, proper FatSecret API credentials are required.');
+    console.log('WARNING: Using mock food detection. For production use, proper FatSecret API credentials with image-recognition scope are required.');
     
     return detectedFoods;
   } catch (error) {

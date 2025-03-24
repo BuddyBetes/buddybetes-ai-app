@@ -30,13 +30,14 @@ export function useImageAnalysis() {
         throw new Error('Invalid image data. Please try taking another photo.');
       }
       
+      // Call the Supabase edge function
       const response = await supabase.functions.invoke('analyze-food-image', {
         body: { image: base64Image }
       });
 
       console.log('API response:', response);
       
-      // Check if the response has an error
+      // Check if response has error property from Supabase Functions
       if (response.error) {
         console.error('Supabase function error:', response.error);
         throw new Error(response.error.message || 'Error analyzing food image');
@@ -60,10 +61,11 @@ export function useImageAnalysis() {
       }
     } catch (err) {
       console.error('Error analyzing image:', err);
-      setError(err instanceof Error ? err.message : 'Failed to analyze food image');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to analyze food image';
+      setError(errorMessage);
       toast({
         title: "Analysis Failed",
-        description: err instanceof Error ? err.message : 'Failed to analyze food image',
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
