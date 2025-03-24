@@ -65,19 +65,21 @@ export const useMessagePersistence = () => {
             
             return loadedMessages;
           } else {
-            // No messages found for this conversation, create a welcome message
+            // No messages found for this conversation, create a welcome message with current timestamp
+            const currentTimestamp = Date.now();
             const welcomeMessage: Message = {
               text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
               type: 'assistant',
-              timestamp: Date.now()
+              timestamp: currentTimestamp
             };
             
             await saveMessageToSupabase(welcomeMessage, currentConversationId);
             return [welcomeMessage];
           }
         } else {
-          // No conversation found, create a new one
-          const newConversationId = `conv-${Date.now()}`;
+          // No conversation found, create a new one with current timestamp
+          const currentTimestamp = Date.now();
+          const newConversationId = `conv-${currentTimestamp}`;
           const { data: newConv, error: createError } = await supabase
             .from('assistant_conversations')
             .insert({
@@ -98,7 +100,7 @@ export const useMessagePersistence = () => {
           const welcomeMessage: Message = {
             text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
             type: 'assistant',
-            timestamp: Date.now()
+            timestamp: currentTimestamp
           };
           
           await saveMessageToSupabase(welcomeMessage, currentConversationId);

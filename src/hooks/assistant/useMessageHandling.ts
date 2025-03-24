@@ -64,11 +64,12 @@ export const useMessageHandling = (
             setMessages(loadedMessages);
             setIsInitialized(true);
           } else if (!isInitialized) {
-            // If no messages, add welcome message
+            // If no messages, add welcome message with current timestamp
+            const currentTimestamp = Date.now();
             const welcomeMessage: Message = {
               text: "Hi! I'm BuddyBetes. I can help answer questions and log your glucose readings. Just say things like 'log 120' or 'my glucose is 95 after dinner'.",
               type: 'assistant',
-              timestamp: Date.now()
+              timestamp: currentTimestamp
             };
             setMessages([welcomeMessage]);
             

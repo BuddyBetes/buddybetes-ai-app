@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, ArrowRight, Activity } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 interface Profile {
   first_name: string;
@@ -74,6 +75,18 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     return firstName + lastName || user?.email?.charAt(0).toUpperCase() || 'U';
   };
   
+  // Format timestamp to readable format
+  const formatTimestamp = () => {
+    if (!timestamp) return '';
+    
+    try {
+      return format(new Date(timestamp), 'h:mm a');
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return '';
+    }
+  };
+  
   return (
     <div className="space-y-2 w-full">
       <motion.div
@@ -95,7 +108,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               : 'bg-[#35cab4] text-white'
           }`}
         >
-          {text}
+          <div className="flex flex-col">
+            {text}
+            {timestamp && (
+              <span className={`text-xs mt-1 ${type === 'user' ? 'text-gray-500' : 'text-white/70'}`}>
+                {formatTimestamp()}
+              </span>
+            )}
+          </div>
         </div>
         
         {type === 'user' && (
