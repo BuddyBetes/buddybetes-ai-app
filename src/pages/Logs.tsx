@@ -34,10 +34,6 @@ const Logs = () => {
     console.log('Logs page - Logs count:', logs.length);
   }, [logs.length]);
 
-  useEffect(() => {
-    console.log('Delete dialog state:', { deleteDialogOpen, isDeleting, logToDelete });
-  }, [deleteDialogOpen, isDeleting, logToDelete]);
-
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, { 
       month: 'short', 
@@ -86,13 +82,13 @@ const Logs = () => {
     setDetailViewOpen(false);
   };
 
-  const confirmDelete = async () => {
+  const handleDeleteExecution = async () => {
     if (!logToDelete) return;
     
     setIsDeleting(true);
+    
     try {
       await deleteLog(logToDelete);
-      
       toast({
         title: "Log deleted",
         description: "The log has been successfully deleted",
@@ -105,17 +101,14 @@ const Logs = () => {
         variant: "destructive",
       });
     } finally {
-      // Important: reset states BEFORE closing dialog to prevent freezing
+      // Clear state in proper order to avoid UI issues
       setIsDeleting(false);
-      setLogToDelete(null);
-      setSelectedLog(null);
       setDeleteDialogOpen(false);
-      
-      console.log('Delete operation completed, all states reset');
+      setLogToDelete(null);
     }
   };
 
-  const cancelDelete = () => {
+  const handleCloseDeleteDialog = () => {
     if (!isDeleting) {
       setDeleteDialogOpen(false);
       setLogToDelete(null);
@@ -135,17 +128,19 @@ const Logs = () => {
     <Layout>
       <AppHeader />
       <div className="space-y-6 pb-28 pt-4">
-        {Object.entries(groupedLogs).map(([dateStr, logsForDate], dateIndex) => (
-          <LogsByDate 
-            key={dateStr}
-            dateStr={dateStr} 
-            logs={logsForDate} 
-            dateIndex={dateIndex} 
-            onLogClick={handleLogClick} 
-          />
-        ))}
-        
-        {Object.keys(groupedLogs).length === 0 && <LogsEmptyState />}
+        {Object.entries(groupedLogs).length > 0 ? (
+          Object.entries(groupedLogs).map(([dateStr, logsForDate], dateIndex) => (
+            <LogsByDate 
+              key={dateStr}
+              dateStr={dateStr} 
+              logs={logsForDate} 
+              dateIndex={dateIndex} 
+              onLogClick={handleLogClick} 
+            />
+          ))
+        ) : (
+          <LogsEmptyState />
+        )}
       </div>
 
       <LogDetailView 
@@ -159,8 +154,8 @@ const Logs = () => {
       <DeleteLogDialog 
         isOpen={deleteDialogOpen}
         isDeleting={isDeleting}
-        onClose={cancelDelete}
-        onConfirm={confirmDelete}
+        onClose={handleCloseDeleteDialog}
+        onConfirm={handleDeleteExecution}
       />
     </Layout>
   );

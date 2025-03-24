@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import React from 'react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -16,7 +16,7 @@ interface DeleteLogDialogProps {
   isOpen: boolean;
   isDeleting: boolean;
   onClose: () => void;
-  onConfirm: () => Promise<void>;
+  onConfirm: () => void;
 }
 
 const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({ 
@@ -25,38 +25,11 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
   onClose, 
   onConfirm 
 }) => {
-  // Debug logging to track dialog state changes
-  useEffect(() => {
-    console.log("DeleteLogDialog state:", { isOpen, isDeleting });
-  }, [isOpen, isDeleting]);
-
-  // Handle confirmation safely
-  const handleConfirm = async () => {
-    try {
-      await onConfirm();
-      // Parent component will handle closing the dialog
-    } catch (error) {
-      console.error("Error in delete confirmation:", error);
-      // The error will be handled by the parent component
-    }
-  };
-
   return (
-    <AlertDialog 
-      open={isOpen} 
-      key={isOpen.toString()} // Force re-render when open state changes
-      onOpenChange={(open) => {
-        console.log('Dialog open change triggered:', open, 'while deleting:', isDeleting);
-        
-        // Allow closing if not deleting
-        if (!isDeleting) {
-          if (!open) onClose();
-        }
-      }}
-    >
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && !isDeleting && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
+          <AlertDialogTitle>Delete Log Entry</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete this log entry? This action cannot be undone.
           </AlertDialogDescription>
@@ -64,7 +37,7 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={handleConfirm} 
+            onClick={onConfirm} 
             className="bg-red-500 hover:bg-red-600" 
             disabled={isDeleting}
           >
@@ -74,7 +47,10 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
                 Deleting...
               </>
             ) : (
-              'Delete'
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </>
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
