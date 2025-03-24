@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext } from '../context/LogContext';
@@ -32,6 +33,10 @@ const Logs = () => {
   useEffect(() => {
     console.log('Logs page - Logs count:', logs.length);
   }, [logs.length]);
+
+  useEffect(() => {
+    console.log('Delete dialog state:', { deleteDialogOpen, isDeleting, logToDelete });
+  }, [deleteDialogOpen, isDeleting, logToDelete]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, { 
@@ -92,12 +97,6 @@ const Logs = () => {
         title: "Log deleted",
         description: "The log has been successfully deleted",
       });
-      
-      setDeleteDialogOpen(false);
-      setIsDeleting(false);
-      setLogToDelete(null);
-      setSelectedLog(null);
-      
     } catch (error) {
       console.error('Error deleting log:', error);
       toast({
@@ -105,7 +104,14 @@ const Logs = () => {
         description: "Failed to delete the log",
         variant: "destructive",
       });
+    } finally {
+      // Important: reset states BEFORE closing dialog to prevent freezing
       setIsDeleting(false);
+      setLogToDelete(null);
+      setSelectedLog(null);
+      setDeleteDialogOpen(false);
+      
+      console.log('Delete operation completed, all states reset');
     }
   };
 

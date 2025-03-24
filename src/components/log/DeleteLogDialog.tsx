@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { 
   AlertDialog, 
@@ -25,6 +25,11 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
   onClose, 
   onConfirm 
 }) => {
+  // Debug logging to track dialog state changes
+  useEffect(() => {
+    console.log("DeleteLogDialog state:", { isOpen, isDeleting });
+  }, [isOpen, isDeleting]);
+
   // Handle confirmation safely
   const handleConfirm = async () => {
     try {
@@ -39,10 +44,13 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
   return (
     <AlertDialog 
       open={isOpen} 
+      key={isOpen.toString()} // Force re-render when open state changes
       onOpenChange={(open) => {
-        // Only allow dialog to close if we're not in the middle of deleting
-        if (!isDeleting && !open) {
-          onClose();
+        console.log('Dialog open change triggered:', open, 'while deleting:', isDeleting);
+        
+        // Allow closing if not deleting
+        if (!isDeleting) {
+          if (!open) onClose();
         }
       }}
     >
