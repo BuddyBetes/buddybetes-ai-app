@@ -78,6 +78,7 @@ serve(async (req) => {
 
       console.log('Final food items with nutrition:', foodItems);
 
+      // Always return a consistent structure with a foodItems array
       return new Response(
         JSON.stringify({ foodItems }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

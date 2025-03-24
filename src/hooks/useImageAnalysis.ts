@@ -45,7 +45,7 @@ export function useImageAnalysis() {
       }
 
       const data = response.data;
-      console.log('Response data:', data);
+      console.log('Response data (stringified):', JSON.stringify(data, null, 2));
 
       if (!data) {
         throw new Error('No data returned from food analysis');
@@ -56,20 +56,40 @@ export function useImageAnalysis() {
         throw new Error(data.error);
       }
 
-      // Fix: Correct validation logic for foodItems
-      if (!data.foodItems || !Array.isArray(data.foodItems)) {
-        console.error('Invalid foodItems format:', data.foodItems);
+      // Handle both direct food item or foodItems array
+      let foodItems: FoodItem[] = [];
+      
+      if (data.foodItems) {
+        // Case 1: Edge function returns { foodItems: [...] }
+        if (Array.isArray(data.foodItems)) {
+          console.log('Found foodItems array in response:', data.foodItems);
+          foodItems = data.foodItems;
+        } else {
+          console.error('data.foodItems exists but is not an array:', data.foodItems);
+          throw new Error('Invalid response format: foodItems is not an array');
+        }
+      } else if (Array.isArray(data)) {
+        // Case 2: Edge function returns direct array [...]
+        console.log('Response is a direct array of food items:', data);
+        foodItems = data;
+      } else if (data.name && typeof data.calories !== 'undefined') {
+        // Case 3: Edge function returns a single food item object
+        console.log('Response is a single food item:', data);
+        foodItems = [data];
+      } else {
+        // No valid food data found
+        console.error('No valid food data structure found in:', data);
         throw new Error('Invalid response format from food analysis');
       }
 
-      if (data.foodItems.length > 0) {
-        console.log('Food items detected:', data.foodItems);
-        setResult({ foodItems: data.foodItems });
+      if (foodItems.length > 0) {
+        console.log('Final processed food items:', foodItems);
+        setResult({ foodItems: foodItems });
         
         // Display a success toast
         toast({
           title: "Food Detected",
-          description: `Detected: ${data.foodItems.map(item => item.name).join(', ')}`,
+          description: `Detected: ${foodItems.map(item => item.name).join(', ')}`,
           variant: "default"
         });
       } else {

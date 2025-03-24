@@ -20,12 +20,14 @@ const AddLog: React.FC = () => {
   const { toast } = useToast();
 
   const handleImageCapture = (imageData: string) => {
+    console.log('AddLog: Image captured, showing results panel');
     setShowResults(true);
     analyzeImage(imageData);
   };
 
   const handleSaveFood = async (foodItems: FoodItem[]) => {
     try {
+      console.log('Saving food items to log:', foodItems);
       // Create a food log with the analyzed items
       await addLog({
         timestamp: new Date(),
@@ -46,6 +48,7 @@ const AddLog: React.FC = () => {
       setShowResults(false);
       resetAnalysis();
     } catch (err) {
+      console.error('Error saving food log:', err);
       toast({
         title: "Error saving food log",
         description: "There was a problem saving your food log",
@@ -55,13 +58,18 @@ const AddLog: React.FC = () => {
   };
 
   const handleCancel = () => {
+    console.log('Cancelling food analysis');
     setShowResults(false);
     resetAnalysis();
   };
 
-  console.log("Result:", result);
-  console.log("Is analyzing:", isAnalyzing);
-  console.log("Error:", error);
+  console.log("AddLog render state:", {
+    showResults, 
+    isAnalyzing, 
+    error,
+    resultExists: !!result,
+    foodItems: result?.foodItems || []
+  });
 
   return (
     <Layout title="Add Glucose Log">
