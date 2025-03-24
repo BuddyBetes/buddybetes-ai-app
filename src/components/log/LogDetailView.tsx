@@ -1,9 +1,14 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { X } from 'lucide-react';
 import { GlucoseLog } from '@/types/logs';
-import { Info, Utensils, Calendar, Clock, Tag, AlertCircle } from 'lucide-react';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useLogContext } from '@/context/LogContext';
+import { Loader2 } from 'lucide-react';
 
 interface LogDetailViewProps {
   log: GlucoseLog | null;
@@ -11,35 +16,49 @@ interface LogDetailViewProps {
   onClose: () => void;
 }
 
-const LogDetailView: React.FC<LogDetailViewProps> = ({ 
-  log, 
-  isOpen, 
-  onClose
-}) => {
+const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) => {
+  const { deleteLog, fetchLogs } = useLogContext();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = () => {
+    if (log) {
+      setLogToDelete(log.id);
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!logToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      await deleteLog(logToDelete);
+      setIsDeleteDialogOpen(false);
+      onClose();
+      fetchLogs(); // Refresh logs after deletion
+    } catch (error) {
+      console.error('Error deleting log:', error);
+    } finally {
+      setIsDeleting(false);
+      setLogToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setLogToDelete(null);
+  };
+
   if (!log) return null;
 
-  // Format date and time for display
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString(undefined, { 
-      weekday: 'long',
-      month: 'long', 
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return format(date, 'PPP');
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString(undefined, { 
-      hour: '2-digit', 
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusLabel = (glucoseLevel: number | undefined) => {
-    if (!glucoseLevel) return 'No reading';
-    if (glucoseLevel < 70) return 'Low';
-    if (glucoseLevel > 180) return 'High';
-    return 'Normal';
+    return format(date, 'h:mm a');
   };
 
   const getStatusColor = (glucoseLevel: number | undefined) => {
@@ -49,116 +68,113 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({
     return 'text-green-600';
   };
 
-  const getBgStatusColor = (glucoseLevel: number | undefined) => {
-    if (!glucoseLevel) return 'bg-gray-100';
-    if (glucoseLevel < 70) return 'bg-red-50';
-    if (glucoseLevel > 180) return 'bg-orange-50';
-    return 'bg-green-50';
-  };
-
   const getMealContextLabel = (mealContext?: 'before' | 'after' | 'fasting') => {
     switch (mealContext) {
       case 'before': return 'Before Meal';
       case 'after': return 'After Meal';
       case 'fasting': return 'Fasting';
-      default: return 'Not specified';
-    }
-  };
-
-  const getMealContextColor = (mealContext?: 'before' | 'after' | 'fasting') => {
-    switch (mealContext) {
-      case 'before': return 'bg-blue-100 text-blue-800';
-      case 'after': return 'bg-violet-100 text-violet-800';
-      case 'fasting': return 'bg-amber-100 text-amber-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return '';
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md rounded-xl p-0 gap-0 overflow-hidden">
-        <div className={`p-6 ${getBgStatusColor(log.glucoseLevel)}`}>
-          <DialogHeader className="mb-2">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-semibold">Log Details</DialogTitle>
-              {log.glucoseLevel !== undefined && (
-                <span className={`text-sm font-medium px-3 py-1 rounded-full ${getStatusColor(log.glucoseLevel)} bg-white/80`}>
-                  {getStatusLabel(log.glucoseLevel)}
-                </span>
+    <>
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent className="p-0 overflow-y-auto">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="h-full flex flex-col"
+          >
+            <div className="flex justify-between items-center px-4 py-3 border-b">
+              <h2 className="text-lg font-semibold">Log Details</h2>
+              <button 
+                onClick={onClose}
+                className="rounded-full p-1 hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-4 space-y-6">
+              <div className="border-b pb-4">
+                <div className="text-gray-500 text-sm mb-1">
+                  {formatDate(log.timestamp)} at {formatTime(log.timestamp)}
+                </div>
+                
+                {log.glucoseLevel !== undefined ? (
+                  <div className="flex items-baseline">
+                    <span className={`text-3xl font-bold ${getStatusColor(log.glucoseLevel)}`}>
+                      {log.glucoseLevel}
+                    </span>
+                    <span className="text-sm text-gray-500 ml-1">mg/dL</span>
+                  </div>
+                ) : (
+                  <div className="text-xl font-medium">Food Entry</div>
+                )}
+                
+                {log.mealContext && (
+                  <div className="mt-2">
+                    <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm">
+                      {getMealContextLabel(log.mealContext)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {log.food && (
+                <div>
+                  <h3 className="font-medium mb-2">Food</h3>
+                  <p className="text-gray-700">{log.food}</p>
+                </div>
+              )}
+              
+              {log.notes && (
+                <div>
+                  <h3 className="font-medium mb-2">Notes</h3>
+                  <p className="text-gray-700">{log.notes}</p>
+                </div>
               )}
             </div>
-            <DialogDescription className="flex items-center gap-2 mt-1">
-              <Calendar className="h-4 w-4 text-gray-500" />
-              <span>{formatDate(log.timestamp)}</span>
-            </DialogDescription>
-            <DialogDescription className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span>{formatTime(log.timestamp)}</span>
-            </DialogDescription>
-          </DialogHeader>
-          
-          {log.glucoseLevel !== undefined ? (
-            <div className="mt-4 mb-2">
-              <div className="flex items-baseline">
-                <span className={`text-4xl font-bold ${getStatusColor(log.glucoseLevel)}`}>
-                  {log.glucoseLevel}
-                </span>
-                <span className="ml-2 text-gray-500">mg/dL</span>
-              </div>
+            
+            <div className="mt-auto border-t p-4">
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteClick} 
+                className="w-full"
+              >
+                Delete Log
+              </Button>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 mt-4 mb-2">
-              <Utensils className="h-6 w-6 text-buddy-500" />
-              <span className="text-xl font-semibold">Food Entry</span>
-            </div>
-          )}
-        </div>
+          </motion.div>
+        </SheetContent>
+      </Sheet>
 
-        <div className="p-6 space-y-6">
-          {log.mealContext && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                <Tag className="h-4 w-4" />
-                <span>Meal Context</span>
-              </div>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getMealContextColor(log.mealContext)}`}>
-                {getMealContextLabel(log.mealContext)}
-              </span>
-            </div>
-          )}
-
-          {log.food && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                <Utensils className="h-4 w-4" />
-                <span>Food</span>
-              </div>
-              <p className="text-gray-900">{log.food}</p>
-            </div>
-          )}
-
-          {log.notes && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                <Info className="h-4 w-4" />
-                <span>Notes</span>
-              </div>
-              <p className="text-gray-900 whitespace-pre-wrap">{log.notes}</p>
-            </div>
-          )}
-
-          {!log.notes && !log.food && !log.mealContext && log.glucoseLevel === undefined && (
-            <div className="flex items-center justify-center py-6">
-              <div className="text-center">
-                <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No additional details</h3>
-                <p className="mt-1 text-sm text-gray-500">This log entry doesn't have any additional information.</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your log.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel} disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
