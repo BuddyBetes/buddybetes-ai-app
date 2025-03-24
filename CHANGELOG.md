@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - Performance optimizations for mobile devices
 - Removed duplicate close button in log detail view
 - Improved notes formatting with proper line breaks
+- Fixed accessibility issues in dialog components
 
 ## [0.1.0] - Initial Release
 - Core functionality established

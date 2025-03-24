@@ -2,13 +2,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { X, Trash2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { GlucoseLog } from '@/types/logs';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useLogContext } from '@/context/LogContext';
-import { Loader2 } from 'lucide-react';
 
 interface LogDetailViewProps {
   log: GlucoseLog | null;
@@ -102,15 +101,9 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
             exit={{ opacity: 0 }}
             className="h-full flex flex-col"
           >
-            <div className="flex justify-between items-center px-4 py-3 border-b">
-              <h2 className="text-lg font-semibold">Log Details</h2>
-              <button 
-                onClick={onClose}
-                className="rounded-full p-1 hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
+            <SheetHeader className="px-4 py-3 border-b">
+              <SheetTitle className="text-lg">Log Details</SheetTitle>
+            </SheetHeader>
             
             <div className="flex-1 overflow-auto p-4 space-y-6">
               {/* Date and Time Section */}
