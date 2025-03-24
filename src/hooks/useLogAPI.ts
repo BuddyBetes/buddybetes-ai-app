@@ -20,6 +20,17 @@ export const useLogAPI = () => {
     return undefined;
   };
 
+  // Helper function to round numbers in notes
+  const roundNumbersInText = (text: string | undefined): string | undefined => {
+    if (!text) return text;
+    
+    // Regex to find numbers with decimal points (e.g., 50.4, 12.7)
+    return text.replace(/(\d+)\.(\d+)/g, (match, p1, p2) => {
+      // Convert to number and round
+      return Math.round(parseFloat(`${p1}.${p2}`)).toString();
+    });
+  };
+
   const fetchLogs = useCallback(async () => {
     if (!user) {
       console.log('No authenticated user found, clearing logs');
@@ -52,7 +63,7 @@ export const useLogAPI = () => {
           glucoseLevel: row.glucose_level !== null ? row.glucose_level : undefined,
           food: row.food,
           mealContext: validateMealContextFn(row.meal_context),
-          notes: row.notes
+          notes: roundNumbersInText(row.notes)
         }));
         setLogs(glucoseLogs);
       }
@@ -61,7 +72,7 @@ export const useLogAPI = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast]); // Removed validateMealContext from dependencies to avoid infinite loop
+  }, [user, toast]);
 
   const addLog = async (log: Omit<GlucoseLog, 'id'>) => {
     if (!user) {
@@ -76,13 +87,16 @@ export const useLogAPI = () => {
     try {
       setIsLoading(true);
       
+      // Process notes to round numbers
+      const processedNotes = roundNumbersInText(log.notes);
+      
       const logData = {
         user_id: user.id,
         timestamp: log.timestamp.toISOString(),
         glucose_level: log.glucoseLevel,
         meal_context: log.mealContext,
         food: log.food,
-        notes: log.notes
+        notes: processedNotes
       };
 
       console.log('Adding new log to Supabase:', logData);
@@ -142,12 +156,15 @@ export const useLogAPI = () => {
     try {
       setIsLoading(true);
       
+      // Process notes to round numbers
+      const processedNotes = roundNumbersInText(log.notes);
+      
       const logData = {
         timestamp: log.timestamp.toISOString(),
         glucose_level: log.glucoseLevel,
         meal_context: log.mealContext,
         food: log.food,
-        notes: log.notes
+        notes: processedNotes
       };
 
       const { data, error } = await supabase

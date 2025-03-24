@@ -29,7 +29,18 @@ const FoodItemEdit: React.FC<FoodItemEditProps> = ({
       }
     }
     
-    // For other fields or invalid carb values, pass through
+    // For other fields, round to whole numbers
+    if ((field === 'protein' || field === 'fat' || field === 'calories') && value !== '') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        // Round to whole number
+        const roundedValue = Math.round(numValue).toString();
+        onChange(field, roundedValue);
+        return;
+      }
+    }
+    
+    // For non-numeric fields or invalid values, pass through
     onChange(field, value);
   };
 
@@ -67,7 +78,7 @@ const FoodItemEdit: React.FC<FoodItemEditProps> = ({
           <Input 
             type="number" 
             value={item.protein} 
-            onChange={(e) => onChange('protein', e.target.value)}
+            onChange={(e) => handleNumericChange('protein', e.target.value)}
           />
         </div>
         <div>
@@ -75,7 +86,7 @@ const FoodItemEdit: React.FC<FoodItemEditProps> = ({
           <Input 
             type="number" 
             value={item.fat} 
-            onChange={(e) => onChange('fat', e.target.value)}
+            onChange={(e) => handleNumericChange('fat', e.target.value)}
           />
         </div>
         <div>
@@ -83,7 +94,7 @@ const FoodItemEdit: React.FC<FoodItemEditProps> = ({
           <Input 
             type="number" 
             value={item.calories} 
-            onChange={(e) => onChange('calories', e.target.value)}
+            onChange={(e) => handleNumericChange('calories', e.target.value)}
           />
         </div>
       </div>

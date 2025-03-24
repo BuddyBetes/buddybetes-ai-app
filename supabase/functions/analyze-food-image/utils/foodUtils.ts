@@ -30,6 +30,7 @@ export function createDefaultFoodItem(foodName: string): FoodItem {
 
 /**
  * Processes a food item to ensure carbs are rounded up to whole numbers
+ * and other nutritional values are rounded to whole numbers
  * @param item - The food item to process
  * @returns Processed food item with rounded values
  */
@@ -37,8 +38,8 @@ export function processFoodItem(item: FoodItem): FoodItem {
   return {
     ...item,
     carbs: Math.ceil(item.carbs), // Round up carbs to whole number
-    protein: Math.round(item.protein),
-    fat: Math.round(item.fat),
-    calories: Math.round(item.calories)
+    protein: Math.round(item.protein), // Round protein to whole number
+    fat: Math.round(item.fat), // Round fat to whole number
+    calories: Math.round(item.calories) // Round calories to whole number
   };
 }

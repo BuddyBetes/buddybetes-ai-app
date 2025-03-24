@@ -60,12 +60,20 @@ const Logs = () => {
 
   const handleCloseDetail = () => {
     setDetailViewOpen(false);
+    // Small delay before clearing selected log to avoid UI jumps
+    setTimeout(() => {
+      setSelectedLog(null);
+    }, 300);
   };
 
   const handleEditLog = (log: GlucoseLog) => {
     updateLog(log)
       .then(() => {
         setDetailViewOpen(false);
+        // Small delay before clearing selected log to avoid UI jumps
+        setTimeout(() => {
+          setSelectedLog(null);
+        }, 300);
       })
       .catch((error) => {
         console.error('Error updating log:', error);
@@ -83,11 +91,24 @@ const Logs = () => {
     
     setIsDeleting(true);
     try {
+      // Call the deleteLog function which will update the state
       await deleteLog(logToDelete);
+      
       toast({
         title: "Log deleted",
         description: "The log has been successfully deleted",
       });
+      
+      // Reset state after successful deletion with small delays to prevent UI freeze
+      setTimeout(() => {
+        setIsDeleting(false);
+        setDeleteDialogOpen(false);
+        setTimeout(() => {
+          setLogToDelete(null);
+          setSelectedLog(null);
+        }, 100);
+      }, 100);
+      
     } catch (error) {
       console.error('Error deleting log:', error);
       toast({
@@ -95,11 +116,7 @@ const Logs = () => {
         description: "Failed to delete the log",
         variant: "destructive",
       });
-    } finally {
-      // Reset all deletion-related state
       setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setLogToDelete(null);
     }
   };
 
