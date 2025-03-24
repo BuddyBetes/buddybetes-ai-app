@@ -25,7 +25,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="mb-3">
+      <div className="mb-2">
         <SuggestionChips onSelectSuggestion={onSuggestionSelect} />
       </div>
       

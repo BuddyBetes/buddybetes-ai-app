@@ -168,7 +168,7 @@ const Assistant = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <ScrollArea className="flex-1 pb-28">
+              <ScrollArea className="flex-1 pb-20">
                 <MessageList 
                   messages={messages}
                   isLoading={isLoading}
@@ -180,7 +180,7 @@ const Assistant = () => {
                 />
               </ScrollArea>
               
-              <div className="fixed bottom-0 left-0 right-0 z-20 bg-white pb-[6.5rem] pt-2 border-t border-gray-100">
+              <div className="fixed bottom-0 left-0 right-0 z-20 bg-white pb-20 pt-2 border-t border-gray-100">
                 <div className={isMobile ? "w-full px-2" : "max-w-3xl mx-auto px-2"}>
                   <MessageInput 
                     input={input}
