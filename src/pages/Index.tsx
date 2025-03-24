@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -43,7 +44,7 @@ const Index = () => {
         console.log('Redirecting to signin');
         navigate('/signin');
       }
-    }, 2000); // Reduced from 3000ms to 2000ms for faster redirect
+    }, 1500); // Reduced from 2000ms to 1500ms for faster redirect
     
     setRedirectTimeout(timer);
     return () => clearTimeout(timer);

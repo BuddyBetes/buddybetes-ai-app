@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,9 +27,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const { toast } = useToast();
 
-  // Detect password recovery flow from URL
+  // Detect password recovery flow from URL and auth events
   useEffect(() => {
     const detectPasswordRecovery = () => {
+      // Check URL parameters for recovery mode
       const url = new URL(window.location.href);
       const hash = url.hash;
       const query = url.search;
@@ -39,12 +41,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         (query && query.includes('type=recovery'));
       
       if (isRecoveryFlow) {
-        console.log('Password recovery flow detected');
+        console.log('Password recovery flow detected from URL');
         setIsPasswordRecovery(true);
       }
     };
     
     detectPasswordRecovery();
+
+    // Also listen for auth state changes to detect PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('Password recovery event detected');
+        setIsPasswordRecovery(true);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -54,8 +70,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (event === 'SIGNED_OUT') {
+        // Mark as password recovery mode if we get that event
+        if (event === 'PASSWORD_RECOVERY') {
+          setIsPasswordRecovery(true);
+        } else if (event === 'SIGNED_OUT') {
           setHasCompletedOnboarding(false);
+          setIsPasswordRecovery(false);
         } else if (event === 'SIGNED_IN' && currentSession?.user) {
           // Don't automatically check onboarding if in password recovery
           if (!isPasswordRecovery) {
