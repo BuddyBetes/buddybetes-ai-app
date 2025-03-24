@@ -16,7 +16,7 @@ import PasswordResetSuccess from '@/components/auth/PasswordResetSuccess';
 
 const ResetPassword = () => {
   const { isAuthenticated, loading, signOut, isPasswordRecovery } = useAuth();
-  const [mode, setMode] = useState<'request' | 'reset'>('reset');
+  const [mode, setMode] = useState<'request' | 'reset'>('request'); // Default to request mode
   const [resetComplete, setResetComplete] = useState(false);
   const [isValidResetLink, setIsValidResetLink] = useState(false);
   const [isCheckingLink, setIsCheckingLink] = useState(true);
@@ -30,30 +30,38 @@ const ResetPassword = () => {
       try {
         setIsCheckingLink(true);
         
-        // Check if we have a recovery token in the URL
+        // Get hash and query params
         const hash = location.hash;
-        const queryParams = new URLSearchParams(location.search);
+        const searchParams = new URLSearchParams(location.search);
         
-        // Handle both types of reset links (hash-based and query-based)
-        const hasResetToken = 
-          (hash && hash.includes('type=recovery')) || 
-          queryParams.has('type') && queryParams.get('type') === 'recovery';
+        // Check for type=recovery in either hash or query params
+        const hashParams = new URLSearchParams(hash.replace('#', ''));
+        const hasRecoveryInHash = hashParams.get('type') === 'recovery';
+        const hasRecoveryInQuery = searchParams.get('type') === 'recovery';
         
-        console.log('Checking reset token, hasResetToken:', hasResetToken);
+        // Log for debugging
+        console.log('Checking reset token:');
+        console.log('- URL hash:', hash);
+        console.log('- URL search:', location.search);
+        console.log('- hasRecoveryInHash:', hasRecoveryInHash);
+        console.log('- hasRecoveryInQuery:', hasRecoveryInQuery);
         
-        if (!hasResetToken) {
-          console.log('No valid recovery token found in URL, showing request form');
+        // If we don't have a recovery token in either place, show request form
+        if (!hasRecoveryInHash && !hasRecoveryInQuery) {
+          console.log('No recovery token found, showing request form');
           setIsValidResetLink(false);
           setMode('request');
           setIsCheckingLink(false);
           return;
         }
         
-        // Let Supabase handle the recovery token
+        // Attempt to get session (Supabase should handle the token extraction)
         const { data, error } = await supabase.auth.getSession();
         
+        console.log('Session check result:', data.session ? 'Session found' : 'No session');
+        
         if (error) {
-          console.error('Error getting session from reset link:', error);
+          console.error('Error retrieving session from reset link:', error);
           setIsValidResetLink(false);
           setMode('request');
           toast({
@@ -61,14 +69,54 @@ const ResetPassword = () => {
             description: "This password reset link is invalid or has expired. Please request a new one.",
             variant: "destructive",
           });
-        } else if (!data.session) {
-          console.log('No session found from recovery token, showing request form');
-          setIsValidResetLink(false);
-          setMode('request');
-        } else {
-          console.log('Valid reset token, user can now reset password');
+        } else if (data.session) {
+          // If we have a session, user can reset password
+          console.log('Valid reset token, showing password reset form');
           setIsValidResetLink(true);
           setMode('reset');
+        } else {
+          // Try to extract and process the token directly from URL
+          try {
+            // Get the access_token and refresh_token from the URL
+            const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+            
+            if (accessToken) {
+              console.log('Found access token in URL, setting session manually');
+              // Set the session manually if we have tokens
+              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken || '',
+              });
+              
+              if (sessionError) {
+                console.error('Error setting session:', sessionError);
+                setIsValidResetLink(false);
+                setMode('request');
+                toast({
+                  title: "Invalid Reset Link",
+                  description: "Unable to process the password reset link. Please request a new one.",
+                  variant: "destructive",
+                });
+              } else if (sessionData.session) {
+                console.log('Session set successfully, showing reset form');
+                setIsValidResetLink(true);
+                setMode('reset');
+              } else {
+                console.log('No session after setting, showing request form');
+                setIsValidResetLink(false);
+                setMode('request');
+              }
+            } else {
+              console.log('No tokens found in URL, showing request form');
+              setIsValidResetLink(false);
+              setMode('request');
+            }
+          } catch (tokenError) {
+            console.error('Error processing token from URL:', tokenError);
+            setIsValidResetLink(false);
+            setMode('request');
+          }
         }
       } catch (err) {
         console.error('Error validating reset token:', err);
