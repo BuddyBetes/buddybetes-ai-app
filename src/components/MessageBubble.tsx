@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { NutritionalInfo, GlucoseStats, TrendAnalysis } from '@/types';
@@ -76,12 +77,25 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   
   // Format timestamp to readable format
   const formatTimestamp = () => {
-    if (!timestamp) return 'Just now';
+    if (!timestamp) {
+      console.log('No timestamp provided for message');
+      return 'Just now';
+    }
     
     try {
-      return format(new Date(timestamp), 'h:mm a');
+      console.log('Formatting timestamp:', timestamp);
+      console.log('As Date object:', new Date(timestamp));
+      
+      // Make sure we're working with a valid date
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date from timestamp:', timestamp);
+        return 'Just now';
+      }
+      
+      return format(date, 'h:mm a');
     } catch (error) {
-      console.error('Error formatting timestamp:', error);
+      console.error('Error formatting timestamp:', error, 'Raw timestamp:', timestamp);
       return 'Just now';
     }
   };

@@ -49,13 +49,20 @@ export const useMessageHandling = (
                 };
               }
               
-              // Ensure we always have a valid timestamp - fallback to current time if missing
-              const timestamp = msg.timestamp ? new Date(msg.timestamp).getTime() : Date.now();
+              // Ensure we have a valid timestamp
+              // Convert database timestamp string to numeric timestamp (milliseconds)
+              const timestamp = msg.timestamp 
+                ? new Date(msg.timestamp).getTime() 
+                : Date.now();
+                
+              console.log('Message timestamp from DB:', msg.timestamp);
+              console.log('Converted timestamp:', timestamp);
+              console.log('Date object:', new Date(timestamp));
               
               return {
                 text: msg.content,
                 type: msg.message_type as 'user' | 'assistant',
-                timestamp,
+                timestamp: timestamp,
                 nutritionalInfo
               };
             });

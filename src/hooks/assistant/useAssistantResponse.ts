@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
 import { Message, NutritionalInfo } from '@/types';
@@ -93,13 +94,16 @@ export const useAssistantResponse = () => {
         // Only include stats if they were requested
         const stats = showStats ? (data.stats || undefined) : undefined;
         
+        const currentTimestamp = Date.now();
+        console.log("Creating message with timestamp:", currentTimestamp);
+        
         const assistantMessage: Message = { 
           text: data.response, 
           type: 'assistant',
           nutritionalInfo: data.nutritionalInfo || undefined,
           stats: stats,
           trendAnalysis: data.trendAnalysis || undefined,
-          timestamp: Date.now(),
+          timestamp: currentTimestamp,
           isNew: true
         };
         

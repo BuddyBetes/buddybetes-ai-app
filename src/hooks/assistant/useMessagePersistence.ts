@@ -128,10 +128,14 @@ export const useMessagePersistence = () => {
     if (!user || !convId) return;
     
     try {
-      // Ensure timestamp is a valid ISO string for database storage
+      // Ensure timestamp is valid before converting to ISO
       const timestamp = message.timestamp 
         ? new Date(message.timestamp).toISOString() 
         : new Date().toISOString();
+      
+      console.log('Saving message with timestamp:', timestamp);
+      console.log('Original message timestamp:', message.timestamp);
+      console.log('As date object:', new Date(message.timestamp || Date.now()));
       
       const messageData = {
         conversation_id: convId,
