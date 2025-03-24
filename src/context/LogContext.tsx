@@ -19,7 +19,7 @@ interface LogProviderProps {
 }
 
 export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
-  const { logs, isLoading, fetchLogs, addLog } = useLogAPI();
+  const { logs, isLoading, fetchLogs, addLog, updateLog, deleteLog } = useLogAPI();
   const { getRecentLogs, getGlucoseLogsOnly, getLogsForToday, getAverageGlucose } = useLogUtils(logs);
 
   useEffect(() => {
@@ -29,6 +29,8 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
   const contextValue: LogContextType = {
     logs,
     addLog,
+    updateLog, 
+    deleteLog,
     getRecentLogs,
     getGlucoseLogsOnly,
     getLogsForToday,

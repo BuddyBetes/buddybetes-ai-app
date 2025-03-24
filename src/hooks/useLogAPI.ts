@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -36,7 +35,6 @@ export const useLogAPI = () => {
           variant: "destructive",
         });
       } else if (data) {
-        // Convert Supabase data to GlucoseLog objects
         const glucoseLogs: GlucoseLog[] = data.map(row => ({
           id: row.id,
           timestamp: new Date(row.timestamp),
@@ -67,7 +65,6 @@ export const useLogAPI = () => {
     try {
       setIsLoading(true);
       
-      // Prepare data for Supabase
       const logData = {
         user_id: user.id,
         timestamp: log.timestamp.toISOString(),
@@ -91,7 +88,6 @@ export const useLogAPI = () => {
           variant: "destructive",
         });
       } else if (data) {
-        // Convert back to GlucoseLog and add to state
         const newLog: GlucoseLog = {
           id: data.id,
           timestamp: new Date(data.timestamp),
@@ -120,10 +116,123 @@ export const useLogAPI = () => {
     }
   };
 
+  const updateLog = async (log: GlucoseLog) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to update logs",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      const logData = {
+        timestamp: log.timestamp.toISOString(),
+        glucose_level: log.glucoseLevel,
+        meal_context: log.mealContext,
+        food: log.food,
+        notes: log.notes
+      };
+
+      const { data, error } = await supabase
+        .from('glucose_logs')
+        .update(logData)
+        .eq('id', log.id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating log:', error);
+        toast({
+          title: "Error updating log",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else if (data) {
+        const updatedLog: GlucoseLog = {
+          id: data.id,
+          timestamp: new Date(data.timestamp),
+          glucoseLevel: data.glucose_level !== null ? data.glucose_level : undefined,
+          food: data.food,
+          mealContext: validateMealContext(data.meal_context),
+          notes: data.notes
+        };
+        
+        setLogs(prev => prev.map(item => item.id === updatedLog.id ? updatedLog : item));
+        
+        toast({
+          title: "Log updated successfully",
+          description: log.glucoseLevel ? `Glucose level: ${log.glucoseLevel} updated` : `Food log updated successfully`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating log:', error);
+      toast({
+        title: "Error updating log",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteLog = async (logId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to delete logs",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const { error } = await supabase
+        .from('glucose_logs')
+        .delete()
+        .eq('id', logId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting log:', error);
+        toast({
+          title: "Error deleting log",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        setLogs(prev => prev.filter(log => log.id !== logId));
+        
+        toast({
+          title: "Log deleted successfully",
+          description: "The log entry has been removed",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting log:', error);
+      toast({
+        title: "Error deleting log",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     logs,
     isLoading,
     fetchLogs,
-    addLog
+    addLog,
+    updateLog,
+    deleteLog
   };
 };

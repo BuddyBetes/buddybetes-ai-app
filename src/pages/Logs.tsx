@@ -7,12 +7,15 @@ import { ChevronRight, Dot, Loader2, Utensils } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import LogDetailView from '@/components/log/LogDetailView';
 import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const Logs = () => {
-  const { logs, isLoading } = useLogContext();
+  const { logs, isLoading, updateLog, deleteLog } = useLogContext();
   const { toast } = useToast();
   const [selectedLog, setSelectedLog] = useState<GlucoseLog | null>(null);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<string | null>(null);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, { 
@@ -70,19 +73,37 @@ const Logs = () => {
   };
 
   const handleEditLog = (log: GlucoseLog) => {
-    toast({
-      title: "Edit functionality",
-      description: "Edit functionality is not implemented yet",
-    });
+    updateLog(log)
+      .then(() => {
+        setDetailViewOpen(false);
+      })
+      .catch((error) => {
+        console.error('Error updating log:', error);
+      });
+  };
+
+  const handleDeleteConfirm = (logId: string) => {
+    setLogToDelete(logId);
+    setDeleteDialogOpen(true);
     setDetailViewOpen(false);
   };
 
-  const handleDeleteLog = (logId: string) => {
-    toast({
-      title: "Delete functionality",
-      description: "Delete functionality is not implemented yet",
-    });
-    setDetailViewOpen(false);
+  const confirmDelete = () => {
+    if (logToDelete) {
+      deleteLog(logToDelete)
+        .then(() => {
+          setDeleteDialogOpen(false);
+          setLogToDelete(null);
+        })
+        .catch((error) => {
+          console.error('Error deleting log:', error);
+        });
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setLogToDelete(null);
   };
 
   if (isLoading) {
@@ -190,8 +211,25 @@ const Logs = () => {
         isOpen={detailViewOpen}
         onClose={handleCloseDetail}
         onEdit={handleEditLog}
-        onDelete={handleDeleteLog}
+        onDelete={handleDeleteConfirm}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this log entry? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };

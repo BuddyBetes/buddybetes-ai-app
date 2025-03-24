@@ -13,6 +13,8 @@ export interface GlucoseLog {
 export interface LogContextType {
   logs: GlucoseLog[];
   addLog: (log: Omit<GlucoseLog, 'id'>) => Promise<void>;
+  updateLog: (log: GlucoseLog) => Promise<void>; 
+  deleteLog: (logId: string) => Promise<void>;
   getRecentLogs: (count: number) => GlucoseLog[];
   getGlucoseLogsOnly: (count: number) => GlucoseLog[];
   getLogsForToday: () => GlucoseLog[];
