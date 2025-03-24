@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { Trash2, Loader2, Clock, Apple, StickyNote } from 'lucide-react';
+import { Trash2, Loader2, Clock, Apple, StickyNote, AlertCircle, Activity } from 'lucide-react';
 import { GlucoseLog } from '@/types/logs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -191,7 +191,7 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
                 </div>
               )}
               
-              {/* Notes Section with improved formatting */}
+              {/* Notes Section with improved formatting and centered icon */}
               {log.notes && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
@@ -199,8 +199,10 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
                     <h3 className="font-semibold text-lg text-gray-800">Notes</h3>
                   </div>
                   <div className="flex items-start">
-                    <StickyNote className="h-5 w-5 text-buddy-500 mr-2 mt-1" />
-                    <div className="text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 w-full whitespace-pre-line">
+                    <div className="flex-shrink-0 mt-1.5">
+                      <StickyNote className="h-5 w-5 text-buddy-500" />
+                    </div>
+                    <div className="text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 w-full ml-2 whitespace-pre-line">
                       {formatNotes(log.notes)}
                     </div>
                   </div>

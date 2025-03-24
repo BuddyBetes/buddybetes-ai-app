@@ -37,6 +37,9 @@ All notable changes to this project will be documented in this file.
 - Added consistent color-coded meal context tags
 - Improved visual hierarchy in log details with colored sections and icons
 - Larger and more readable glucose values with enhanced status indicators
+- Enhanced notes section with properly vertically aligned icons
+- Improved empty state for Glucose Trend charts with better visual cues
+- Reduced font size of time range tabs for better mobile display
 
 ### Fixed
 - Various UI/UX improvements
@@ -44,6 +47,7 @@ All notable changes to this project will be documented in this file.
 - Removed duplicate close button in log detail view
 - Improved notes formatting with proper line breaks
 - Fixed accessibility issues in dialog components
+- Enhanced alignment of icons in notes section for better visual consistency
 
 ## [0.1.0] - Initial Release
 - Core functionality established

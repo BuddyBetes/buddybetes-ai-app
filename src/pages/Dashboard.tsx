@@ -147,9 +147,9 @@ const Dashboard = () => {
             className="w-full"
           >
             <TabsList className="w-full bg-gray-100 mb-1">
-              <TabsTrigger className="flex-1" value="24h">Last 24 Hours</TabsTrigger>
-              <TabsTrigger className="flex-1" value="7d">Last 7 Days</TabsTrigger>
-              <TabsTrigger className="flex-1" value="30d">Last 30 Days</TabsTrigger>
+              <TabsTrigger className="flex-1 text-xs md:text-sm" value="24h">Last 24 Hours</TabsTrigger>
+              <TabsTrigger className="flex-1 text-xs md:text-sm" value="7d">Last 7 Days</TabsTrigger>
+              <TabsTrigger className="flex-1 text-xs md:text-sm" value="30d">Last 30 Days</TabsTrigger>
             </TabsList>
             
             <TabsContent value="24h" className="mt-0 pt-2">

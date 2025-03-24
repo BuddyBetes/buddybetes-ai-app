@@ -14,6 +14,7 @@ import { GlucoseLog } from '../context/LogContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ChartContainer, ChartTooltipContent, ChartTooltip } from '@/components/ui/chart';
+import { LineChart as LineChartIcon, AlertCircle } from 'lucide-react';
 
 interface GlucoseChartProps {
   data: GlucoseLog[];
@@ -153,8 +154,14 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-          <p>No glucose data available for this time period</p>
-          <p className="text-sm mt-2">Log your readings to see trends</p>
+          <div className="bg-gray-100 p-3 rounded-full mb-4">
+            <LineChartIcon size={32} className="text-gray-400" />
+          </div>
+          <p className="font-medium text-gray-600 mb-2">No glucose data available</p>
+          <div className="flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+            <AlertCircle size={14} className="mr-1 text-gray-400" />
+            <p>Log your readings to see trends over time</p>
+          </div>
         </div>
       )}
     </div>
