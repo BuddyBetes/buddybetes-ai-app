@@ -38,7 +38,7 @@ export function useImageAnalysis() {
 
       if (apiError) {
         console.error('Supabase function error:', apiError);
-        throw new Error(apiError.message);
+        throw new Error(apiError.message || 'Error analyzing food image');
       }
 
       if (data && data.foodItems) {

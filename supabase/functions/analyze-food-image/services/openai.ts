@@ -2,7 +2,7 @@
 // This file now uses FatSecret Image Recognition API instead of OpenAI
 // FatSecret is used for direct image-to-food detection
 
-const fatSecretApiKey = Deno.env.get('FATSECRET_API_KEY');
+const fatSecretApiKey = Deno.env.get('FATSECRET_API_KEY') || 'f2a13018f56748c59dd2050b8a9e3d19';
 const fatSecretApiSecret = Deno.env.get('FATSECRET_API_SECRET') || '';  // Add support for API secret if available
 
 /**
