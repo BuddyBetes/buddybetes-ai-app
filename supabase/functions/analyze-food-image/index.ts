@@ -47,7 +47,7 @@ serve(async (req) => {
 
     console.log('Image data received, length:', image.length);
     
-    // Step 1: Get food suggestions using FatSecret Image Recognition API
+    // Step 1: Get food suggestions using our food detection service
     try {
       const foods = await analyzeFoodImage(image);
       console.log('Detected food items:', foods);
