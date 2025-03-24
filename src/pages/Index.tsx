@@ -51,9 +51,33 @@ const Index = () => {
   if (loading || isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-        <div className="w-20 h-20 rounded-full bg-buddy-500 flex items-center justify-center">
-          <Mic size={32} className="text-white animate-pulse" />
-        </div>
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-24 h-24 rounded-full bg-buddy-500 flex items-center justify-center"
+        >
+          <motion.div
+            animate={{ 
+              scale: [1, 1.2, 1],
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity,
+              ease: "easeInOut" 
+            }}
+          >
+            <Mic size={40} className="text-white" />
+          </motion.div>
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mt-6 text-gray-600 font-medium"
+        >
+          Loading your experience...
+        </motion.p>
       </div>
     );
   }
