@@ -56,13 +56,13 @@ export function useImageAnalysis() {
         throw new Error(data.error);
       }
 
-      // Ensure foodItems is always an array
-      if (!data.foodItems && !Array.isArray(data.foodItems)) {
+      // Fix: Correct validation logic for foodItems
+      if (!data.foodItems || !Array.isArray(data.foodItems)) {
         console.error('Invalid foodItems format:', data.foodItems);
         throw new Error('Invalid response format from food analysis');
       }
 
-      if (Array.isArray(data.foodItems) && data.foodItems.length > 0) {
+      if (data.foodItems.length > 0) {
         console.log('Food items detected:', data.foodItems);
         setResult({ foodItems: data.foodItems });
         
@@ -72,13 +72,10 @@ export function useImageAnalysis() {
           description: `Detected: ${data.foodItems.map(item => item.name).join(', ')}`,
           variant: "default"
         });
-      } else if (Array.isArray(data.foodItems) && data.foodItems.length === 0) {
+      } else {
         // Handle empty food items array explicitly
         console.warn('No food items detected in the response');
         throw new Error('No food detected in this image. Please try again with a clearer photo.');
-      } else {
-        console.error('Invalid response format:', data);
-        throw new Error('Invalid response format from food analysis');
       }
     } catch (err) {
       console.error('Error analyzing image:', err);

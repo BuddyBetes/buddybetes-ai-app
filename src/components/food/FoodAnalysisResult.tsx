@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FoodItem } from './types';
@@ -25,11 +25,14 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
   onCancel
 }) => {
   const [editingItem, setEditingItem] = useState<number | null>(null);
-  const [editedItems, setEditedItems] = useState<FoodItem[]>(foodItems);
+  const [editedItems, setEditedItems] = useState<FoodItem[]>([]);
 
   // Update editedItems when foodItems change from props
-  React.useEffect(() => {
-    setEditedItems(foodItems);
+  useEffect(() => {
+    console.log("FoodAnalysisResult received foodItems:", foodItems);
+    if (Array.isArray(foodItems) && foodItems.length > 0) {
+      setEditedItems([...foodItems]);
+    }
   }, [foodItems]);
 
   const handleEdit = (index: number) => {
@@ -77,6 +80,7 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
   }
 
   console.log("Rendering food items:", foodItems);
+  console.log("Rendering edited items:", editedItems);
 
   return (
     <Card className="w-full">
