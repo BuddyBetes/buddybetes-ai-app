@@ -26,6 +26,8 @@ All notable changes to this project will be documented in this file.
 - Improved error handling and user feedback during authentication processes
 - Implemented redirect to sign-in page after successful password reset
 - Refined authentication state management in AuthContext
+- Refactored authentication components for better maintainability and code organization
+- Extracted password reset logic into dedicated context for improved state management
 
 ### Technical Features
 - React with TypeScript implementation
@@ -42,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Improved error messaging during authentication
 - Enhanced UI consistency across authentication flows
 - Optimized authentication state detection and handling
+- Refactored ResetPassword page into smaller, focused components
 
 ### Fixed
 - Various UI/UX improvements
