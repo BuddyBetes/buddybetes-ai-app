@@ -30,16 +30,20 @@ export function useImageAnalysis() {
         throw new Error('Invalid image data. Please try taking another photo.');
       }
       
-      const { data, error: apiError } = await supabase.functions.invoke('analyze-food-image', {
+      const response = await supabase.functions.invoke('analyze-food-image', {
         body: { image: base64Image }
       });
 
-      console.log('API response:', data);
-
-      if (apiError) {
-        console.error('Supabase function error:', apiError);
-        throw new Error(apiError.message || 'Error analyzing food image');
+      console.log('API response status:', response.status);
+      console.log('API response data:', response.data);
+      
+      // Check if the response has a non-2xx status
+      if (response.error) {
+        console.error('Supabase function error:', response.error);
+        throw new Error(response.error.message || 'Error analyzing food image');
       }
+
+      const data = response.data;
 
       if (data && data.foodItems) {
         // If we got an empty array back, show a user-friendly message

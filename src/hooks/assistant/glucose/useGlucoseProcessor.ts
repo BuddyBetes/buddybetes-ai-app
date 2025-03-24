@@ -1,6 +1,6 @@
 
 import { useState, useRef } from 'react';
-import { extractGlucoseInfo, isGlucoseLogIntent } from '@/utils/voiceParser';
+import { extractGlucoseInfo, isGlucoseLogIntent, extractFoodInfo, isFoodLogIntent } from '@/utils/voiceParser';
 import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -17,8 +17,61 @@ export const useGlucoseProcessor = (
 
   // Process voice input for glucose logging
   const processGlucoseLogIntent = async (text: string): Promise<boolean> => {
-    console.log("Processing voice input for glucose logging intent...");
+    console.log("Processing voice input for glucose/food logging intent...");
     
+    // Check for food logging intent first
+    if (isFoodLogIntent(text)) {
+      console.log("Food logging intent detected in voice input!");
+      const foodInfo = extractFoodInfo(text);
+      console.log("Extracted food info:", foodInfo);
+      
+      if (foodInfo && foodInfo.food) {
+        // Create a new log with just food information
+        const newLog = {
+          timestamp: new Date(),
+          food: foodInfo.food,
+          notes: foodInfo.notes || "",
+          // Set default values for required fields
+          glucoseLevel: 0, // Use 0 as a sentinel value for food-only entries
+          mealContext: "after" // Default
+        };
+        
+        console.log("Creating new food log:", newLog);
+        await addLog(newLog);
+        
+        toast({
+          title: "Food Logged",
+          description: `Food entry "${foodInfo.food}" added successfully.`,
+          duration: 3000
+        });
+        
+        const confirmationMessage = `Added food entry: ${foodInfo.food}`;
+        
+        setMessages(prev => [
+          ...prev,
+          {
+            text: text,
+            type: 'user',
+            timestamp: Date.now(),
+            isNew: true
+          },
+          {
+            text: confirmationMessage,
+            type: 'assistant',
+            timestamp: Date.now(),
+            isNew: true
+          }
+        ]);
+        
+        if (mode === 'voice' && playResponseAudio) {
+          await playResponseAudio(confirmationMessage);
+        }
+        
+        return true;
+      }
+    }
+    
+    // Fall back to glucose log processing
     if (isGlucoseLogIntent(text)) {
       console.log("Glucose logging intent detected in voice input!");
       const logInfo = extractGlucoseInfo(text);

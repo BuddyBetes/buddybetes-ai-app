@@ -99,3 +99,60 @@ export const isGlucoseLogIntent = (text: string): boolean => {
   
   return logPatterns.some(pattern => pattern.test(text));
 }
+
+/**
+ * Extracts food information from voice input
+ */
+export const extractFoodInfo = (text: string): { food: string; notes?: string } | null => {
+  // Skip processing if the text is too short
+  if (!text || text.length < 5) return null;
+  
+  // Patterns to detect food logging commands
+  const foodLogPatterns = [
+    /log food\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /add food\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /record food\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /I ate\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /ate\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /had\s+(.*?)(?:for (breakfast|lunch|dinner))?(?:\.|\,|\!|\?|$)/i,
+    /track food\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /track meal\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /log meal\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+    /food entry\s+(.*?)(?:\.|\,|\!|\?|$)/i,
+  ];
+  
+  for (const pattern of foodLogPatterns) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[1].length > 2) {
+      // Extract notes if present
+      const notesMatch = text.match(/note(?:s)?\s*(?:is|are|:)?\s*(.*?)(?:\.|\,|\!|\?|$)/i);
+      
+      return {
+        food: match[1].trim(),
+        notes: notesMatch ? notesMatch[1].trim() : undefined
+      };
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Determines if the voice input is likely meant to log food information
+ */
+export const isFoodLogIntent = (text: string): boolean => {
+  const foodIntentPatterns = [
+    /log food/i,
+    /add food/i,
+    /record food/i,
+    /I ate/i,
+    /track food/i,
+    /track meal/i,
+    /log meal/i,
+    /food entry/i,
+    /add meal/i,
+    /log what (I|we) ate/i
+  ];
+  
+  return foodIntentPatterns.some(pattern => pattern.test(text));
+}
