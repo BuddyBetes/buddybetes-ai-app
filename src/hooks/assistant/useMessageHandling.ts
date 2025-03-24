@@ -50,10 +50,13 @@ export const useMessageHandling = (
                 };
               }
               
+              // Ensure we always have a valid timestamp
+              const timestamp = msg.timestamp ? new Date(msg.timestamp).getTime() : Date.now();
+              
               return {
                 text: msg.content,
                 type: msg.message_type as 'user' | 'assistant',
-                timestamp: new Date(msg.timestamp).getTime(),
+                timestamp,
                 nutritionalInfo
               };
             });

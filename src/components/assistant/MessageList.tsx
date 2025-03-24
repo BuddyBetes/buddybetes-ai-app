@@ -111,7 +111,10 @@ const MessageList: React.FC<MessageListProps> = ({
                 text={message.text}
                 type={message.type}
                 nutritionalInfo={message.nutritionalInfo}
+                stats={message.stats}
+                trendAnalysis={message.trendAnalysis}
                 isNew={message.isNew}
+                timestamp={message.timestamp}
               />
             ))}
           </div>

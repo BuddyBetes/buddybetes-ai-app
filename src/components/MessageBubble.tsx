@@ -21,6 +21,7 @@ interface MessageBubbleProps {
   stats?: GlucoseStats;
   trendAnalysis?: TrendAnalysis;
   isNew?: boolean;
+  timestamp?: number;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ 
@@ -29,7 +30,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   nutritionalInfo,
   stats,
   trendAnalysis,
-  isNew = false
+  isNew = false,
+  timestamp
 }) => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -45,7 +47,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           .from('profiles')
           .select('first_name, last_name, email')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching profile:', error);
