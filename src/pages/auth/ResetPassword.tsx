@@ -37,7 +37,9 @@ const ResetPassword = () => {
         // Check for type=recovery in either hash or query params
         const hashParams = new URLSearchParams(hash.replace('#', ''));
         const hasRecoveryInHash = hashParams.get('type') === 'recovery';
+        const hasAccessTokenInHash = hashParams.get('access_token') !== null;
         const hasRecoveryInQuery = searchParams.get('type') === 'recovery';
+        const hasAccessTokenInQuery = searchParams.get('access_token') !== null;
         
         // Check if already in password recovery context from AuthContext
         // This is a fallback in case URL parameters are missing
@@ -48,11 +50,14 @@ const ResetPassword = () => {
         console.log('- URL hash:', hash);
         console.log('- URL search:', location.search);
         console.log('- hasRecoveryInHash:', hasRecoveryInHash);
+        console.log('- hasAccessTokenInHash:', hasAccessTokenInHash);
         console.log('- hasRecoveryInQuery:', hasRecoveryInQuery);
+        console.log('- hasAccessTokenInQuery:', hasAccessTokenInQuery);
         console.log('- hasRecoveryContext:', hasRecoveryContext);
         
         // If we have any indication of recovery flow, attempt to process the reset
-        if (hasRecoveryInHash || hasRecoveryInQuery || hasRecoveryContext) {
+        if (hasRecoveryInHash || hasRecoveryInQuery || hasRecoveryContext || 
+            hasAccessTokenInHash || hasAccessTokenInQuery) {
           console.log('Recovery mode detected, attempting to validate session');
           
           // Attempt to get session (Supabase should handle the token extraction)
@@ -151,8 +156,19 @@ const ResetPassword = () => {
       }
     };
 
-    checkResetToken();
+    // Force a small delay to ensure the URL is fully processed
+    setTimeout(() => {
+      checkResetToken();
+    }, 100);
   }, [location, toast, isAuthenticated, loading, isPasswordRecovery]);
+
+  // Prevent redirecting to dashboard if we're in password recovery mode
+  useEffect(() => {
+    if (isPasswordRecovery && isAuthenticated && !loading && !isCheckingLink) {
+      console.log('In password recovery mode, preventing dashboard redirect');
+      // Don't navigate away from reset password page when in password recovery flow
+    }
+  }, [isPasswordRecovery, isAuthenticated, navigate, loading, isCheckingLink]);
 
   // Handle reset completion
   const handleResetComplete = () => {

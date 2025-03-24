@@ -27,12 +27,15 @@ const Index = () => {
     
     console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding, isPasswordRecovery });
     
+    // If in password recovery flow, immediately redirect to reset password page and don't set any other redirects
+    if (isPasswordRecovery) {
+      console.log('Redirecting to reset password page immediately');
+      navigate('/reset-password');
+      return; // Important: exit early to prevent other redirects
+    }
+    
     const timer = setTimeout(() => {
-      // If in password recovery flow, redirect to reset password page
-      if (isPasswordRecovery) {
-        console.log('Redirecting to reset password page');
-        navigate('/reset-password');
-      } else if (isAuthenticated) {
+      if (isAuthenticated) {
         if (hasCompletedOnboarding) {
           console.log('Redirecting to dashboard');
           navigate('/dashboard');

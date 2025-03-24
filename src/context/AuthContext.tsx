@@ -36,9 +36,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const query = url.search;
       
       // Check for password recovery tokens in different formats
+      // Look for type=recovery or access_token in hash or query parameters
       const isRecoveryFlow = 
-        (hash && hash.includes('type=recovery')) || 
-        (query && query.includes('type=recovery'));
+        (hash && (hash.includes('type=recovery') || hash.includes('access_token'))) || 
+        (query && (query.includes('type=recovery') || query.includes('access_token')));
       
       if (isRecoveryFlow) {
         console.log('Password recovery flow detected from URL');
