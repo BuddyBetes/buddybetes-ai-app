@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { NutritionalInfo, GlucoseStats, TrendAnalysis } from '@/types';
 import NutritionalCard from './NutritionalCard';
 import { TrendingUp, TrendingDown, ArrowRight, Activity } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/context/AuthContext';
 
 interface MessageBubbleProps {
   text: string;
@@ -22,6 +24,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   trendAnalysis,
   isNew = false
 }) => {
+  const { user } = useAuth();
+  
+  // Get user initials from email
+  const getUserInitials = () => {
+    if (!user?.email) return 'U';
+    return user.email.charAt(0).toUpperCase();
+  };
+  
   return (
     <div className="space-y-2 w-full">
       <motion.div
@@ -47,9 +57,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
         
         {type === 'user' && (
-          <div className="w-8 h-8 rounded-full bg-gray-200 ml-2 flex-shrink-0 self-end overflow-hidden">
-            <img src="/placeholder.svg" alt="User" className="w-full h-full object-cover" />
-          </div>
+          <Avatar className="w-8 h-8 ml-2 flex-shrink-0 self-end">
+            <AvatarImage src="" alt="User" />
+            <AvatarFallback className="bg-buddy-100 text-buddy-800 text-sm">
+              {getUserInitials()}
+            </AvatarFallback>
+          </Avatar>
         )}
       </motion.div>
       
