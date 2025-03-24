@@ -131,14 +131,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route path="/confirm" element={<EmailConfirmed />} />
-      <Route
-        path="/reset-password"
-        element={
-          <PageTransition>
-            <ResetPassword />
-          </PageTransition>
-        }
-      />
+      <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
   );
 };

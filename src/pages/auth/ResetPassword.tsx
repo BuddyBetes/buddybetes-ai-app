@@ -33,11 +33,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const ResetPassword = () => {
-  const { isAuthenticated, hasCompletedOnboarding } = useAuth();
+  const { isAuthenticated, hasCompletedOnboarding, signOut } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
   const [isValidResetLink, setIsValidResetLink] = useState(false);
   const [isCheckingLink, setIsCheckingLink] = useState(true);
+  const [isProcessingReset, setIsProcessingReset] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -50,7 +51,7 @@ const ResetPassword = () => {
     },
   });
 
-  // Check for recovery token in URL and validate session
+  // Check if we're coming from a password reset link
   useEffect(() => {
     const checkResetToken = async () => {
       try {
@@ -69,6 +70,7 @@ const ResetPassword = () => {
           console.log('No valid recovery token found in URL');
           setIsValidResetLink(false);
           setIsCheckingLink(false);
+          setIsProcessingReset(false);
           toast({
             title: "Invalid Reset Link",
             description: "This link is not a valid password reset link.",
@@ -83,6 +85,7 @@ const ResetPassword = () => {
         if (error) {
           console.error('Error getting session from reset link:', error);
           setIsValidResetLink(false);
+          setIsProcessingReset(false);
           toast({
             title: "Invalid or Expired Link",
             description: "This password reset link is invalid or has expired. Please request a new one.",
@@ -91,6 +94,7 @@ const ResetPassword = () => {
         } else if (!data.session) {
           console.log('No session found, invalid reset token');
           setIsValidResetLink(false);
+          setIsProcessingReset(false);
           toast({
             title: "Invalid Reset Link",
             description: "This password reset link is invalid. Please request a new one.",
@@ -99,10 +103,12 @@ const ResetPassword = () => {
         } else {
           console.log('Valid reset token, user can now reset password');
           setIsValidResetLink(true);
+          setIsProcessingReset(false);
         }
       } catch (err) {
         console.error('Error validating reset token:', err);
         setIsValidResetLink(false);
+        setIsProcessingReset(false);
         toast({
           title: "Error",
           description: "An error occurred while processing your reset link.",
@@ -138,6 +144,9 @@ const ResetPassword = () => {
           duration: 5000,
         });
         
+        // Sign out the user after password reset so they can sign in with new password
+        await signOut();
+        
         // Redirect to signin page after 3 seconds
         setTimeout(() => {
           navigate('/signin');
@@ -155,8 +164,8 @@ const ResetPassword = () => {
     }
   };
 
-  // Redirect authenticated users
-  if (isAuthenticated) {
+  // Only redirect authenticated users if they're not in the middle of a password reset
+  if (isAuthenticated && !isValidResetLink && !isProcessingReset) {
     if (!hasCompletedOnboarding) {
       return <Navigate to="/onboarding" replace />;
     }
@@ -164,7 +173,7 @@ const ResetPassword = () => {
   }
 
   // Show loading state while checking the reset link
-  if (isCheckingLink) {
+  if (isCheckingLink || isProcessingReset) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F8F8] p-4">
         <Card className="border-none shadow-lg w-full max-w-md">
