@@ -168,7 +168,7 @@ const Assistant = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col h-full"
             >
-              <ScrollArea className="flex-1 pb-20">
+              <ScrollArea className="flex-1 pb-28">
                 <MessageList 
                   messages={messages}
                   isLoading={isLoading}

@@ -34,10 +34,9 @@ export function useImageAnalysis() {
         body: { image: base64Image }
       });
 
-      console.log('API response status:', response.status);
-      console.log('API response data:', response.data);
+      console.log('API response:', response);
       
-      // Check if the response has a non-2xx status
+      // Check if the response has an error
       if (response.error) {
         console.error('Supabase function error:', response.error);
         throw new Error(response.error.message || 'Error analyzing food image');

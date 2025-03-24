@@ -88,7 +88,7 @@ const MessageList: React.FC<MessageListProps> = ({
   return (
     <div 
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto pb-6 relative px-2 min-h-[300px]"
+      className="flex-1 overflow-y-auto pb-20 relative px-2 min-h-[300px]"
     >
       <AnimatePresence>
         {showWelcome && (
@@ -128,7 +128,7 @@ const MessageList: React.FC<MessageListProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-4 right-4 p-3 bg-[#35cab4] text-white rounded-full shadow-md"
+            className="absolute bottom-24 right-4 p-3 bg-[#35cab4] text-white rounded-full shadow-md"
             onClick={onScrollToBottom}
           >
             <ArrowUp size={18} />

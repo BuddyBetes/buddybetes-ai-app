@@ -33,7 +33,7 @@ export const useGlucoseProcessor = (
           notes: foodInfo.notes || "",
           // Set default values for required fields
           glucoseLevel: 0, // Use 0 as a sentinel value for food-only entries
-          mealContext: "after" // Default
+          mealContext: "after" as "before" | "after" | "fasting" // Explicitly cast to the allowed type
         };
         
         console.log("Creating new food log:", newLog);
@@ -128,7 +128,7 @@ export const useGlucoseProcessor = (
         timestamp: new Date(), // Default to now, could be enhanced to parse the time
         glucoseLevel: logInfo.glucoseLevel,
         food: logInfo.food || "",
-        mealContext: logInfo.mealContext || "after",
+        mealContext: (logInfo.mealContext || "after") as "before" | "after" | "fasting",
         notes: `${logInfo.notes || ""} Time: ${timeInfo}`
       };
       
@@ -177,7 +177,7 @@ export const useGlucoseProcessor = (
       timestamp: new Date(),
       glucoseLevel: logInfo.glucoseLevel,
       food: logInfo.food || "",
-      mealContext: logInfo.mealContext || "after",
+      mealContext: (logInfo.mealContext || "after") as "before" | "after" | "fasting",
       notes: logInfo.notes || ""
     };
     
