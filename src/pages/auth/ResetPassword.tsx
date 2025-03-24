@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -36,6 +36,9 @@ const ResetPassword = () => {
   const { isAuthenticated, hasCompletedOnboarding } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
+  const [isValidResetLink, setIsValidResetLink] = useState(false);
+  const [isCheckingLink, setIsCheckingLink] = useState(true);
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -47,28 +50,71 @@ const ResetPassword = () => {
     },
   });
 
-  // Check if we have a recovery token in the URL
+  // Check for recovery token in URL and validate session
   useEffect(() => {
-    const handleRecoveryToken = async () => {
-      const hash = window.location.hash;
-      if (hash && hash.includes('type=recovery')) {
+    const checkResetToken = async () => {
+      try {
+        setIsCheckingLink(true);
+        
+        // Check if we have a recovery token in the URL
+        const hash = location.hash;
+        const queryParams = new URLSearchParams(location.search);
+        
+        // Handle both types of reset links (hash-based and query-based)
+        const hasResetToken = 
+          (hash && hash.includes('type=recovery')) || 
+          queryParams.has('type') && queryParams.get('type') === 'recovery';
+        
+        if (!hasResetToken) {
+          console.log('No valid recovery token found in URL');
+          setIsValidResetLink(false);
+          setIsCheckingLink(false);
+          toast({
+            title: "Invalid Reset Link",
+            description: "This link is not a valid password reset link.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         // Let Supabase handle the recovery token
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('Error getting session from reset link:', error);
+          setIsValidResetLink(false);
           toast({
-            title: "Error",
-            description: "Invalid or expired recovery link. Please request a new password reset.",
+            title: "Invalid or Expired Link",
+            description: "This password reset link is invalid or has expired. Please request a new one.",
             variant: "destructive",
           });
-          navigate('/signin');
+        } else if (!data.session) {
+          console.log('No session found, invalid reset token');
+          setIsValidResetLink(false);
+          toast({
+            title: "Invalid Reset Link",
+            description: "This password reset link is invalid. Please request a new one.",
+            variant: "destructive",
+          });
+        } else {
+          console.log('Valid reset token, user can now reset password');
+          setIsValidResetLink(true);
         }
+      } catch (err) {
+        console.error('Error validating reset token:', err);
+        setIsValidResetLink(false);
+        toast({
+          title: "Error",
+          description: "An error occurred while processing your reset link.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsCheckingLink(false);
       }
     };
 
-    handleRecoveryToken();
-  }, [navigate, toast]);
+    checkResetToken();
+  }, [location, toast]);
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
@@ -78,6 +124,7 @@ const ResetPassword = () => {
       });
 
       if (error) {
+        console.error('Password update error:', error);
         toast({
           title: "Password Reset Failed",
           description: error.message,
@@ -96,11 +143,11 @@ const ResetPassword = () => {
           navigate('/signin');
         }, 3000);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password update error:', error);
       toast({
         title: "An error occurred",
-        description: "Please try again later",
+        description: error?.message || "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -114,6 +161,47 @@ const ResetPassword = () => {
       return <Navigate to="/onboarding" replace />;
     }
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Show loading state while checking the reset link
+  if (isCheckingLink) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F8F8] p-4">
+        <Card className="border-none shadow-lg w-full max-w-md">
+          <CardContent className="p-6 pt-6 text-center">
+            <Lock size={32} className="mx-auto text-buddy-500 mb-4" />
+            <h1 className="text-2xl font-semibold mb-4">Verifying Reset Link</h1>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-buddy-500"></div>
+            </div>
+            <p className="mt-4 text-gray-500">Please wait while we verify your password reset link...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If reset link is invalid, show error
+  if (!isValidResetLink) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F8F8] p-4">
+        <Card className="border-none shadow-lg w-full max-w-md">
+          <CardContent className="p-6 pt-6 text-center">
+            <div className="text-red-500 mb-4">
+              <Lock size={32} className="mx-auto" />
+            </div>
+            <h1 className="text-2xl font-semibold mb-2">Invalid Reset Link</h1>
+            <p className="text-gray-500 mb-6">This password reset link is invalid or has expired.</p>
+            <Button 
+              onClick={() => navigate('/signin')}
+              className="w-full h-12 bg-buddy-500 hover:bg-buddy-600"
+            >
+              Back to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
