@@ -29,7 +29,7 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
   const handleConfirm = async () => {
     try {
       await onConfirm();
-      // Don't close the dialog here - let the parent component handle it
+      // Parent component will handle closing the dialog
     } catch (error) {
       console.error("Error in delete confirmation:", error);
       // The error will be handled by the parent component

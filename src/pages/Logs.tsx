@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext } from '../context/LogContext';
@@ -22,7 +21,6 @@ const Logs = () => {
   const [logToDelete, setLogToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Log the authentication and loading state for debugging
   useEffect(() => {
     console.log('Logs page - Auth state:', user ? 'Authenticated' : 'Not authenticated');
   }, [user]);
@@ -43,7 +41,6 @@ const Logs = () => {
     });
   };
 
-  // Group logs by date
   const groupedLogs: Record<string, GlucoseLog[]> = {};
   logs.forEach(log => {
     const dateStr = formatDate(log.timestamp);
@@ -60,7 +57,6 @@ const Logs = () => {
 
   const handleCloseDetail = () => {
     setDetailViewOpen(false);
-    // Small delay before clearing selected log to avoid UI jumps
     setTimeout(() => {
       setSelectedLog(null);
     }, 300);
@@ -70,7 +66,6 @@ const Logs = () => {
     updateLog(log)
       .then(() => {
         setDetailViewOpen(false);
-        // Small delay before clearing selected log to avoid UI jumps
         setTimeout(() => {
           setSelectedLog(null);
         }, 300);
@@ -91,7 +86,6 @@ const Logs = () => {
     
     setIsDeleting(true);
     try {
-      // Call the deleteLog function which will update the state
       await deleteLog(logToDelete);
       
       toast({
@@ -99,15 +93,10 @@ const Logs = () => {
         description: "The log has been successfully deleted",
       });
       
-      // Reset state after successful deletion with small delays to prevent UI freeze
-      setTimeout(() => {
-        setIsDeleting(false);
-        setDeleteDialogOpen(false);
-        setTimeout(() => {
-          setLogToDelete(null);
-          setSelectedLog(null);
-        }, 100);
-      }, 100);
+      setDeleteDialogOpen(false);
+      setIsDeleting(false);
+      setLogToDelete(null);
+      setSelectedLog(null);
       
     } catch (error) {
       console.error('Error deleting log:', error);
@@ -121,7 +110,6 @@ const Logs = () => {
   };
 
   const cancelDelete = () => {
-    // Only allow cancellation if not currently deleting
     if (!isDeleting) {
       setDeleteDialogOpen(false);
       setLogToDelete(null);
