@@ -79,27 +79,27 @@ const Logs = () => {
   };
 
   const confirmDelete = async () => {
-    if (logToDelete) {
-      setIsDeleting(true);
-      try {
-        await deleteLog(logToDelete);
-        setDeleteDialogOpen(false);
-        setLogToDelete(null);
-        toast({
-          title: "Log deleted",
-          description: "The log has been successfully deleted",
-        });
-      } catch (error) {
-        console.error('Error deleting log:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete the log",
-          variant: "destructive",
-        });
-      } finally {
-        // Even if there's an error, make sure to reset the deleting state
-        setIsDeleting(false);
-      }
+    if (!logToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteLog(logToDelete);
+      toast({
+        title: "Log deleted",
+        description: "The log has been successfully deleted",
+      });
+    } catch (error) {
+      console.error('Error deleting log:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the log",
+        variant: "destructive",
+      });
+    } finally {
+      // Reset all deletion-related state
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setLogToDelete(null);
     }
   };
 

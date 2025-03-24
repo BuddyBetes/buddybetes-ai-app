@@ -16,6 +16,23 @@ const FoodItemEdit: React.FC<FoodItemEditProps> = ({
   onChange,
   onSave
 }) => {
+  // Helper function to handle numeric input and round up carbs
+  const handleNumericChange = (field: keyof FoodItem, value: string) => {
+    // Process the value for carbs to round up to the nearest whole number
+    if (field === 'carbs' && value !== '') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        // Round up carbs to whole number
+        const roundedValue = Math.ceil(numValue).toString();
+        onChange(field, roundedValue);
+        return;
+      }
+    }
+    
+    // For other fields or invalid carb values, pass through
+    onChange(field, value);
+  };
+
   return (
     <div className="space-y-3">
       <div>
@@ -42,7 +59,7 @@ const FoodItemEdit: React.FC<FoodItemEditProps> = ({
           <Input 
             type="number" 
             value={item.carbs} 
-            onChange={(e) => onChange('carbs', e.target.value)}
+            onChange={(e) => handleNumericChange('carbs', e.target.value)}
           />
         </div>
         <div>

@@ -33,15 +33,25 @@ const AddLog: React.FC = () => {
   const handleSaveFood = async (foodItems: FoodItem[]) => {
     try {
       console.log('Saving food items to log:', foodItems);
+      
+      // Process food items to ensure carbs are rounded up to whole numbers
+      const processedFoodItems = foodItems.map(item => ({
+        ...item,
+        carbs: Math.ceil(item.carbs), // Round up carbs to whole numbers
+        protein: Math.round(item.protein),
+        fat: Math.round(item.fat),
+        calories: Math.round(item.calories)
+      }));
+      
       // Create a food log with the analyzed items
       await addLog({
         timestamp: new Date(),
         glucoseLevel: undefined, // Add this to match the type requirements
-        food: foodItems.map(item => item.name).join(', '),
-        notes: `Carbs: ${foodItems.reduce((sum, item) => sum + item.carbs, 0)}g, ` +
-               `Protein: ${foodItems.reduce((sum, item) => sum + item.protein, 0)}g, ` +
-               `Fat: ${foodItems.reduce((sum, item) => sum + item.fat, 0)}g, ` +
-               `Calories: ${foodItems.reduce((sum, item) => sum + item.calories, 0)}`
+        food: processedFoodItems.map(item => item.name).join(', '),
+        notes: `Carbs: ${processedFoodItems.reduce((sum, item) => sum + item.carbs, 0)}g, ` +
+               `Protein: ${processedFoodItems.reduce((sum, item) => sum + item.protein, 0)}g, ` +
+               `Fat: ${processedFoodItems.reduce((sum, item) => sum + item.fat, 0)}g, ` +
+               `Calories: ${processedFoodItems.reduce((sum, item) => sum + item.calories, 0)}`
       });
 
       toast({

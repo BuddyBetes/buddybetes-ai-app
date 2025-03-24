@@ -25,13 +25,26 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
   onClose, 
   onConfirm 
 }) => {
+  // Handle confirmation safely
+  const handleConfirm = async () => {
+    try {
+      await onConfirm();
+    } catch (error) {
+      console.error("Error in delete confirmation:", error);
+      // The error will be handled by the parent component
+    }
+  };
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => {
-      // Only allow dialog to close if we're not in the middle of deleting
-      if (!isDeleting && !open) {
-        onClose();
-      }
-    }}>
+    <AlertDialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        // Only allow dialog to close if we're not in the middle of deleting
+        if (!isDeleting && !open) {
+          onClose();
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
@@ -42,7 +55,7 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose} disabled={isDeleting}>Cancel</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={onConfirm} 
+            onClick={handleConfirm} 
             className="bg-red-500 hover:bg-red-600" 
             disabled={isDeleting}
           >

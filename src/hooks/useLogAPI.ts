@@ -223,7 +223,7 @@ export const useLogAPI = () => {
         });
         throw error;
       } else {
-        // Update local state first, then show success toast
+        // Update local state immediately
         setLogs(prev => prev.filter(log => log.id !== logId));
       }
     } catch (error) {
