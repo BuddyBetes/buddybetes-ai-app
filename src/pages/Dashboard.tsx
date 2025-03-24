@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
@@ -172,25 +171,16 @@ const Dashboard = () => {
         >
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">AI Insights</h3>
-            <div className="flex space-x-2 mb-4">
-              {isLoading ? null : (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={refreshInsights}
-                >
-                  <RefreshCw size={14} className="mr-1" />
-                  Refresh
-                </Button>
-              )}
+            {isLoading ? null : (
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="sm"
-                onClick={navigateToAssistant}
+                onClick={refreshInsights}
               >
-                Ask Assistant <ArrowUpRight size={14} className="ml-1" />
+                <RefreshCw size={14} className="mr-1" />
+                Refresh
               </Button>
-            </div>
+            )}
           </div>
           
           <Alert variant="default" className="mb-4 bg-gray-50 border-gray-200">

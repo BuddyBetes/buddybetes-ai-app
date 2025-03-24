@@ -40,6 +40,9 @@ All notable changes to this project will be documented in this file.
 - Enhanced notes section with properly vertically aligned icons
 - Improved empty state for Glucose Trend charts with better visual cues
 - Reduced font size of time range tabs for better mobile display
+- Converted log details view from side sheet to centered modal dialog
+- Improved typography and text hierarchy in log details view
+- Removed "Ask Assistant" button from Dashboard for cleaner UI
 
 ### Fixed
 - Various UI/UX improvements
