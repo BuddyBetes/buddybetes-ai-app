@@ -45,6 +45,7 @@ export function useImageAnalysis() {
       }
 
       const data = response.data;
+      console.log('Response data:', data);
 
       if (!data) {
         throw new Error('No data returned from food analysis');
@@ -53,6 +54,12 @@ export function useImageAnalysis() {
       if (data.error) {
         console.error('Error in response data:', data.error);
         throw new Error(data.error);
+      }
+
+      // Ensure foodItems is always an array
+      if (!data.foodItems && !Array.isArray(data.foodItems)) {
+        console.error('Invalid foodItems format:', data.foodItems);
+        throw new Error('Invalid response format from food analysis');
       }
 
       if (Array.isArray(data.foodItems) && data.foodItems.length > 0) {

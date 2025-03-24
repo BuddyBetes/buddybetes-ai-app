@@ -59,6 +59,10 @@ const AddLog: React.FC = () => {
     resetAnalysis();
   };
 
+  console.log("Result:", result);
+  console.log("Is analyzing:", isAnalyzing);
+  console.log("Error:", error);
+
   return (
     <Layout title="Add Glucose Log">
       <AppHeader />

@@ -27,6 +27,11 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
   const [editingItem, setEditingItem] = useState<number | null>(null);
   const [editedItems, setEditedItems] = useState<FoodItem[]>(foodItems);
 
+  // Update editedItems when foodItems change from props
+  React.useEffect(() => {
+    setEditedItems(foodItems);
+  }, [foodItems]);
+
   const handleEdit = (index: number) => {
     setEditingItem(index);
   };
@@ -70,6 +75,8 @@ const FoodAnalysisResult: React.FC<FoodAnalysisResultProps> = ({
   if (!foodItems || foodItems.length === 0) {
     return <NoFoodState onRetry={onCancel} />;
   }
+
+  console.log("Rendering food items:", foodItems);
 
   return (
     <Card className="w-full">
