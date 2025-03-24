@@ -24,11 +24,15 @@ export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
       "Apple": { carbs: [12, 15], protein: [0.2, 0.5], fat: [0.1, 0.4], calories: [50, 80] },
       "Banana": { carbs: [22, 25], protein: [1, 1.5], fat: [0.2, 0.4], calories: [90, 120] },
       "Orange": { carbs: [11, 15], protein: [0.8, 1.2], fat: [0.1, 0.3], calories: [45, 70] },
+      "Watermelon": { carbs: [7, 10], protein: [0.5, 0.8], fat: [0.1, 0.2], calories: [30, 45] },
+      "Strawberry": { carbs: [6, 8], protein: [0.6, 0.8], fat: [0.1, 0.3], calories: [30, 40] },
+      "Avocado": { carbs: [8, 12], protein: [2, 4], fat: [15, 20], calories: [160, 200] },
       
       // Vegetables
       "Broccoli": { carbs: [6, 7], protein: [2.5, 3.5], fat: [0.3, 0.5], calories: [30, 50] },
       "Carrot": { carbs: [9, 12], protein: [0.8, 1.2], fat: [0.1, 0.3], calories: [40, 50] },
       "Spinach": { carbs: [3, 4], protein: [2, 3], fat: [0.3, 0.5], calories: [20, 30] },
+      "Tomato": { carbs: [3, 5], protein: [0.8, 1.2], fat: [0.1, 0.3], calories: [20, 30] },
       
       // Proteins
       "Chicken": { carbs: [0, 1], protein: [25, 30], fat: [3, 10], calories: [120, 200] },
@@ -45,6 +49,7 @@ export async function getFoodNutrition(foodName: string): Promise<FoodItem> {
       "Salad": { carbs: [5, 10], protein: [1, 3], fat: [2, 5], calories: [40, 100] },
       "Sandwich": { carbs: [25, 35], protein: [10, 15], fat: [5, 15], calories: [200, 350] },
       "Coffee": { carbs: [0, 1], protein: [0, 0.3], fat: [0, 0.1], calories: [0, 5] },
+      "Yogurt": { carbs: [4, 7], protein: [3, 5], fat: [2, 4], calories: [60, 100] },
     };
     
     // Generate plausible nutrition based on food name

@@ -52,6 +52,13 @@ export function useImageAnalysis() {
         }
         console.log('Food items detected:', data.foodItems);
         setResult({ foodItems: data.foodItems });
+        
+        // Display a success toast
+        toast({
+          title: "Food Detected",
+          description: `Detected: ${data.foodItems.map(item => item.name).join(', ')}`,
+          variant: "default"
+        });
       } else if (data && data.error) {
         console.error('Error in response:', data.error);
         throw new Error(data.error);
