@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,8 @@ interface PasswordResetFormProps {
 const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -111,6 +113,14 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -120,14 +130,28 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-gray-700 font-medium">New Password</FormLabel>
-              <FormControl>
-                <Input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  {...field} 
-                  className="h-12 text-base border-gray-200 focus:border-buddy-500"
-                />
-              </FormControl>
+              <div className="relative">
+                <FormControl>
+                  <Input 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••" 
+                    {...field} 
+                    className="h-12 text-base border-gray-200 focus:border-buddy-500 pr-10"
+                  />
+                </FormControl>
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               <PasswordStrengthIndicator password={currentPassword} />
               <FormMessage />
               <p className="text-xs text-gray-500 mt-1">
@@ -143,14 +167,28 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-gray-700 font-medium">Confirm Password</FormLabel>
-              <FormControl>
-                <Input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  {...field} 
-                  className="h-12 text-base border-gray-200 focus:border-buddy-500"
-                />
-              </FormControl>
+              <div className="relative">
+                <FormControl>
+                  <Input 
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••" 
+                    {...field} 
+                    className="h-12 text-base border-gray-200 focus:border-buddy-500 pr-10"
+                  />
+                </FormControl>
+                <button
+                  type="button"
+                  onClick={toggleConfirmPasswordVisibility}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               <FormMessage />
             </FormItem>
           )}

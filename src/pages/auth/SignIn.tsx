@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mic, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Mic, ArrowRight, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,7 @@ const SignIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [authError, setAuthError] = useState<{ title: string; message: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -80,6 +81,10 @@ const SignIn = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   // Redirect authenticated users
@@ -181,14 +186,28 @@ const SignIn = () => {
                           Forgot password?
                         </button>
                       </div>
-                      <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          {...field} 
-                          className="h-12 text-base border-gray-200 focus:border-buddy-500"
-                        />
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input 
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••" 
+                            {...field} 
+                            className="h-12 text-base border-gray-200 focus:border-buddy-500 pr-10"
+                          />
+                        </FormControl>
+                        <button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
