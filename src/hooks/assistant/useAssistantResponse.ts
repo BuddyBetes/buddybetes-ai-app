@@ -21,6 +21,15 @@ export const useAssistantResponse = () => {
       const recentLogs = getRecentLogs(5);
       const foodQuery = detectFoodQuery(message);
       
+      // Check if this is a request for statistics
+      const showStats = message.toLowerCase().includes('average') ||
+                        message.toLowerCase().includes('min') ||
+                        message.toLowerCase().includes('max') ||
+                        message.toLowerCase().includes('range') ||
+                        message.toLowerCase().includes('summary') ||
+                        message.toLowerCase().includes('statistics') ||
+                        message.toLowerCase().includes('stats');
+      
       // Check if this is a request for trend analysis
       const analyzeTrends = message.toLowerCase().includes('trend') || 
                            message.toLowerCase().includes('analyze') ||
@@ -28,6 +37,7 @@ export const useAssistantResponse = () => {
                            message.toLowerCase().includes('history');
       
       console.log("📤 Sending to glucose-assistant function with message:", message);
+      console.log("Show stats:", showStats);
       console.log("Analyze trends:", analyzeTrends);
       
       const { data, error } = await supabase.functions.invoke('glucose-assistant', {
@@ -36,7 +46,8 @@ export const useAssistantResponse = () => {
           glucoseHistory: recentLogs,
           foodQuery: foodQuery,
           makeBrief: true,
-          analyzeTrends: analyzeTrends
+          analyzeTrends: analyzeTrends,
+          showStats: showStats
         }
       });
       
@@ -76,11 +87,14 @@ export const useAssistantResponse = () => {
         console.log("📊 STATS:", data.stats);
         console.log("📈 TREND ANALYSIS:", data.trendAnalysis);
         
+        // Only include stats if they were requested
+        const stats = showStats ? (data.stats || undefined) : undefined;
+        
         const assistantMessage: Message = { 
           text: data.response, 
           type: 'assistant',
           nutritionalInfo: data.nutritionalInfo || undefined,
-          stats: data.stats || undefined,
+          stats: stats,
           trendAnalysis: data.trendAnalysis || undefined,
           timestamp: Date.now(),
           isNew: true
