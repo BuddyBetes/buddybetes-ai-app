@@ -1,11 +1,18 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { NutritionalInfo, GlucoseStats, TrendAnalysis } from '@/types';
 import NutritionalCard from './NutritionalCard';
 import { TrendingUp, TrendingDown, ArrowRight, Activity } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Profile {
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
 interface MessageBubbleProps {
   text: string;
@@ -25,11 +32,44 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   isNew = false
 }) => {
   const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  // Get user initials from email
-  const getUserInitials = () => {
-    if (!user?.email) return 'U';
-    return user.email.charAt(0).toUpperCase();
+  useEffect(() => {
+    const getProfile = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+        } else {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getProfile();
+  }, [user]);
+
+  // Get user initials the same way as ProfileHeader
+  const getInitials = () => {
+    if (!profile) return user?.email?.charAt(0).toUpperCase() || 'U';
+    
+    const firstName = profile.first_name?.charAt(0) || '';
+    const lastName = profile.last_name?.charAt(0) || '';
+    
+    return firstName + lastName || user?.email?.charAt(0).toUpperCase() || 'U';
   };
   
   return (
@@ -60,7 +100,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <Avatar className="w-8 h-8 ml-2 flex-shrink-0 self-end">
             <AvatarImage src="" alt="User" />
             <AvatarFallback className="bg-buddy-100 text-buddy-800 text-sm">
-              {getUserInitials()}
+              {loading ? 'U' : getInitials()}
             </AvatarFallback>
           </Avatar>
         )}
