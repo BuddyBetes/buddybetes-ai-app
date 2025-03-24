@@ -97,14 +97,18 @@ const Logs = () => {
           variant: "destructive",
         });
       } finally {
+        // Even if there's an error, make sure to reset the deleting state
         setIsDeleting(false);
       }
     }
   };
 
   const cancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setLogToDelete(null);
+    // Only allow cancellation if not currently deleting
+    if (!isDeleting) {
+      setDeleteDialogOpen(false);
+      setLogToDelete(null);
+    }
   };
 
   if (isLoading) {

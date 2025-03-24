@@ -26,7 +26,12 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
   onConfirm 
 }) => {
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => {
+      // Only allow dialog to close if we're not in the middle of deleting
+      if (!isDeleting && !open) {
+        onClose();
+      }
+    }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm deletion</AlertDialogTitle>

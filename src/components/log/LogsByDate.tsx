@@ -12,6 +12,9 @@ interface LogsByDateProps {
 }
 
 const LogsByDate: React.FC<LogsByDateProps> = ({ dateStr, logs, dateIndex, onLogClick }) => {
+  // If no logs for this date, don't render anything
+  if (logs.length === 0) return null;
+  
   return (
     <motion.div 
       key={dateStr}

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -60,7 +61,7 @@ export const useLogAPI = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast]); // Removed validateMealContext from dependencies to avoid infinite loop
 
   const addLog = async (log: Omit<GlucoseLog, 'id'>) => {
     if (!user) {
@@ -204,8 +205,9 @@ export const useLogAPI = () => {
     }
 
     try {
-      setIsLoading(true);
-
+      // Don't set global loading state to avoid UI freezing
+      // Only the delete button should show loading state
+      
       const { error } = await supabase
         .from('glucose_logs')
         .delete()
@@ -221,6 +223,7 @@ export const useLogAPI = () => {
         });
         throw error;
       } else {
+        // Update local state first, then show success toast
         setLogs(prev => prev.filter(log => log.id !== logId));
       }
     } catch (error) {
@@ -231,8 +234,6 @@ export const useLogAPI = () => {
         variant: "destructive",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
