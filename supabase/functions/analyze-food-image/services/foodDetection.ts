@@ -1,15 +1,124 @@
 
-// This file implements food detection using FatSecret API with OAuth 2.0
-// If authentication fails, it falls back to a mock detection method
+// This file implements food detection using OpenAI's Vision API
+// with FatSecret API as the nutrition data source
 
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY') || '';
 const fatSecretClientId = Deno.env.get('FATSECRET_API_KEY') || '';
 const fatSecretClientSecret = Deno.env.get('FATSECRET_API_SECRET') || '';
+
+/**
+ * Uses OpenAI Vision API to analyze food images
+ * @param base64Image - Base64 encoded image data
+ * @returns Array of detected food items
+ */
+export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
+  try {
+    console.log('Starting food image analysis with OpenAI Vision API');
+    
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
+    
+    // Prepare the API request to OpenAI
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a food identification specialist. Identify all food items visible in the image. Return only a JSON array of food names without descriptions or explanations. For example: ["Apple", "Chicken Sandwich"]. If no food is visible, return an empty array.'
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: 'What food items do you see in this image? Return only a JSON array.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 300
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error(`OpenAI API error (${response.status}):`, errorData);
+      throw new Error(`Failed to analyze image with OpenAI: ${response.status} ${errorData}`);
+    }
+    
+    const data = await response.json();
+    console.log('OpenAI response:', data);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+      console.error('Unexpected response format from OpenAI:', data);
+      throw new Error('Invalid response format from OpenAI');
+    }
+    
+    // Parse the JSON array from the response
+    try {
+      const content = data.choices[0].message.content.trim();
+      console.log('Raw content from OpenAI:', content);
+      
+      // Handle different response formats OpenAI might return
+      let foodItems: string[] = [];
+      
+      if (content.startsWith('[') && content.endsWith(']')) {
+        // Direct JSON array
+        foodItems = JSON.parse(content);
+      } else {
+        // Extract JSON array if embedded in text
+        const match = content.match(/\[.*\]/s);
+        if (match) {
+          foodItems = JSON.parse(match[0]);
+        } else {
+          // Split by commas or newlines if not proper JSON
+          foodItems = content.split(/,|\n/).map(item => {
+            return item.trim().replace(/^["'\s]+|["'\s]+$/g, '');
+          }).filter(Boolean);
+        }
+      }
+      
+      console.log('Detected food items:', foodItems);
+      
+      if (foodItems.length === 0) {
+        console.log('No food items detected in the image');
+      }
+      
+      return foodItems;
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', parseError, 'Response was:', data.choices[0].message.content);
+      
+      // Fallback: Use a simple text parsing approach
+      const content = data.choices[0].message.content;
+      const foodItems = content.split(/,|\n/).map(item => item.trim()).filter(Boolean);
+      
+      console.log('Fallback parsing detected items:', foodItems);
+      return foodItems;
+    }
+  } catch (error) {
+    console.error('Error in food detection:', error);
+    throw new Error(`Food detection error: ${error.message}`);
+  }
+}
 
 /**
  * Gets an OAuth token from FatSecret API
  * @returns Access token for the FatSecret API
  */
-async function getFatSecretOAuthToken(): Promise<string> {
+export async function getFatSecretOAuthToken(): Promise<string> {
   try {
     console.log('Requesting OAuth token from FatSecret');
     
@@ -41,99 +150,5 @@ async function getFatSecretOAuthToken(): Promise<string> {
   } catch (error) {
     console.error('Error getting OAuth token:', error);
     throw error;
-  }
-}
-
-/**
- * Uses FatSecret API to analyze food images
- * If API authentication fails, falls back to a mock detection
- * @param base64Image - Base64 encoded image data
- * @returns Array of detected food items
- */
-export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
-  try {
-    console.log('Starting food image analysis with FatSecret API');
-    
-    // Try to get an OAuth token first
-    try {
-      const accessToken = await getFatSecretOAuthToken();
-      console.log('Successfully authenticated with FatSecret API');
-      
-      // If we have image recognition scope and real credentials, we would call their image API here
-      // This would be something like:
-      // const imageRecognitionUrl = 'https://platform.fatsecret.com/rest/server.api';
-      // const params = new URLSearchParams({
-      //   method: 'food.recognize_image',
-      //   format: 'json'
-      // });
-      // 
-      // const response = await fetch(`${imageRecognitionUrl}?${params}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${accessToken}`,
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({ image: base64Image })
-      // });
-      //
-      // const data = await response.json();
-      // return data.foods.map(food => food.name);
-      
-      // For now, since we don't have full API access with image recognition scope,
-      // we'll continue with the fallback method but at least verify credentials work
-      console.log('Using fallback detection method (OAuth token is valid but image recognition not available)');
-    } catch (error) {
-      console.warn('OAuth authentication failed, using fallback detection method:', error.message);
-      // Continue with fallback method below
-    }
-    
-    // Basic image analysis to simulate food detection
-    console.log('Using fallback food detection method');
-    
-    // For demo purposes - creating mock food detection with improved matching
-    const commonFoods = [
-      "Apple", "Banana", "Watermelon", "Orange", "Strawberry", 
-      "Salad", "Sandwich", "Pizza", "Chicken", "Rice", 
-      "Pasta", "Broccoli", "Coffee", "Bread", "Eggs", 
-      "Burger", "Soup", "Yogurt", "Avocado", "Tomato"
-    ];
-    
-    // Check if image data contains any color patterns that might indicate certain fruits
-    // This is a very simplified approach to image analysis simulation
-    const isRedDominant = Math.random() > 0.5; // Simplified simulation
-    const isGreenDominant = Math.random() > 0.5; // Simplified simulation
-    
-    // Select 1-3 random items from the common foods list
-    let detectedFoods: string[] = [];
-    
-    // For watermelon or similar red/green fruits, increase detection probability
-    if (isRedDominant && isGreenDominant) {
-      detectedFoods.push("Watermelon");
-    } else {
-      // Select 1-3 random items from the common foods list
-      const numItems = Math.floor(Math.random() * 3) + 1;
-      
-      for (let i = 0; i < numItems; i++) {
-        const randomIndex = Math.floor(Math.random() * commonFoods.length);
-        const food = commonFoods[randomIndex];
-        
-        if (!detectedFoods.includes(food)) {
-          detectedFoods.push(food);
-        }
-      }
-    }
-    
-    // If no foods were detected, return watermelon as default for testing
-    if (detectedFoods.length === 0) {
-      detectedFoods = ["Watermelon"];
-    }
-    
-    console.log('Mock food detection detected:', detectedFoods);
-    console.log('WARNING: Using mock food detection. For production use, proper FatSecret API credentials with image-recognition scope are required.');
-    
-    return detectedFoods;
-  } catch (error) {
-    console.error('Error in food detection:', error);
-    throw new Error(`Food detection error: ${error.message}`);
   }
 }
