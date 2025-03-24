@@ -7,13 +7,13 @@ import AppRoutes from './components/AppRoutes';
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <LogProvider>
-        <Router>
+    <Router>
+      <AuthProvider>
+        <LogProvider>
           <AppRoutes />
-        </Router>
-      </LogProvider>
-    </AuthProvider>
+        </LogProvider>
+      </AuthProvider>
+    </Router>
   );
 };
 
