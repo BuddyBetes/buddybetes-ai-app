@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ interface AuthContextProps {
   signOut: () => Promise<void>;
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (value: boolean) => void;
+  isPasswordRecovery: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -22,7 +24,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const { toast } = useToast();
+
+  // Detect password recovery flow from URL
+  useEffect(() => {
+    const detectPasswordRecovery = () => {
+      const url = new URL(window.location.href);
+      const hash = url.hash;
+      const query = url.search;
+      
+      // Check for password recovery tokens in different formats
+      const isRecoveryFlow = 
+        (hash && hash.includes('type=recovery')) || 
+        (query && query.includes('type=recovery'));
+      
+      if (isRecoveryFlow) {
+        console.log('Password recovery flow detected');
+        setIsPasswordRecovery(true);
+      }
+    };
+    
+    detectPasswordRecovery();
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -34,7 +58,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_OUT') {
           setHasCompletedOnboarding(false);
         } else if (event === 'SIGNED_IN' && currentSession?.user) {
-          checkOnboardingStatus(currentSession.user.id);
+          // Don't automatically check onboarding if in password recovery
+          if (!isPasswordRecovery) {
+            checkOnboardingStatus(currentSession.user.id);
+          }
         }
       }
     );
@@ -47,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         
-        if (initialSession?.user) {
+        if (initialSession?.user && !isPasswordRecovery) {
           await checkOnboardingStatus(initialSession.user.id);
         }
       } catch (error) {
@@ -67,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast, isPasswordRecovery]);
 
   const checkOnboardingStatus = async (userId: string) => {
     try {
@@ -134,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     await supabase.auth.signOut();
     setHasCompletedOnboarding(false);
+    setIsPasswordRecovery(false);
   };
 
   return (
@@ -148,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         hasCompletedOnboarding,
         setHasCompletedOnboarding,
+        isPasswordRecovery,
       }}
     >
       {children}

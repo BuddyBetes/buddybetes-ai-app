@@ -131,6 +131,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route path="/confirm" element={<EmailConfirmed />} />
+      {/* Important: Don't use PublicRoute for reset-password since we want to handle all scenarios */}
       <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
   );
