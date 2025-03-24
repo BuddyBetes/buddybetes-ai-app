@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { Trash2, Loader2, Clock, Apple, StickyNote, AlertCircle, Activity, X } from 'lucide-react';
+import { Trash2, Loader2, Clock, Apple, StickyNote, AlertCircle, Activity } from 'lucide-react';
 import { GlucoseLog } from '@/types/logs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useLogContext } from '@/context/LogContext';
@@ -110,53 +110,53 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md p-0 overflow-y-auto max-h-[90vh]">
-          <DialogHeader className="px-4 py-3 border-b sticky top-0 bg-white z-10">
-            <DialogTitle className="text-lg font-bold text-center">Log Details</DialogTitle>
-          </DialogHeader>
-          
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent className="p-0 overflow-y-auto">
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col"
+            className="h-full flex flex-col"
           >
-            <div className="flex-1 overflow-auto p-4 space-y-6">
+            <SheetHeader className="px-4 py-4 border-b sticky top-0 bg-white z-10">
+              <SheetTitle className="text-xl font-bold text-center">Log Details</SheetTitle>
+            </SheetHeader>
+            
+            <div className="flex-1 overflow-auto p-5 space-y-8">
               {/* Date and Time Section */}
-              <div className="text-center py-3 bg-gray-50 rounded-xl shadow-sm">
+              <div className="text-center py-4 bg-gray-50 rounded-xl shadow-sm">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Clock className="h-4 w-4 text-gray-500" />
-                  <div className="text-gray-600 text-xs font-medium">
+                  <div className="text-gray-600 text-sm font-medium">
                     {formatDate(log.timestamp)}
                   </div>
                 </div>
-                <div className="text-gray-800 font-bold text-xl">
+                <div className="text-gray-800 font-bold text-2xl">
                   {formatTime(log.timestamp)}
                 </div>
               </div>
               
               {/* Glucose Level Section */}
               {log.glucoseLevel !== undefined ? (
-                <div className="flex flex-col items-center border-b pb-5">
-                  <div className="text-xs text-gray-500 mb-1 font-medium">Glucose Level</div>
+                <div className="flex flex-col items-center border-b pb-6">
+                  <div className="text-sm text-gray-500 mb-2 font-medium">Glucose Level</div>
                   <div className="flex items-baseline">
-                    <span className={`text-4xl font-bold ${getStatusColor(log.glucoseLevel)}`}>
+                    <span className={`text-5xl font-bold ${getStatusColor(log.glucoseLevel)}`}>
                       {log.glucoseLevel}
                     </span>
-                    <span className="text-sm text-gray-500 ml-1">mg/dL</span>
+                    <span className="text-lg text-gray-500 ml-2">mg/dL</span>
                   </div>
                   
                   {/* Status Indicator */}
                   {log.glucoseLevel && (
-                    <div className={`mt-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusBgColor(log.glucoseLevel)} ${getStatusColor(log.glucoseLevel)}`}>
+                    <div className={`mt-3 px-4 py-1.5 rounded-full text-sm font-medium ${getStatusBgColor(log.glucoseLevel)} ${getStatusColor(log.glucoseLevel)}`}>
                       {log.glucoseLevel < 70 ? 'Low' : log.glucoseLevel > 180 ? 'High' : 'Normal'}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center border-b pb-5">
-                  <Badge variant="outline" className="px-3 py-1.5 text-sm font-medium">
+                <div className="flex flex-col items-center border-b pb-6">
+                  <Badge variant="outline" className="px-4 py-2 text-lg font-medium">
                     Food Entry
                   </Badge>
                 </div>
@@ -164,12 +164,12 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
               
               {/* Meal Context Section */}
               {log.mealContext && (
-                <div className="border-b pb-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="h-6 w-1 bg-buddy-500 rounded-full"></div>
-                    <h3 className="font-semibold text-sm text-gray-800">Meal Context</h3>
+                <div className="border-b pb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-8 w-1 bg-buddy-500 rounded-full"></div>
+                    <h3 className="font-semibold text-lg text-gray-800">Meal Context</h3>
                   </div>
-                  <div className={`inline-block px-3 py-1.5 rounded-full text-xs font-medium border ${getMealContextColor(log.mealContext)}`}>
+                  <div className={`inline-block px-4 py-2 rounded-full text-sm font-medium border ${getMealContextColor(log.mealContext)}`}>
                     {getMealContextLabel(log.mealContext)}
                   </div>
                 </div>
@@ -177,14 +177,14 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
               
               {/* Food Section */}
               {log.food && (
-                <div className="border-b pb-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="h-6 w-1 bg-buddy-500 rounded-full"></div>
-                    <h3 className="font-semibold text-sm text-gray-800">Food</h3>
+                <div className="border-b pb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-8 w-1 bg-buddy-500 rounded-full"></div>
+                    <h3 className="font-semibold text-lg text-gray-800">Food</h3>
                   </div>
                   <div className="flex items-center">
-                    <Apple className="h-4 w-4 text-buddy-500 mr-2" />
-                    <p className="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-100 w-full">
+                    <Apple className="h-5 w-5 text-buddy-500 mr-2" />
+                    <p className="text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 w-full">
                       {log.food}
                     </p>
                   </div>
@@ -194,15 +194,15 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
               {/* Notes Section with improved formatting and centered icon */}
               {log.notes && (
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="h-6 w-1 bg-buddy-500 rounded-full"></div>
-                    <h3 className="font-semibold text-sm text-gray-800">Notes</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-8 w-1 bg-buddy-500 rounded-full"></div>
+                    <h3 className="font-semibold text-lg text-gray-800">Notes</h3>
                   </div>
                   <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      <StickyNote className="h-4 w-4 text-buddy-500" />
+                    <div className="flex-shrink-0 mt-1.5">
+                      <StickyNote className="h-5 w-5 text-buddy-500" />
                     </div>
-                    <div className="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-100 w-full ml-2 whitespace-pre-line">
+                    <div className="text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100 w-full ml-2 whitespace-pre-line">
                       {formatNotes(log.notes)}
                     </div>
                   </div>
@@ -210,19 +210,19 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
               )}
             </div>
             
-            <div className="mt-auto border-t p-3 sticky bottom-0 bg-white">
+            <div className="mt-auto border-t p-4 sticky bottom-0 bg-white">
               <Button 
                 variant="destructive" 
                 onClick={handleDeleteClick} 
-                className="w-full flex items-center justify-center py-2 text-sm"
+                className="w-full flex items-center justify-center py-6 text-base"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="mr-2 h-5 w-5" />
                 Delete Log
               </Button>
             </div>
           </motion.div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
