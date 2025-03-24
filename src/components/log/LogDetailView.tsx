@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { GlucoseLog } from '@/context/LogContext';
+import { GlucoseLog } from '@/types/logs';
 import { Info, Edit, Trash2, AlertCircle } from 'lucide-react';
 
 interface LogDetailViewProps {

@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
-import { useLogContext, GlucoseLog } from '../context/LogContext';
+import { useLogContext } from '../context/LogContext';
+import { GlucoseLog } from '@/types/logs';
 import { motion } from 'framer-motion';
 import { ChevronRight, Dot, Loader2, Utensils } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
@@ -14,7 +14,6 @@ const Logs = () => {
   const [selectedLog, setSelectedLog] = useState<GlucoseLog | null>(null);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
 
-  // Format date and time
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, { 
       month: 'short', 
@@ -52,7 +51,6 @@ const Logs = () => {
     fasting: 'bg-amber-100 text-amber-800',
   };
 
-  // Group logs by date
   const groupedLogs: Record<string, GlucoseLog[]> = {};
   logs.forEach(log => {
     const dateStr = formatDate(log.timestamp);
