@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext } from '../context/LogContext';
+import { useAuth } from '@/context/AuthContext';
 import { GlucoseLog } from '@/types/logs';
 import { motion } from 'framer-motion';
 import { ChevronRight, Dot, Loader2, Utensils } from 'lucide-react';
@@ -11,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const Logs = () => {
   const { logs, isLoading, updateLog, deleteLog } = useLogContext();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedLog, setSelectedLog] = useState<GlucoseLog | null>(null);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
@@ -63,48 +65,11 @@ const Logs = () => {
     groupedLogs[dateStr].push(log);
   });
 
-  const handleLogClick = (log: GlucoseLog) => {
-    setSelectedLog(log);
-    setDetailViewOpen(true);
-  };
-
-  const handleCloseDetail = () => {
-    setDetailViewOpen(false);
-  };
-
-  const handleEditLog = (log: GlucoseLog) => {
-    updateLog(log)
-      .then(() => {
-        setDetailViewOpen(false);
-      })
-      .catch((error) => {
-        console.error('Error updating log:', error);
-      });
-  };
-
-  const handleDeleteConfirm = (logId: string) => {
-    setLogToDelete(logId);
-    setDeleteDialogOpen(true);
-    setDetailViewOpen(false);
-  };
-
-  const confirmDelete = () => {
-    if (logToDelete) {
-      deleteLog(logToDelete)
-        .then(() => {
-          setDeleteDialogOpen(false);
-          setLogToDelete(null);
-        })
-        .catch((error) => {
-          console.error('Error deleting log:', error);
-        });
-    }
-  };
-
-  const cancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setLogToDelete(null);
-  };
+  useEffect(() => {
+    console.log('User state:', user?.id);
+    console.log('Logs state:', logs.length, 'logs loaded');
+    console.log('Loading state:', isLoading);
+  }, [user, logs, isLoading]);
 
   if (isLoading) {
     return (
@@ -113,6 +78,11 @@ const Logs = () => {
         <div className="flex flex-col items-center justify-center h-full py-12">
           <Loader2 className="h-8 w-8 animate-spin text-buddy-500" />
           <p className="mt-4 text-gray-500">Loading your glucose logs...</p>
+          {user ? (
+            <p className="mt-2 text-sm text-gray-400">Fetching data for {user.email}</p>
+          ) : (
+            <p className="mt-2 text-sm text-gray-400">Waiting for authentication...</p>
+          )}
         </div>
       </Layout>
     );
