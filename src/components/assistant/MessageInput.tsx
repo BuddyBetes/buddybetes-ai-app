@@ -1,10 +1,19 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Mic, X } from 'lucide-react';
+import { Send, Mic, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import SuggestionChips from '../SuggestionChips';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Profile {
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
 interface MessageInputProps {
   input: string;
@@ -23,6 +32,46 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onSuggestionSelect,
   onVoiceMode,
 }) => {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getProfile = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+        } else {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getProfile();
+  }, [user]);
+
+  const getInitials = () => {
+    if (!profile) return user?.email?.charAt(0).toUpperCase() || 'U';
+    
+    const firstName = profile.first_name?.charAt(0) || '';
+    const lastName = profile.last_name?.charAt(0) || '';
+    
+    return firstName + lastName || user?.email?.charAt(0).toUpperCase() || 'U';
+  };
+
   return (
     <div className="w-full">
       <div className="mb-2">
@@ -34,10 +83,15 @@ const MessageInput: React.FC<MessageInputProps> = ({
           type="button"
           variant="ghost" 
           size="icon"
-          className="rounded-full text-gray-500 flex-shrink-0"
+          className="rounded-full overflow-hidden flex-shrink-0"
           onClick={onVoiceMode}
         >
-          <Mic size={20} />
+          <Avatar className="h-9 w-9">
+            <AvatarImage src="" alt="Profile" />
+            <AvatarFallback className="bg-buddy-100 text-buddy-800 text-sm">
+              {loading ? <User className="h-4 w-4" /> : getInitials()}
+            </AvatarFallback>
+          </Avatar>
         </Button>
         
         <Textarea
