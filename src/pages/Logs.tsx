@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext } from '../context/LogContext';
@@ -64,6 +65,50 @@ const Logs = () => {
     }
     groupedLogs[dateStr].push(log);
   });
+
+  // Add back handler functions
+  const handleLogClick = (log: GlucoseLog) => {
+    setSelectedLog(log);
+    setDetailViewOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailViewOpen(false);
+  };
+
+  const handleEditLog = (log: GlucoseLog) => {
+    updateLog(log)
+      .then(() => {
+        setDetailViewOpen(false);
+      })
+      .catch((error) => {
+        console.error('Error updating log:', error);
+      });
+  };
+
+  const handleDeleteConfirm = (logId: string) => {
+    setLogToDelete(logId);
+    setDeleteDialogOpen(true);
+    setDetailViewOpen(false);
+  };
+
+  const confirmDelete = () => {
+    if (logToDelete) {
+      deleteLog(logToDelete)
+        .then(() => {
+          setDeleteDialogOpen(false);
+          setLogToDelete(null);
+        })
+        .catch((error) => {
+          console.error('Error deleting log:', error);
+        });
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setLogToDelete(null);
+  };
 
   useEffect(() => {
     console.log('User state:', user?.id);
