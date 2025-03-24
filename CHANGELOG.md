@@ -43,6 +43,9 @@ All notable changes to this project will be documented in this file.
 - Removed "Ask Assistant" button from Dashboard and aligned refresh button
 - Reduced font sizes in Log Detail view for more balanced text hierarchy
 - Simplified Health Data edit form with smaller fonts and removed redundant calendar
+- Improved Add Log UI with clearer options for scanning food or manual logging
+- Added automatic navigation to Logs page after saving a log
+- Reduced font sizes and improved spacing in manual log form for better readability
 
 ### Fixed
 - Various UI/UX improvements

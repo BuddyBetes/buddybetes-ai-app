@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLogContext } from '../context/LogContext';
@@ -9,7 +10,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-const LogForm: React.FC = () => {
+interface LogFormProps {
+  onLogAdded?: () => void;
+}
+
+const LogForm: React.FC<LogFormProps> = ({ onLogAdded }) => {
   const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
   const [glucoseLevel, setGlucoseLevel] = useState('');
@@ -53,6 +58,11 @@ const LogForm: React.FC = () => {
     setFood('');
     setMealContext('before');
     setNotes('');
+    
+    // Navigate to logs page via callback if provided
+    if (onLogAdded) {
+      onLogAdded();
+    }
   };
 
   const inputVariants = {
@@ -60,9 +70,13 @@ const LogForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
-      <div className="space-y-2">
-        <Label htmlFor="glucoseLevel" className="text-base">
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
+      <div className="mb-4">
+        <h3 className="text-base font-medium text-gray-700 mb-2">Add Log Details</h3>
+      </div>
+      
+      <div className="space-y-1.5">
+        <Label htmlFor="glucoseLevel" className="text-sm">
           Glucose Level (mg/dL)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
@@ -72,40 +86,39 @@ const LogForm: React.FC = () => {
             value={glucoseLevel}
             onChange={(e) => setGlucoseLevel(e.target.value)}
             placeholder="Enter your glucose reading"
-            className="h-12 text-lg"
-            required
+            className="h-11 text-base"
             disabled={isLoading}
           />
         </motion.div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="mealContext" className="text-base">
+      <div className="space-y-1.5">
+        <Label htmlFor="mealContext" className="text-sm">
           When was this reading taken?
         </Label>
         <RadioGroup 
           value={mealContext} 
           onValueChange={(value) => setMealContext(value as 'before' | 'after' | 'fasting')}
-          className="flex space-x-4"
+          className="flex space-x-3"
           disabled={isLoading}
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <RadioGroupItem value="before" id="before" />
-            <Label htmlFor="before">Before meal</Label>
+            <Label htmlFor="before" className="text-sm">Before meal</Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <RadioGroupItem value="after" id="after" />
-            <Label htmlFor="after">After meal</Label>
+            <Label htmlFor="after" className="text-sm">After meal</Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <RadioGroupItem value="fasting" id="fasting" />
-            <Label htmlFor="fasting">Fasting</Label>
+            <Label htmlFor="fasting" className="text-sm">Fasting</Label>
           </div>
         </RadioGroup>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="food" className="text-base">
+      <div className="space-y-1.5">
+        <Label htmlFor="food" className="text-sm">
           Food (optional)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
@@ -114,14 +127,14 @@ const LogForm: React.FC = () => {
             value={food}
             onChange={(e) => setFood(e.target.value)}
             placeholder="What did you eat?"
-            className="h-12"
+            className="h-11 text-base"
             disabled={isLoading}
           />
         </motion.div>
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="notes" className="text-base">
+      <div className="space-y-1.5">
+        <Label htmlFor="notes" className="text-sm">
           Notes (optional)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
@@ -130,7 +143,7 @@ const LogForm: React.FC = () => {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add any additional notes"
-            className="min-h-24"
+            className="min-h-20 text-base"
             disabled={isLoading}
           />
         </motion.div>
@@ -142,7 +155,7 @@ const LogForm: React.FC = () => {
       >
         <Button 
           type="submit" 
-          className="w-full h-12 text-lg bg-buddy-500 hover:bg-buddy-600"
+          className="w-full h-11 mt-2 text-base bg-buddy-500 hover:bg-buddy-600"
           disabled={isLoading}
         >
           {isLoading ? (

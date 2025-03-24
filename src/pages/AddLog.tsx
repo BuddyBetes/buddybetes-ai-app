@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import AppHeader from '@/components/AppHeader';
 import LogFormContainer from '@/components/log/LogFormContainer';
@@ -8,13 +9,15 @@ import FoodAnalysisResult from '@/components/food/FoodAnalysisResult';
 import { FoodItem } from '@/components/food/types';
 import { useImageAnalysis } from '@/hooks/useImageAnalysis';
 import { Button } from '@/components/ui/button';
-import { Camera } from 'lucide-react';
+import { Camera, Edit3 } from 'lucide-react';
 import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
 
 const AddLog: React.FC = () => {
+  const navigate = useNavigate();
   const [showCamera, setShowCamera] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [showManualLog, setShowManualLog] = useState(false);
   const { analyzeImage, resetAnalysis, isAnalyzing, result, error } = useImageAnalysis();
   const { addLog } = useLogContext();
   const { toast } = useToast();
@@ -62,6 +65,9 @@ const AddLog: React.FC = () => {
       // Reset UI state
       setShowResults(false);
       resetAnalysis();
+      
+      // Navigate to logs page after successful save
+      navigate('/logs');
     } catch (err) {
       console.error('Error saving food log:', err);
       toast({
@@ -90,19 +96,32 @@ const AddLog: React.FC = () => {
     <Layout title="Add Glucose Log">
       <AppHeader />
       <div className="space-y-6">
-        {!showResults && (
-          <>
-            <div className="flex justify-center mb-4">
+        {!showResults && !showManualLog && (
+          <div className="flex flex-col items-center justify-center mt-6 space-y-4">
+            <h2 className="text-lg font-medium text-center">How would you like to log?</h2>
+            <div className="flex flex-col w-full max-w-md gap-3 px-4">
               <Button 
                 onClick={() => setShowCamera(true)}
-                className="bg-buddy-500 hover:bg-buddy-600 rounded-full h-12 px-4"
+                className="bg-buddy-500 hover:bg-buddy-600 h-14 text-lg w-full flex justify-center items-center"
               >
                 <Camera className="h-5 w-5 mr-2" />
-                Scan Food
+                Scan Food with Camera
+              </Button>
+              
+              <Button 
+                onClick={() => setShowManualLog(true)}
+                variant="outline"
+                className="h-14 text-lg w-full flex justify-center items-center border-buddy-300"
+              >
+                <Edit3 className="h-5 w-5 mr-2" />
+                Log Manually
               </Button>
             </div>
-            <LogFormContainer />
-          </>
+          </div>
+        )}
+        
+        {!showResults && showManualLog && (
+          <LogFormContainer onLogAdded={() => navigate('/logs')} />
         )}
         
         {showResults && (
