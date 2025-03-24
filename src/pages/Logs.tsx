@@ -1,13 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext, GlucoseLog } from '../context/LogContext';
 import { motion } from 'framer-motion';
 import { ChevronRight, Dot, Loader2, Utensils } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
+import LogDetailView from '@/components/log/LogDetailView';
+import { useToast } from '@/hooks/use-toast';
 
 const Logs = () => {
   const { logs, isLoading } = useLogContext();
+  const { toast } = useToast();
+  const [selectedLog, setSelectedLog] = useState<GlucoseLog | null>(null);
+  const [detailViewOpen, setDetailViewOpen] = useState(false);
 
   // Format date and time
   const formatDate = (date: Date) => {
@@ -57,6 +62,31 @@ const Logs = () => {
     groupedLogs[dateStr].push(log);
   });
 
+  const handleLogClick = (log: GlucoseLog) => {
+    setSelectedLog(log);
+    setDetailViewOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailViewOpen(false);
+  };
+
+  const handleEditLog = (log: GlucoseLog) => {
+    toast({
+      title: "Edit functionality",
+      description: "Edit functionality is not implemented yet",
+    });
+    setDetailViewOpen(false);
+  };
+
+  const handleDeleteLog = (logId: string) => {
+    toast({
+      title: "Delete functionality",
+      description: "Delete functionality is not implemented yet",
+    });
+    setDetailViewOpen(false);
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -90,6 +120,7 @@ const Logs = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 + (logIndex * 0.05) }}
                 className="bg-white rounded-xl shadow-sm overflow-hidden"
+                onClick={() => handleLogClick(log)}
               >
                 <div className="p-4">
                   <div className="flex justify-between items-start">
@@ -155,6 +186,14 @@ const Logs = () => {
           </motion.div>
         )}
       </div>
+
+      <LogDetailView 
+        log={selectedLog}
+        isOpen={detailViewOpen}
+        onClose={handleCloseDetail}
+        onEdit={handleEditLog}
+        onDelete={handleDeleteLog}
+      />
     </Layout>
   );
 };
