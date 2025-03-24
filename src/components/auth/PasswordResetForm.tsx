@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -20,10 +19,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
-// Form validation schema
+// Form validation schema with enhanced password requirements
 const formSchema = z.object({
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one number'),
+  confirmPassword: z.string()
+    .min(8, 'Password must be at least 8 characters'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -49,6 +52,7 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
       password: '',
       confirmPassword: '',
     },
+    mode: 'onChange', // Validate on change for better user experience
   });
 
   // Update current password when form value changes
@@ -125,6 +129,9 @@ const PasswordResetForm = ({ onResetComplete, signOut }: PasswordResetFormProps)
               </FormControl>
               <PasswordStrengthIndicator password={currentPassword} />
               <FormMessage />
+              <p className="text-xs text-gray-500 mt-1">
+                Password must be at least 8 characters with 1 uppercase letter and 1 number
+              </p>
             </FormItem>
           )}
         />

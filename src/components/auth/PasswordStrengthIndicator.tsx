@@ -81,8 +81,7 @@ const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps)
       </div>
       <Progress 
         value={getProgressValue(strength)} 
-        className="h-1.5" 
-        indicatorClassName={getProgressColor(strength)}
+        className={`h-1.5 ${getProgressColor(strength)}`}
       />
     </div>
   );
