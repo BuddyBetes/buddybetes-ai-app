@@ -25,8 +25,17 @@ const DeleteLogDialog: React.FC<DeleteLogDialogProps> = ({
   onClose, 
   onConfirm 
 }) => {
+  // Simple dialog that only cares about being open/closed
+  // and executing actions when buttons are clicked
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => !open && !isDeleting && onClose()}>
+    <AlertDialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (!open && !isDeleting) {
+          onClose();
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Log Entry</AlertDialogTitle>

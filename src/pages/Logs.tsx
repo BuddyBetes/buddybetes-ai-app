@@ -82,13 +82,18 @@ const Logs = () => {
     setDetailViewOpen(false);
   };
 
+  // Simplified delete execution function
   const handleDeleteExecution = async () => {
     if (!logToDelete) return;
     
+    // Set deleting state
     setIsDeleting(true);
     
     try {
+      // Execute the deletion
       await deleteLog(logToDelete);
+      
+      // Show success message
       toast({
         title: "Log deleted",
         description: "The log has been successfully deleted",
@@ -101,13 +106,15 @@ const Logs = () => {
         variant: "destructive",
       });
     } finally {
-      // Clear state in proper order to avoid UI issues
+      // Clean up all states in a single finally block
+      // Order matters: first reset deleting state, then close dialog, then clear ID
       setIsDeleting(false);
       setDeleteDialogOpen(false);
       setLogToDelete(null);
     }
   };
 
+  // Simple close function
   const handleCloseDeleteDialog = () => {
     if (!isDeleting) {
       setDeleteDialogOpen(false);
