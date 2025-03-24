@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { NutritionalInfo, GlucoseStats, TrendAnalysis } from '@/types';
@@ -77,13 +76,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   
   // Format timestamp to readable format
   const formatTimestamp = () => {
-    if (!timestamp) return '';
+    if (!timestamp) return 'Just now';
     
     try {
       return format(new Date(timestamp), 'h:mm a');
     } catch (error) {
       console.error('Error formatting timestamp:', error);
-      return '';
+      return 'Just now';
     }
   };
   
@@ -110,11 +109,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         >
           <div className="flex flex-col">
             {text}
-            {timestamp && (
-              <span className={`text-xs mt-1 ${type === 'user' ? 'text-gray-500' : 'text-white/70'}`}>
-                {formatTimestamp()}
-              </span>
-            )}
+            <span className={`text-xs mt-1 ${type === 'user' ? 'text-gray-500' : 'text-white/70'}`}>
+              {formatTimestamp()}
+            </span>
           </div>
         </div>
         

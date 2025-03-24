@@ -55,10 +55,15 @@ export const useMessagePersistence = () => {
                 };
               }
               
+              // Ensure we always have a valid timestamp - fallback to current time if missing
+              const messageTimestamp = msg.timestamp 
+                ? new Date(msg.timestamp).getTime() 
+                : Date.now();
+              
               return {
                 text: msg.content,
                 type: msg.message_type as 'user' | 'assistant',
-                timestamp: new Date(msg.timestamp).getTime(),
+                timestamp: messageTimestamp,
                 nutritionalInfo
               };
             });
@@ -123,6 +128,11 @@ export const useMessagePersistence = () => {
     if (!user || !convId) return;
     
     try {
+      // Ensure timestamp is a valid ISO string for database storage
+      const timestamp = message.timestamp 
+        ? new Date(message.timestamp).toISOString() 
+        : new Date().toISOString();
+      
       const messageData = {
         conversation_id: convId,
         message_type: message.type,
@@ -133,7 +143,7 @@ export const useMessagePersistence = () => {
           carbs: message.nutritionalInfo.carbs,
           details: message.nutritionalInfo.details
         } : null,
-        timestamp: new Date(message.timestamp).toISOString()
+        timestamp: timestamp
       };
       
       const { error } = await supabase

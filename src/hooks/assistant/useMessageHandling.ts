@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Message } from '@/types';
 import { useMessagePersistence } from './useMessagePersistence';
@@ -50,7 +49,7 @@ export const useMessageHandling = (
                 };
               }
               
-              // Ensure we always have a valid timestamp
+              // Ensure we always have a valid timestamp - fallback to current time if missing
               const timestamp = msg.timestamp ? new Date(msg.timestamp).getTime() : Date.now();
               
               return {
