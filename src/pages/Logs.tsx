@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext } from '../context/LogContext';
@@ -18,6 +19,7 @@ const Logs = () => {
   const [detailViewOpen, setDetailViewOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Log the authentication and loading state for debugging
   useEffect(() => {
@@ -103,16 +105,27 @@ const Logs = () => {
     setDetailViewOpen(false);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (logToDelete) {
-      deleteLog(logToDelete)
-        .then(() => {
-          setDeleteDialogOpen(false);
-          setLogToDelete(null);
-        })
-        .catch((error) => {
-          console.error('Error deleting log:', error);
+      setIsDeleting(true);
+      try {
+        await deleteLog(logToDelete);
+        setDeleteDialogOpen(false);
+        setLogToDelete(null);
+        toast({
+          title: "Log deleted",
+          description: "The log has been successfully deleted",
         });
+      } catch (error) {
+        console.error('Error deleting log:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete the log",
+          variant: "destructive",
+        });
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -241,9 +254,20 @@ const Logs = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
-              Delete
+            <AlertDialogCancel onClick={cancelDelete} disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              className="bg-red-500 hover:bg-red-600" 
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

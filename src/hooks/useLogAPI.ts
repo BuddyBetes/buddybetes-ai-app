@@ -193,14 +193,14 @@ export const useLogAPI = () => {
     }
   };
 
-  const deleteLog = async (logId: string) => {
+  const deleteLog = async (logId: string): Promise<void> => {
     if (!user) {
       toast({
         title: "Authentication required",
         description: "Please sign in to delete logs",
         variant: "destructive",
       });
-      return;
+      throw new Error("Authentication required");
     }
 
     try {
@@ -219,13 +219,9 @@ export const useLogAPI = () => {
           description: error.message,
           variant: "destructive",
         });
+        throw error;
       } else {
         setLogs(prev => prev.filter(log => log.id !== logId));
-        
-        toast({
-          title: "Log deleted successfully",
-          description: "The log entry has been removed",
-        });
       }
     } catch (error) {
       console.error('Error deleting log:', error);
@@ -234,6 +230,7 @@ export const useLogAPI = () => {
         description: "An unexpected error occurred",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
