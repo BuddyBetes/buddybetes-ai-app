@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useLogContext } from '@/context/LogContext';
 import { Message, NutritionalInfo } from '@/types';
@@ -28,7 +27,11 @@ export const useAssistantResponse = () => {
                         message.toLowerCase().includes('range') ||
                         message.toLowerCase().includes('summary') ||
                         message.toLowerCase().includes('statistics') ||
-                        message.toLowerCase().includes('stats');
+                        message.toLowerCase().includes('stats') ||
+                        message.toLowerCase().includes('trend') ||
+                        message.toLowerCase().includes('pattern') ||
+                        message.toLowerCase().includes('how') && message.toLowerCase().includes('glucose') ||
+                        message.toLowerCase().includes('analyze');
       
       // Check if this is a request for trend analysis
       const analyzeTrends = message.toLowerCase().includes('trend') || 
