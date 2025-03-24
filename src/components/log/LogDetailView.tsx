@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { GlucoseLog } from '@/types/logs';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -77,6 +77,21 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
     }
   };
 
+  // Format notes with proper line breaks and spacing
+  const formatNotes = (notes?: string) => {
+    if (!notes) return null;
+    
+    // Replace line breaks with proper HTML line breaks
+    const formattedNotes = notes.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < notes.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+    
+    return formattedNotes;
+  };
+
   return (
     <>
       <Sheet open={isOpen} onOpenChange={onClose}>
@@ -98,42 +113,65 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
             </div>
             
             <div className="flex-1 overflow-auto p-4 space-y-6">
-              <div className="border-b pb-4">
-                <div className="text-gray-500 text-sm mb-1">
-                  {formatDate(log.timestamp)} at {formatTime(log.timestamp)}
+              {/* Date and Time Section */}
+              <div className="text-center py-3 bg-gray-50 rounded-md">
+                <div className="text-gray-500 text-sm">
+                  {formatDate(log.timestamp)}
                 </div>
-                
+                <div className="text-gray-600 font-medium">
+                  {formatTime(log.timestamp)}
+                </div>
+              </div>
+              
+              {/* Glucose Level Section */}
+              <div className="flex flex-col items-center border-b pb-4">
                 {log.glucoseLevel !== undefined ? (
-                  <div className="flex items-baseline">
-                    <span className={`text-3xl font-bold ${getStatusColor(log.glucoseLevel)}`}>
-                      {log.glucoseLevel}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-1">mg/dL</span>
-                  </div>
+                  <>
+                    <div className="text-sm text-gray-500 mb-1">Glucose Level</div>
+                    <div className="flex items-baseline">
+                      <span className={`text-4xl font-bold ${getStatusColor(log.glucoseLevel)}`}>
+                        {log.glucoseLevel}
+                      </span>
+                      <span className="text-sm text-gray-500 ml-1">mg/dL</span>
+                    </div>
+                    
+                    {/* Status Indicator */}
+                    {log.glucoseLevel && (
+                      <div className="mt-2 px-3 py-1 rounded-full text-sm font-medium bg-gray-100">
+                        {log.glucoseLevel < 70 ? 'Low' : log.glucoseLevel > 180 ? 'High' : 'Normal'}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-xl font-medium">Food Entry</div>
                 )}
-                
-                {log.mealContext && (
-                  <div className="mt-2">
-                    <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm">
-                      {getMealContextLabel(log.mealContext)}
-                    </span>
-                  </div>
-                )}
               </div>
               
-              {log.food && (
-                <div>
-                  <h3 className="font-medium mb-2">Food</h3>
-                  <p className="text-gray-700">{log.food}</p>
+              {/* Meal Context Section */}
+              {log.mealContext && (
+                <div className="border-b pb-4">
+                  <h3 className="font-medium mb-2 text-gray-700">Meal Context</h3>
+                  <div className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm">
+                    {getMealContextLabel(log.mealContext)}
+                  </div>
                 </div>
               )}
               
+              {/* Food Section */}
+              {log.food && (
+                <div className="border-b pb-4">
+                  <h3 className="font-medium mb-2 text-gray-700">Food</h3>
+                  <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{log.food}</p>
+                </div>
+              )}
+              
+              {/* Notes Section with improved formatting */}
               {log.notes && (
                 <div>
-                  <h3 className="font-medium mb-2">Notes</h3>
-                  <p className="text-gray-700">{log.notes}</p>
+                  <h3 className="font-medium mb-2 text-gray-700">Notes</h3>
+                  <div className="text-gray-700 bg-gray-50 p-3 rounded-md whitespace-pre-line">
+                    {formatNotes(log.notes)}
+                  </div>
                 </div>
               )}
             </div>
@@ -142,8 +180,9 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
               <Button 
                 variant="destructive" 
                 onClick={handleDeleteClick} 
-                className="w-full"
+                className="w-full flex items-center justify-center"
               >
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete Log
               </Button>
             </div>

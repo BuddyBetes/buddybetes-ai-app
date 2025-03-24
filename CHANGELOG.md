@@ -33,10 +33,14 @@ All notable changes to this project will be documented in this file.
 - Removed edit and delete functionality for logs to simplify user experience
 - Streamlined log entry process
 - Re-implemented delete log functionality with improved UX
+- Enhanced log detail view with better formatting and improved UI
 
 ### Fixed
 - Various UI/UX improvements
 - Performance optimizations for mobile devices
+- Removed duplicate close button in log detail view
+- Improved notes formatting with proper line breaks
 
 ## [0.1.0] - Initial Release
 - Core functionality established
+
