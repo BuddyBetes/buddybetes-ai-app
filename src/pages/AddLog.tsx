@@ -22,7 +22,12 @@ const AddLog: React.FC = () => {
   const handleImageCapture = (imageData: string) => {
     console.log('AddLog: Image captured, showing results panel');
     setShowResults(true);
-    analyzeImage(imageData);
+    
+    // Wrap in setTimeout to ensure the UI updates before the potentially 
+    // long-running analysis starts, preventing race conditions
+    setTimeout(() => {
+      analyzeImage(imageData);
+    }, 50);
   };
 
   const handleSaveFood = async (foodItems: FoodItem[]) => {

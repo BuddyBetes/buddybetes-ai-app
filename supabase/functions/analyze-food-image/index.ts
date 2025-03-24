@@ -46,45 +46,49 @@ serve(async (req) => {
     }
 
     console.log('Image data received, length:', image.length);
+    const requestId = crypto.randomUUID();
+    console.log(`[${requestId}] Starting food analysis`);
     
     // Step 1: Get food suggestions using OpenAI vision model
     try {
       const foods = await analyzeFoodImage(image);
-      console.log('Detected food items:', foods);
+      console.log(`[${requestId}] Detected food items:`, foods);
       
       if (!foods || foods.length === 0) {
-        console.log('No foods detected');
+        console.log(`[${requestId}] No foods detected`);
         return new Response(
           JSON.stringify({ 
             error: 'No food detected. Please try again with a clearer photo or enter food manually.',
-            foodItems: [] 
+            foodItems: [],
+            status: 'complete' 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      // Step 2: Get nutritional information for each food item
-      const foodItems: FoodItem[] = [];
-      for (const food of foods) {
-        try {
-          const nutritionInfo = await getFoodNutrition(food);
-          foodItems.push(nutritionInfo);
-        } catch (err) {
-          console.error(`Error getting nutrition for ${food}:`, err);
-          // Return default placeholder data if we can't get nutrition info
-          foodItems.push(createDefaultFoodItem(food));
-        }
-      }
+      // Step 2: Get nutritional information for each food item IN PARALLEL
+      console.log(`[${requestId}] Getting nutrition data for ${foods.length} items in parallel`);
+      const foodItems = await Promise.all(
+        foods.map(async (food) => {
+          try {
+            return await getFoodNutrition(food);
+          } catch (err) {
+            console.error(`[${requestId}] Error getting nutrition for ${food}:`, err);
+            // Return default placeholder data if we can't get nutrition info
+            return createDefaultFoodItem(food);
+          }
+        })
+      );
 
-      console.log('Final food items with nutrition:', foodItems);
+      console.log(`[${requestId}] Final food items with nutrition:`, foodItems);
 
-      // Always return a consistent structure with a foodItems array
+      // Always return a consistent structure with a foodItems array and completion status
       return new Response(
-        JSON.stringify({ foodItems }),
+        JSON.stringify({ foodItems, status: 'complete' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (apiError) {
-      console.error('API error:', apiError);
+      console.error(`[${requestId}] API error:`, apiError);
       let errorMessage = 'Error analyzing food image';
       
       if (apiError instanceof Error) {
@@ -94,7 +98,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: errorMessage,
-          foodItems: [] 
+          foodItems: [],
+          status: 'error' 
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -108,7 +113,7 @@ serve(async (req) => {
     }
     
     return new Response(
-      JSON.stringify({ error: errorMessage, foodItems: [] }),
+      JSON.stringify({ error: errorMessage, foodItems: [], status: 'error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
