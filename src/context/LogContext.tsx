@@ -24,15 +24,16 @@ export const LogProvider: React.FC<LogProviderProps> = ({ children }) => {
   const { logs, isLoading, fetchLogs, addLog, updateLog, deleteLog } = useLogAPI();
   const { getRecentLogs, getGlucoseLogsOnly, getLogsForToday, getAverageGlucose } = useLogUtils(logs);
 
-  // Fetch logs when the user changes
+  // Fetch logs only when the user ID changes, not on every user object change
   useEffect(() => {
-    if (user) {
+    const userId = user?.id;
+    if (userId) {
       console.log('User is authenticated, fetching logs');
       fetchLogs();
     } else {
       console.log('No authenticated user, skipping log fetch');
     }
-  }, [user, fetchLogs]);
+  }, [user?.id, fetchLogs]); // Only depend on user.id, not the entire user object
 
   const contextValue: LogContextType = {
     logs,

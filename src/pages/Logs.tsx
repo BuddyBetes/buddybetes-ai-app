@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useLogContext } from '../context/LogContext';
@@ -23,9 +22,15 @@ const Logs = () => {
   // Log the authentication and loading state for debugging
   useEffect(() => {
     console.log('Logs page - Auth state:', user ? 'Authenticated' : 'Not authenticated');
+  }, [user]);
+
+  useEffect(() => {
     console.log('Logs page - Loading state:', isLoading);
+  }, [isLoading]);
+
+  useEffect(() => {
     console.log('Logs page - Logs count:', logs.length);
-  }, [user, isLoading, logs]);
+  }, [logs.length]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString(undefined, { 

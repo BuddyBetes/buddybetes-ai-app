@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +11,13 @@ export const useLogAPI = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { validateMealContext } = useLogUtils(logs);
+
+  const validateMealContextFn = (mealContext: string | null): 'before' | 'after' | 'fasting' | undefined => {
+    if (mealContext === 'before' || mealContext === 'after' || mealContext === 'fasting') {
+      return mealContext;
+    }
+    return undefined;
+  };
 
   const fetchLogs = useCallback(async () => {
     if (!user) {
@@ -44,7 +50,7 @@ export const useLogAPI = () => {
           timestamp: new Date(row.timestamp),
           glucoseLevel: row.glucose_level !== null ? row.glucose_level : undefined,
           food: row.food,
-          mealContext: validateMealContext(row.meal_context),
+          mealContext: validateMealContextFn(row.meal_context),
           notes: row.notes
         }));
         setLogs(glucoseLogs);
@@ -54,7 +60,7 @@ export const useLogAPI = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast, validateMealContext]);
+  }, [user, toast]);
 
   const addLog = async (log: Omit<GlucoseLog, 'id'>) => {
     if (!user) {
@@ -98,7 +104,7 @@ export const useLogAPI = () => {
           timestamp: new Date(data.timestamp),
           glucoseLevel: data.glucose_level !== null ? data.glucose_level : undefined,
           food: data.food,
-          mealContext: validateMealContext(data.meal_context),
+          mealContext: validateMealContextFn(data.meal_context),
           notes: data.notes
         };
         
@@ -164,7 +170,7 @@ export const useLogAPI = () => {
           timestamp: new Date(data.timestamp),
           glucoseLevel: data.glucose_level !== null ? data.glucose_level : undefined,
           food: data.food,
-          mealContext: validateMealContext(data.meal_context),
+          mealContext: validateMealContextFn(data.meal_context),
           notes: data.notes
         };
         
