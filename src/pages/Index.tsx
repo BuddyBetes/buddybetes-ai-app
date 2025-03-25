@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mic } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
@@ -83,20 +82,21 @@ const Index = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-24 h-24 rounded-full bg-buddy-500 flex items-center justify-center"
+          className="flex justify-center"
         >
-          <motion.div
+          <motion.img
+            src="/logo.png"
+            alt="BuddyBetes Logo"
+            className="w-32 h-auto"
             animate={{ 
-              scale: [1, 1.2, 1],
+              scale: [1, 1.05, 1],
             }}
             transition={{ 
               duration: 1.5, 
               repeat: Infinity,
               ease: "easeInOut" 
             }}
-          >
-            <Mic size={40} className="text-white" />
-          </motion.div>
+          />
         </motion.div>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
@@ -118,13 +118,13 @@ const Index = () => {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="flex flex-col items-center"
       >
-        <motion.div 
-          className="w-32 h-32 rounded-full bg-buddy-500 flex items-center justify-center mb-8"
-          animate={{ scale: [1, 1.1, 1] }}
+        <motion.img 
+          src="/logo.png"
+          alt="BuddyBetes Logo"
+          className="w-48 h-auto mb-8"
+          animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <Mic size={64} className="text-white" />
-        </motion.div>
+        />
         
         <motion.h1 
           className="text-4xl font-bold mb-2 text-gray-900"

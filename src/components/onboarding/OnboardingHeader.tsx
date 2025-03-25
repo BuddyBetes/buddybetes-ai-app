@@ -10,6 +10,14 @@ const OnboardingHeader: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <motion.div
+        className="flex justify-center mb-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <img src="/logo.png" alt="BuddyBetes Logo" className="w-20 h-auto" />
+      </motion.div>
       <motion.h1 
         className="text-3xl font-semibold tracking-tight mb-3"
         initial={{ opacity: 0 }}
