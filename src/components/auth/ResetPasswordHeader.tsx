@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
-import { usePasswordReset } from '@/context/PasswordResetContext';
+import { usePasswordReset } from '@/context/passwordReset/PasswordResetContext';
 
 const ResetPasswordHeader: React.FC = () => {
   const { mode, resetComplete } = usePasswordReset();

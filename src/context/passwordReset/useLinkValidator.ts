@@ -1,93 +1,34 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
 
-interface ResetLocationState {
-  fromReset?: boolean;
-  accessToken?: string | null;
-  refreshToken?: string | null;
-  recoveryToken?: boolean | null;
-}
-
-interface PasswordResetContextProps {
-  mode: 'request' | 'reset';
-  resetComplete: boolean;
+export function useLinkValidator({
+  isPasswordRecovery,
+  isAuthenticated,
+  loading,
+  processingTokens,
+  locationState,
+  isValidResetLink,
+  setIsValidResetLink,
+  setMode,
+  setIsCheckingLink
+}: {
+  isPasswordRecovery: boolean;
+  isAuthenticated: boolean;
+  loading: boolean;
+  processingTokens: boolean;
+  locationState: any;
   isValidResetLink: boolean;
-  isCheckingLink: boolean;
-  handleResetComplete: () => void;
-}
-
-const PasswordResetContext = createContext<PasswordResetContextProps | undefined>(undefined);
-
-export const PasswordResetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading, signOut, isPasswordRecovery } = useAuth();
-  const [mode, setMode] = useState<'request' | 'reset'>('request');
-  const [resetComplete, setResetComplete] = useState(false);
-  const [isValidResetLink, setIsValidResetLink] = useState(false);
-  const [isCheckingLink, setIsCheckingLink] = useState(true);
-  const [processingTokens, setProcessingTokens] = useState(false);
+  setIsValidResetLink: (value: boolean) => void;
+  setMode: (value: 'request' | 'reset') => void;
+  setIsCheckingLink: (value: boolean) => void;
+}) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Get location state from navigation, if any
-  const locationState = location.state as ResetLocationState | null;
-
-  // Process tokens from location state or URL
-  useEffect(() => {
-    const processTokens = async () => {
-      try {
-        setProcessingTokens(true);
-        
-        // Check if we have tokens in state from navigation
-        if (locationState?.fromReset) {
-          console.log('Found reset token state from navigation:', {
-            hasAccessToken: !!locationState.accessToken,
-            hasRecoveryToken: !!locationState.recoveryToken
-          });
-          
-          // If we have an access token in state, try to set the session directly
-          if (locationState.accessToken) {
-            console.log('Setting session from navigation state token');
-            const { data, error } = await supabase.auth.setSession({
-              access_token: locationState.accessToken,
-              refresh_token: locationState.refreshToken || ''
-            });
-            
-            if (error) {
-              console.error('Error setting session from navigation state:', error);
-              setIsValidResetLink(false);
-              setMode('request');
-            } else if (data.session) {
-              console.log('Successfully set session from navigation state');
-              setIsValidResetLink(true);
-              setMode('reset');
-              return;
-            }
-          } else if (locationState.recoveryToken || isPasswordRecovery) {
-            // If we have a recovery flag but no token, check if we're in recovery context
-            console.log('Found recovery context, checking session');
-            setIsValidResetLink(true);
-            setMode('reset');
-            return;
-          }
-        }
-      } catch (err) {
-        console.error('Error processing tokens from state:', err);
-      } finally {
-        setProcessingTokens(false);
-      }
-    };
-    
-    if (locationState?.fromReset) {
-      processTokens();
-    }
-  }, [locationState, isPasswordRecovery]);
-
-  // Check if we're coming from a password reset link (backup for direct URL access)
+  // Check if we're coming from a password reset link
   useEffect(() => {
     const checkResetToken = async () => {
       // Skip if we already processed tokens from state
@@ -227,52 +168,5 @@ export const PasswordResetProvider: React.FC<{ children: React.ReactNode }> = ({
     setTimeout(() => {
       checkResetToken();
     }, 150); // Slightly increased delay to ensure token processing
-  }, [location, toast, isAuthenticated, loading, isPasswordRecovery, locationState, processingTokens, isValidResetLink]);
-
-  // Prevent redirecting to dashboard if we're in password recovery mode
-  useEffect(() => {
-    if ((isPasswordRecovery || isValidResetLink) && isAuthenticated && !loading && !isCheckingLink) {
-      console.log('In password recovery mode, preventing dashboard redirect');
-      // Stay on reset password page when in password recovery flow
-    }
-  }, [isPasswordRecovery, isAuthenticated, loading, isCheckingLink, isValidResetLink]);
-
-  // Handle reset completion - redirect to signin when complete
-  const handleResetComplete = () => {
-    setResetComplete(true);
-  };
-
-  // Effect to handle redirection after reset is complete
-  useEffect(() => {
-    if (resetComplete) {
-      // Give time for the success message to be seen, then redirect
-      const redirectTimer = setTimeout(() => {
-        navigate('/signin', { replace: true });
-      }, 3000);
-      
-      return () => clearTimeout(redirectTimer);
-    }
-  }, [resetComplete, navigate]);
-
-  return (
-    <PasswordResetContext.Provider
-      value={{
-        mode,
-        resetComplete,
-        isValidResetLink,
-        isCheckingLink,
-        handleResetComplete
-      }}
-    >
-      {children}
-    </PasswordResetContext.Provider>
-  );
-};
-
-export const usePasswordReset = () => {
-  const context = useContext(PasswordResetContext);
-  if (context === undefined) {
-    throw new Error('usePasswordReset must be used within a PasswordResetProvider');
-  }
-  return context;
-};
+  }, [location, toast, isAuthenticated, loading, isPasswordRecovery, locationState, processingTokens, isValidResetLink, setIsValidResetLink, setMode, setIsCheckingLink]);
+}
