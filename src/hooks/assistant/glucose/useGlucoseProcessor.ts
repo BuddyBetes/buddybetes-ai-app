@@ -38,8 +38,8 @@ export const useGlucoseProcessor = (
           timestamp: new Date(),
           food: parsedData.food,
           notes: parsedData.notes || "",
-          // Set default values for required fields
-          glucoseLevel: 0, // Use 0 as a sentinel value for food-only entries
+          // Set undefined for food-only entries (not 0)
+          glucoseLevel: undefined,
           mealContext: (parsedData.mealContext || "after") as "before" | "after" | "fasting"
         };
         

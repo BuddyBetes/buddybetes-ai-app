@@ -100,7 +100,7 @@ export const useDirectGlucoseLogging = () => {
       try {
         await addLog({
           timestamp: new Date(),
-          glucoseLevel: 0, // Use 0 as a sentinel value for food-only entries
+          glucoseLevel: undefined, // Use undefined instead of 0 for food-only entries
           food: parsedData.food,
           mealContext: parsedData.mealContext || "after",
           notes: parsedData.notes || ""
