@@ -62,7 +62,7 @@ const TextMode: React.FC<TextModeProps> = ({
         />
       </ScrollArea>
       
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white pb-24 pt-2 border-t border-gray-100">
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white pb-32 pt-2 border-t border-gray-100">
         <div className={isMobile ? "w-full px-2" : "max-w-3xl mx-auto px-2"}>
           <MessageInput 
             input={input}

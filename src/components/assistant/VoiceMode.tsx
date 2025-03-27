@@ -29,7 +29,7 @@ const VoiceMode: React.FC<VoiceModeProps> = ({
       exit={{ opacity: 0 }}
       className="flex flex-col items-center justify-center h-full w-full flex-grow"
     >
-      <div className="flex items-center justify-center w-full h-full py-4 md:py-8">
+      <div className="flex items-center justify-center w-full h-full py-16 md:py-20">
         <VoiceButton 
           onStartSession={handleStartSession}
           onEndSession={handleEndSession}
