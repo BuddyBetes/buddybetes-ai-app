@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +19,7 @@ interface HealthData {
   height_unit: string;
   weight: string;
   weight_unit: string;
-  birthdate: string;
+  birthdate: Date | string | undefined;
   gender: string;
   diabetes_type: string;
   glucose_unit: GlucoseUnit;
@@ -36,16 +36,30 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
   const { toast } = useToast();
   const { setGlucoseUnit } = useGlucoseUnit();
   const [loading, setLoading] = useState(false);
+  
+  // Ensure the birthdate is a Date object
+  const initialBirthdate = typeof healthData.birthdate === 'string' && healthData.birthdate
+    ? new Date(healthData.birthdate)
+    : healthData.birthdate instanceof Date 
+      ? healthData.birthdate 
+      : undefined;
+  
   const [formData, setFormData] = useState({
     height: healthData.height || '',
     height_unit: healthData.height_unit || 'cm',
     weight: healthData.weight || '',
     weight_unit: healthData.weight_unit || 'kg',
-    birthdate: healthData.birthdate ? new Date(healthData.birthdate) : undefined,
+    birthdate: initialBirthdate,
     gender: healthData.gender || '',
     diabetes_type: healthData.diabetes_type || '',
     glucose_unit: healthData.glucose_unit || 'mg/dL' as GlucoseUnit,
   });
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('HealthDataEdit initialized with:', healthData);
+    console.log('FormData initialized as:', formData);
+  }, []);
   
   const genders = [
     { value: 'male', label: 'Male' },
@@ -69,6 +83,7 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
   };
   
   const handleSelectChange = (name: string, value: string) => {
+    console.log(`Changing ${name} to ${value}`);
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
@@ -83,7 +98,7 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
       // Format the date for database
       const formattedData = {
         ...formData,
-        birthdate: formData.birthdate ? formData.birthdate.toISOString() : null,
+        birthdate: formData.birthdate instanceof Date ? formData.birthdate.toISOString() : null,
       };
       
       const { error } = await supabase
@@ -122,7 +137,7 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
         <div className="space-y-2">
           <Label htmlFor="gender">Gender</Label>
           <Select 
-            value={formData.gender} 
+            value={formData.gender || ""} 
             onValueChange={value => handleSelectChange('gender', value)}
           >
             <SelectTrigger id="gender">
@@ -147,7 +162,7 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
                 id="birthdate"
                 className="w-full justify-start text-left font-normal"
               >
-                {formData.birthdate ? (
+                {formData.birthdate instanceof Date ? (
                   format(formData.birthdate, "PP")
                 ) : (
                   <span>Pick a date</span>
@@ -158,7 +173,7 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={formData.birthdate}
+                selected={formData.birthdate instanceof Date ? formData.birthdate : undefined}
                 onSelect={date => setFormData(prev => ({ ...prev, birthdate: date }))}
                 disabled={(date) => date > new Date()}
                 initialFocus
@@ -224,7 +239,7 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
         <div className="space-y-2">
           <Label htmlFor="diabetes_type">Diabetes Type</Label>
           <Select 
-            value={formData.diabetes_type} 
+            value={formData.diabetes_type || ""} 
             onValueChange={value => handleSelectChange('diabetes_type', value)}
           >
             <SelectTrigger id="diabetes_type">

@@ -60,7 +60,10 @@ const HealthData = () => {
             weight: data.weight || '',
             weightUnit: data.weight_unit || 'kg',
             diabetesType: data.diabetes_type || '',
-            glucoseUnit: data.glucose_unit || 'mg/dL'
+            // Ensure we have a valid glucose unit
+            glucoseUnit: (data.glucose_unit === 'mg/dL' || data.glucose_unit === 'mmol/L') 
+              ? data.glucose_unit 
+              : 'mg/dL'
           });
         }
       } catch (error) {
