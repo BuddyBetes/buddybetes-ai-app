@@ -25,7 +25,9 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
         <SheetHeader className="mb-4">
           <SheetTitle>Log Details</SheetTitle>
         </SheetHeader>
-        <LogDisplay log={log} />
+        <div className="log-detail-container">
+          <LogDisplay log={log} />
+        </div>
       </SheetContent>
     </Sheet>
   );
