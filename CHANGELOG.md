@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 - Mobile-friendly interfaces
 - Date-grouped log display
 - Delete log functionality with confirmation dialog
+- Enhanced visual differentiation between food and glucose entries with distinctive icons and badges
+- Improved log details display with better layout and visual hierarchy
 
 ### Authentication Improvements
 - Enhanced password reset flow with more intuitive user experience
@@ -37,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Styled components using shadcn/ui
 - Animation effects with Framer Motion
 - Clean component architecture
+- Robust error handling for date formatting and invalid data
 
 ### Changed
 - Refined sign-in page component structure
@@ -45,12 +48,18 @@ All notable changes to this project will be documented in this file.
 - Enhanced UI consistency across authentication flows
 - Optimized authentication state detection and handling
 - Refactored ResetPassword page into smaller, focused components
+- Enhanced log detail view with better visual organization
+- Improved UI differentiation between log entry types
 
 ### Fixed
 - Various UI/UX improvements
 - Performance optimizations for mobile devices
 - Improved alignment and styling of authentication forms
 - Enhanced accessibility in authentication components
+- Fixed date handling issues in log display components
+- Resolved invalid prop warnings in React components
+- Corrected empty dropdown values in health data edit forms
+- Improved error handling for invalid date values
 
 ## [0.1.0] - Initial Release
 - Core functionality established
