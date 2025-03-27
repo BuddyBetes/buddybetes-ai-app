@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mic, ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,7 +84,6 @@ const SignUp = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  // Redirect authenticated users
   if (isAuthenticated) {
     return <Navigate to="/onboarding" replace />;
   }
@@ -100,11 +98,11 @@ const SignUp = () => {
       >
         <div className="flex flex-col items-center space-y-6 mb-8">
           <motion.div 
-            className="w-20 h-20 rounded-full bg-buddy-500 flex items-center justify-center"
+            className="w-20 h-20 rounded-full bg-white flex items-center justify-center"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Mic size={32} className="text-white" />
+            <img src="/logo.png" alt="BuddyBetes Logo" className="w-16 h-16" />
           </motion.div>
           <div className="text-center">
             <h1 className="text-3xl font-semibold tracking-tight mb-2">Create Account</h1>
@@ -248,7 +246,6 @@ const SignUp = () => {
         </div>
       </motion.div>
       
-      {/* Email Confirmation Dialog */}
       <Dialog open={showConfirmationDialog} onOpenChange={setShowConfirmationDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

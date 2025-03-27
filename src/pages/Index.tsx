@@ -1,8 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mic } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
@@ -13,36 +11,29 @@ const Index = () => {
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Clear previous timeout if it exists
     if (redirectTimeout) {
       clearTimeout(redirectTimeout);
     }
 
-    // Don't redirect while still loading authentication state
     if (loading) {
       return;
     }
 
-    // Set initializing to false after loading is complete
     setIsInitializing(false);
     
     console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding, isPasswordRecovery });
     
-    // Capture the tokens from URL if they exist - before any redirection happens
     const url = new URL(window.location.href);
     const hash = url.hash;
     const query = url.search;
     
-    // Extract tokens from URL if present
     const hashParams = new URLSearchParams(hash.replace('#', ''));
     const accessToken = hashParams.get('access_token') || new URLSearchParams(query).get('access_token');
     const refreshToken = hashParams.get('refresh_token') || new URLSearchParams(query).get('refresh_token');
     const recoveryToken = hashParams.get('type') === 'recovery' || new URLSearchParams(query).get('type') === 'recovery';
     
-    // If in password recovery flow, immediately redirect to reset password page with token info
     if (isPasswordRecovery || accessToken || recoveryToken) {
       console.log('Redirecting to reset password page immediately with token state');
-      // Pass tokens as state to preserve them during navigation
       navigate('/reset-password', { 
         state: { 
           fromReset: true,
@@ -50,9 +41,9 @@ const Index = () => {
           refreshToken: refreshToken || null,
           recoveryToken: recoveryToken || null
         },
-        replace: true  // Replace the current entry in history to prevent back navigation issues
+        replace: true
       });
-      return; // Important: exit early to prevent other redirects
+      return;
     }
     
     const timer = setTimeout(() => {
@@ -68,14 +59,12 @@ const Index = () => {
         console.log('Redirecting to signin');
         navigate('/signin');
       }
-    }, 1500); // Reduced from 2000ms to 1500ms for faster redirect
-    
+    }, 1500);
+
     setRedirectTimeout(timer);
     return () => clearTimeout(timer);
   }, [navigate, isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery]);
 
-  // Don't render splash screen if we're still determining auth state
-  // This prevents the flash of content before redirect
   if (loading || isInitializing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white">
@@ -83,7 +72,7 @@ const Index = () => {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-24 h-24 rounded-full bg-buddy-500 flex items-center justify-center"
+          className="w-24 h-24 rounded-full bg-white flex items-center justify-center"
         >
           <motion.div
             animate={{ 
@@ -95,7 +84,7 @@ const Index = () => {
               ease: "easeInOut" 
             }}
           >
-            <Mic size={40} className="text-white" />
+            <img src="/logo.png" alt="BuddyBetes Logo" className="w-20 h-20" />
           </motion.div>
         </motion.div>
         <motion.p
@@ -119,11 +108,11 @@ const Index = () => {
         className="flex flex-col items-center"
       >
         <motion.div 
-          className="w-32 h-32 rounded-full bg-buddy-500 flex items-center justify-center mb-8"
+          className="w-32 h-32 rounded-full bg-white flex items-center justify-center mb-8"
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Mic size={64} className="text-white" />
+          <img src="/logo.png" alt="BuddyBetes Logo" className="w-28 h-28" />
         </motion.div>
         
         <motion.h1 
