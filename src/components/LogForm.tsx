@@ -25,10 +25,10 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!glucoseLevel && !food.trim()) {
+    if (!food.trim()) {
       toast({
         title: "Missing information",
-        description: "Please enter either a glucose level or food information",
+        description: "Please enter food information",
         variant: "destructive",
       });
       return;
@@ -46,7 +46,7 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded }) => {
     const newLog = {
       timestamp: new Date(),
       glucoseLevel: glucoseLevel ? Number(glucoseLevel) : undefined,
-      food: food.trim() || undefined,
+      food: food.trim(),
       mealContext,
       notes: notes.trim() || undefined,
     };
@@ -76,25 +76,25 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded }) => {
       </div>
       
       <div className="space-y-1.5">
-        <Label htmlFor="glucoseLevel" className="text-sm">
-          Glucose Level (mg/dL)
+        <Label htmlFor="food" className="text-sm font-medium">
+          Food <span className="text-red-500">*</span>
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
           <Input
-            id="glucoseLevel"
-            type="number"
-            value={glucoseLevel}
-            onChange={(e) => setGlucoseLevel(e.target.value)}
-            placeholder="Enter your glucose reading"
+            id="food"
+            value={food}
+            onChange={(e) => setFood(e.target.value)}
+            placeholder="What did you eat?"
             className="h-11 text-base"
             disabled={isLoading}
+            required
           />
         </motion.div>
       </div>
       
       <div className="space-y-1.5">
         <Label htmlFor="mealContext" className="text-sm">
-          When was this reading taken?
+          When was this meal?
         </Label>
         <RadioGroup 
           value={mealContext} 
@@ -118,15 +118,16 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded }) => {
       </div>
       
       <div className="space-y-1.5">
-        <Label htmlFor="food" className="text-sm">
-          Food (optional)
+        <Label htmlFor="glucoseLevel" className="text-sm">
+          Glucose Level (mg/dL) (optional)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
           <Input
-            id="food"
-            value={food}
-            onChange={(e) => setFood(e.target.value)}
-            placeholder="What did you eat?"
+            id="glucoseLevel"
+            type="number"
+            value={glucoseLevel}
+            onChange={(e) => setGlucoseLevel(e.target.value)}
+            placeholder="Enter your glucose reading"
             className="h-11 text-base"
             disabled={isLoading}
           />

@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
 import { motion } from 'framer-motion';
-import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle, RefreshCw, Utensils } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
-  const { getGlucoseLogsOnly, getLogsForToday, getAverageGlucose } = useLogContext();
+  const { getGlucoseLogsOnly, getLogsForToday, getAverageGlucose, logs } = useLogContext();
   const glucoseLogs = getGlucoseLogsOnly(30); // Only get logs with glucose values
   const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
   
@@ -26,6 +26,11 @@ const Dashboard = () => {
   
   // Get count of logs today for the "Time in Range" card
   const logsToday = getLogsForToday().length;
+  
+  // Get the most recent food entry
+  const lastFoodEntry = [...logs].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  ).find(log => log.food && log.food.trim().length > 0);
   
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -66,23 +71,40 @@ const Dashboard = () => {
           >
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Current Glucose</h3>
+                <h3 className="text-sm font-medium text-gray-500">
+                  {lastFoodEntry ? "Latest Food Entry" : "Current Glucose"}
+                </h3>
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold">
-                    {lastReading}
-                  </span>
-                  <span className="ml-1 text-sm text-gray-500">mg/dL</span>
+                  {lastFoodEntry ? (
+                    <span className="text-xl font-bold text-gray-800 flex items-center">
+                      <Utensils className="h-5 w-5 mr-2 text-buddy-600" />
+                      {lastFoodEntry.food}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="text-3xl font-bold">
+                        {lastReading}
+                      </span>
+                      <span className="ml-1 text-sm text-gray-500">mg/dL</span>
+                    </>
+                  )}
                 </div>
               </div>
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                isInRange ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-              }`}>
-                {isInRange ? 'In Range' : 'Out of Range'}
-              </div>
+              {lastReading > 0 && (
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  isInRange ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                }`}>
+                  {isInRange ? 'In Range' : 'Out of Range'}
+                </div>
+              )}
             </div>
             <div className="text-xs text-gray-500 flex items-center">
               <Clock size={12} className="mr-1" />
-              Last updated: {glucoseLogs[0]?.timestamp.toLocaleTimeString() || 'No readings'}
+              Last updated: {
+                lastFoodEntry ? 
+                  new Date(lastFoodEntry.timestamp).toLocaleTimeString() : 
+                  glucoseLogs[0]?.timestamp.toLocaleTimeString() || 'No readings'
+              }
             </div>
           </motion.div>
 

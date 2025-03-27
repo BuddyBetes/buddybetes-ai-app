@@ -25,8 +25,8 @@ export const useDirectGlucoseLogging = () => {
       return false;
     }
     
-    // Check if the message is a glucose log intent according to AI
-    if (parsedData.isGlucoseLog && parsedData.glucoseLevel) {
+    // First check if it's a food log intent according to AI
+    if (parsedData.isFoodLog && parsedData.food) {
       const newUserMessage: Message = { 
         text: message, 
         type: 'user',
@@ -41,6 +41,85 @@ export const useDirectGlucoseLogging = () => {
       }
       
       try {
+        await addLog({
+          timestamp: new Date(),
+          glucoseLevel: parsedData.glucoseLevel || undefined, // Allow including glucose level in food entries
+          food: parsedData.food,
+          mealContext: parsedData.mealContext || "after",
+          notes: parsedData.notes || ""
+        });
+        
+        const confirmMessage = `Added food entry: ${parsedData.food}${
+          parsedData.glucoseLevel ? ` with glucose reading of ${parsedData.glucoseLevel} mg/dL.` : '.'
+        }`;
+        
+        const assistantMessage: Message = { 
+          text: confirmMessage, 
+          type: 'assistant',
+          timestamp: Date.now(),
+          isNew: true
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        if (conversationId) {
+          await saveMessageToSupabase(assistantMessage, conversationId);
+        }
+        
+        if (currentMode === 'voice' && playResponseAudio) {
+          await playResponseAudio(confirmMessage);
+        }
+        
+        toast({
+          title: "Food Logged",
+          description: `Food entry "${parsedData.food}" added successfully.`,
+          duration: 3000
+        });
+        
+        return true;
+      } catch (error) {
+        console.error("Error adding food log:", error);
+        return false;
+      }
+    }
+    // Then check if it's a glucose log intent (secondary priority)
+    else if (parsedData.isGlucoseLog && parsedData.glucoseLevel) {
+      const newUserMessage: Message = { 
+        text: message, 
+        type: 'user',
+        timestamp: Date.now(),
+        isNew: true
+      };
+      
+      setMessages(prev => [...prev, newUserMessage]);
+      
+      if (conversationId) {
+        await saveMessageToSupabase(newUserMessage, conversationId);
+      }
+      
+      try {
+        // Ask for food if no food is provided with glucose level
+        if (!parsedData.food) {
+          const askForFoodMessage: Message = {
+            text: `I've detected a glucose reading of ${parsedData.glucoseLevel} mg/dL. What food did you eat with this reading?`,
+            type: 'assistant',
+            timestamp: Date.now(),
+            isNew: true
+          };
+          
+          setMessages(prev => [...prev, askForFoodMessage]);
+          
+          if (conversationId) {
+            await saveMessageToSupabase(askForFoodMessage, conversationId);
+          }
+          
+          if (currentMode === 'voice' && playResponseAudio) {
+            await playResponseAudio(askForFoodMessage.text);
+          }
+          
+          return true;
+        }
+        
         await addLog({
           timestamp: new Date(),
           glucoseLevel: parsedData.glucoseLevel,
@@ -81,59 +160,6 @@ export const useDirectGlucoseLogging = () => {
         return true;
       } catch (error) {
         console.error("Error adding glucose log:", error);
-        return false;
-      }
-    } else if (parsedData.isFoodLog && parsedData.food) {
-      const newUserMessage: Message = { 
-        text: message, 
-        type: 'user',
-        timestamp: Date.now(),
-        isNew: true
-      };
-      
-      setMessages(prev => [...prev, newUserMessage]);
-      
-      if (conversationId) {
-        await saveMessageToSupabase(newUserMessage, conversationId);
-      }
-      
-      try {
-        await addLog({
-          timestamp: new Date(),
-          glucoseLevel: undefined, // Use undefined instead of 0 for food-only entries
-          food: parsedData.food,
-          mealContext: parsedData.mealContext || "after",
-          notes: parsedData.notes || ""
-        });
-        
-        const confirmMessage = `Added food entry: ${parsedData.food}`;
-        
-        const assistantMessage: Message = { 
-          text: confirmMessage, 
-          type: 'assistant',
-          timestamp: Date.now(),
-          isNew: true
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        
-        if (conversationId) {
-          await saveMessageToSupabase(assistantMessage, conversationId);
-        }
-        
-        if (currentMode === 'voice' && playResponseAudio) {
-          await playResponseAudio(confirmMessage);
-        }
-        
-        toast({
-          title: "Food Logged",
-          description: `Food entry "${parsedData.food}" added successfully.`,
-          duration: 3000
-        });
-        
-        return true;
-      } catch (error) {
-        console.error("Error adding food log:", error);
         return false;
       }
     }
