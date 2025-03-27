@@ -30,7 +30,7 @@ export const GlucoseUnitProvider: React.FC<GlucoseUnitProviderProps> = ({ childr
   useEffect(() => {
     // Load the user's glucose unit preference from localStorage first for quick UI render
     const storedUnit = localStorage.getItem('glucoseUnit') as GlucoseUnit;
-    if (storedUnit) {
+    if (storedUnit && (storedUnit === 'mg/dL' || storedUnit === 'mmol/L')) {
       setGlucoseUnitState(storedUnit);
     }
 
@@ -51,11 +51,18 @@ export const GlucoseUnitProvider: React.FC<GlucoseUnitProviderProps> = ({ childr
         .maybeSingle();
 
       if (error) {
+        // Check if the error is related to missing column
+        if (error.message.includes('column') && error.message.includes('not exist')) {
+          console.error('glucose_unit column does not exist yet');
+          return; // Gracefully handle missing column
+        }
         console.error('Error fetching glucose unit preference:', error);
       } else if (data && data.glucose_unit) {
         const unit = data.glucose_unit as GlucoseUnit;
-        setGlucoseUnitState(unit);
-        localStorage.setItem('glucoseUnit', unit);
+        if (unit === 'mg/dL' || unit === 'mmol/L') {
+          setGlucoseUnitState(unit);
+          localStorage.setItem('glucoseUnit', unit);
+        }
       }
     } catch (error) {
       console.error('Error fetching glucose unit preference:', error);
@@ -78,6 +85,14 @@ export const GlucoseUnitProvider: React.FC<GlucoseUnitProviderProps> = ({ childr
         .eq('user_id', user.id);
 
       if (error) {
+        // Check if the error is related to missing column
+        if (error.message.includes('column') && error.message.includes('not exist')) {
+          console.error('glucose_unit column does not exist yet');
+          // Still update the local state
+          localStorage.setItem('glucoseUnit', unit);
+          setGlucoseUnitState(unit);
+          return;
+        }
         console.error('Error updating glucose unit preference:', error);
       } else {
         // Update localStorage and state

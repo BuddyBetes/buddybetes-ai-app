@@ -29,11 +29,7 @@ const Logs = () => {
   }, [logs.length]);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString(undefined, { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD for grouping
   };
 
   const groupedLogs: Record<string, GlucoseLog[]> = {};
@@ -71,13 +67,12 @@ const Logs = () => {
       <AppHeader />
       <div className="space-y-6 pb-28 pt-4">
         {Object.entries(groupedLogs).length > 0 ? (
-          Object.entries(groupedLogs).map(([dateStr, logsForDate], dateIndex) => (
+          Object.entries(groupedLogs).map(([dateStr, logsForDate]) => (
             <LogsByDate 
               key={dateStr}
-              dateStr={dateStr} 
-              logs={logsForDate} 
-              dateIndex={dateIndex} 
-              onLogClick={handleLogClick} 
+              date={dateStr} 
+              logs={logsForDate}
+              onLogSelect={handleLogClick} 
             />
           ))
         ) : (
