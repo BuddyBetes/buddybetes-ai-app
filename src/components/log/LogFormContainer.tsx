@@ -1,20 +1,23 @@
 
 import React from 'react';
+import LogForm from '../LogForm';
 import { motion } from 'framer-motion';
-import LogForm from '@/components/LogForm';
 
 interface LogFormContainerProps {
   onLogAdded?: () => void;
+  initialGlucoseLevel?: number | null;
 }
 
-const LogFormContainer: React.FC<LogFormContainerProps> = ({ onLogAdded }) => {
+const LogFormContainer: React.FC<LogFormContainerProps> = ({ onLogAdded, initialGlucoseLevel }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2, duration: 0.5 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+      className="px-4 py-4"
     >
-      <LogForm onLogAdded={onLogAdded} />
+      <LogForm onLogAdded={onLogAdded} initialGlucoseLevel={initialGlucoseLevel} />
     </motion.div>
   );
 };

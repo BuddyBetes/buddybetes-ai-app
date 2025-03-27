@@ -5,19 +5,22 @@ import Layout from '../components/Layout';
 import AppHeader from '@/components/AppHeader';
 import LogFormContainer from '@/components/log/LogFormContainer';
 import CameraModal from '@/components/food/CameraModal';
+import GlucometerScanModal from '@/components/glucose/GlucometerScanModal';
 import FoodAnalysisResult from '@/components/food/FoodAnalysisResult';
 import { FoodItem } from '@/components/food/types';
 import { useImageAnalysis } from '@/hooks/useImageAnalysis';
 import { Button } from '@/components/ui/button';
-import { Camera, Edit3 } from 'lucide-react';
+import { Camera, Activity, Edit3 } from 'lucide-react';
 import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
 
 const AddLog: React.FC = () => {
   const navigate = useNavigate();
   const [showCamera, setShowCamera] = useState(false);
+  const [showGlucometerScan, setShowGlucometerScan] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showManualLog, setShowManualLog] = useState(false);
+  const [capturedGlucoseReading, setCapturedGlucoseReading] = useState<number | null>(null);
   const { analyzeImage, resetAnalysis, isAnalyzing, result, error } = useImageAnalysis();
   const { addLog } = useLogContext();
   const { toast } = useToast();
@@ -31,6 +34,12 @@ const AddLog: React.FC = () => {
     setTimeout(() => {
       analyzeImage(imageData);
     }, 50);
+  };
+
+  const handleGlucometerCapture = (reading: number) => {
+    console.log('Glucometer reading captured:', reading);
+    setCapturedGlucoseReading(reading);
+    setShowManualLog(true);
   };
 
   const handleSaveFood = async (foodItems: FoodItem[]) => {
@@ -109,6 +118,14 @@ const AddLog: React.FC = () => {
               </Button>
               
               <Button 
+                onClick={() => setShowGlucometerScan(true)}
+                className="bg-blue-500 hover:bg-blue-600 h-14 text-lg w-full flex justify-center items-center"
+              >
+                <Activity className="h-5 w-5 mr-2" />
+                Scan Glucometer
+              </Button>
+              
+              <Button 
                 onClick={() => setShowManualLog(true)}
                 variant="outline"
                 className="h-14 text-lg w-full flex justify-center items-center border-buddy-300"
@@ -121,7 +138,10 @@ const AddLog: React.FC = () => {
         )}
         
         {!showResults && showManualLog && (
-          <LogFormContainer onLogAdded={() => navigate('/logs')} />
+          <LogFormContainer 
+            onLogAdded={() => navigate('/logs')} 
+            initialGlucoseLevel={capturedGlucoseReading} 
+          />
         )}
         
         {showResults && (
@@ -139,6 +159,12 @@ const AddLog: React.FC = () => {
         open={showCamera}
         onOpenChange={setShowCamera}
         onImageCapture={handleImageCapture}
+      />
+      
+      <GlucometerScanModal
+        open={showGlucometerScan}
+        onOpenChange={setShowGlucometerScan}
+        onReadingCapture={handleGlucometerCapture}
       />
     </Layout>
   );

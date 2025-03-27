@@ -90,7 +90,8 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
-              {lastReading > 0 && (
+              {/* Only show the "in range" indicator for glucose readings, not food entries */}
+              {lastReading > 0 && !lastFoodEntry && (
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                   isInRange ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
                 }`}>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLogContext } from '../context/LogContext';
 import { Button } from '@/components/ui/button';
@@ -12,15 +12,23 @@ import { Loader2 } from 'lucide-react';
 
 interface LogFormProps {
   onLogAdded?: () => void;
+  initialGlucoseLevel?: number | null;
 }
 
-const LogForm: React.FC<LogFormProps> = ({ onLogAdded }) => {
+const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) => {
   const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
   const [glucoseLevel, setGlucoseLevel] = useState('');
   const [food, setFood] = useState('');
   const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
   const [notes, setNotes] = useState('');
+
+  // Set initial glucose level if provided
+  useEffect(() => {
+    if (initialGlucoseLevel) {
+      setGlucoseLevel(initialGlucoseLevel.toString());
+    }
+  }, [initialGlucoseLevel]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
