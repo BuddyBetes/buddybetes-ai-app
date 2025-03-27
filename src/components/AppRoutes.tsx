@@ -2,6 +2,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { GlucoseUnitProvider } from '@/context/GlucoseUnitContext';
 
 // Page components
 import Dashboard from '@/pages/Dashboard';
@@ -28,6 +29,17 @@ const AppRoutes: React.FC = () => {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
+  // Wrap authenticated routes with GlucoseUnitProvider
+  const renderProtectedRoute = (component: React.ReactNode, requireOnboarding: boolean = true) => (
+    <ProtectedRoute requireOnboarding={requireOnboarding}>
+      <GlucoseUnitProvider>
+        <PageTransition>
+          {component}
+        </PageTransition>
+      </GlucoseUnitProvider>
+    </ProtectedRoute>
+  );
+
   return (
     <Routes>
       <Route
@@ -42,73 +54,31 @@ const AppRoutes: React.FC = () => {
       />
       <Route
         path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <Dashboard />
-            </PageTransition>
-          </ProtectedRoute>
-        }
+        element={renderProtectedRoute(<Dashboard />)}
       />
       <Route
         path="/add-log"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <AddLog />
-            </PageTransition>
-          </ProtectedRoute>
-        }
+        element={renderProtectedRoute(<AddLog />)}
       />
       <Route
         path="/logs"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <Logs />
-            </PageTransition>
-          </ProtectedRoute>
-        }
+        element={renderProtectedRoute(<Logs />)}
       />
       <Route
         path="/assistant"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <Assistant />
-            </PageTransition>
-          </ProtectedRoute>
-        }
+        element={renderProtectedRoute(<Assistant />)}
       />
       <Route
         path="/onboarding"
-        element={
-          <ProtectedRoute requireOnboarding={false}>
-            <PageTransition>
-              <Onboarding />
-            </PageTransition>
-          </ProtectedRoute>
-        }
+        element={renderProtectedRoute(<Onboarding />, false)}
       />
       <Route
         path="/profile"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <Profile />
-            </PageTransition>
-          </ProtectedRoute>
-        }
+        element={renderProtectedRoute(<Profile />)}
       />
       <Route
         path="/settings"
-        element={
-          <ProtectedRoute>
-            <PageTransition>
-              <Settings />
-            </PageTransition>
-          </ProtectedRoute>
-        }
+        element={renderProtectedRoute(<Settings />)}
       />
       <Route
         path="/signin"

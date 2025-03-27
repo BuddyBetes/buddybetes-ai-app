@@ -4,6 +4,7 @@ import HealthDataDisplay from './HealthDataDisplay';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { GlucoseUnit } from '@/types/global';
 
 interface HealthDataType {
   gender: string;
@@ -13,6 +14,7 @@ interface HealthDataType {
   weight: string;
   weightUnit: string;
   diabetesType: string;
+  glucoseUnit: GlucoseUnit;
 }
 
 const HealthData = () => {
@@ -25,7 +27,8 @@ const HealthData = () => {
     heightUnit: 'cm',
     weight: '',
     weightUnit: 'kg',
-    diabetesType: ''
+    diabetesType: '',
+    glucoseUnit: 'mg/dL'
   });
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +40,7 @@ const HealthData = () => {
         setLoading(true);
         const { data, error } = await supabase
           .from('health_data')
-          .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type')
+          .select('gender, birthdate, height, height_unit, weight, weight_unit, diabetes_type, glucose_unit')
           .eq('user_id', user.id)
           .maybeSingle(); // Use maybeSingle instead of single to handle multiple rows
 
@@ -56,7 +59,8 @@ const HealthData = () => {
             heightUnit: data.height_unit || 'cm',
             weight: data.weight || '',
             weightUnit: data.weight_unit || 'kg',
-            diabetesType: data.diabetes_type || ''
+            diabetesType: data.diabetes_type || '',
+            glucoseUnit: data.glucose_unit || 'mg/dL'
           });
         }
       } catch (error) {
@@ -88,6 +92,7 @@ const HealthData = () => {
           weight: newData.weight,
           weight_unit: newData.weightUnit,
           diabetes_type: newData.diabetesType,
+          glucose_unit: newData.glucoseUnit,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);

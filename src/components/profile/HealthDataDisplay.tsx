@@ -5,26 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import HealthDataEdit from './HealthDataEdit';
 import { format } from 'date-fns';
+import { GlucoseUnit } from '@/types/global';
+
+interface HealthDataType {
+  gender: string;
+  birthdate: Date | undefined;
+  height: string;
+  heightUnit: string;
+  weight: string;
+  weightUnit: string;
+  diabetesType: string;
+  glucoseUnit: GlucoseUnit;
+}
 
 interface HealthDataDisplayProps {
-  healthData: {
-    gender: string;
-    birthdate: Date | undefined;
-    height: string;
-    heightUnit: string;
-    weight: string;
-    weightUnit: string;
-    diabetesType: string;
-  };
-  setHealthData: React.Dispatch<React.SetStateAction<{
-    gender: string;
-    birthdate: Date | undefined;
-    height: string;
-    heightUnit: string;
-    weight: string;
-    weightUnit: string;
-    diabetesType: string;
-  }>>;
+  healthData: HealthDataType;
+  setHealthData: React.Dispatch<React.SetStateAction<HealthDataType>>;
 }
 
 const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps) => {
@@ -66,7 +62,20 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
           <SheetTrigger asChild>
             <Button variant="outline" size="sm">Edit</Button>
           </SheetTrigger>
-          <HealthDataEdit healthData={healthData} setHealthData={setHealthData} />
+          <HealthDataEdit 
+            healthData={{
+              gender: healthData.gender,
+              birthdate: healthData.birthdate,
+              height: healthData.height,
+              height_unit: healthData.heightUnit,
+              weight: healthData.weight,
+              weight_unit: healthData.weightUnit,
+              diabetes_type: healthData.diabetesType,
+              glucose_unit: healthData.glucoseUnit,
+            }} 
+            onUpdate={() => {}} 
+            onCancel={() => {}} 
+          />
         </Sheet>
       </div>
       
@@ -102,6 +111,10 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
         <div className="p-3 bg-gray-50 rounded-lg">
           <div className="text-xs text-gray-500 mb-1">Diabetes Type</div>
           <div className="font-medium">{healthData.diabetesType || 'Not specified'}</div>
+        </div>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <div className="text-xs text-gray-500 mb-1">Glucose Unit</div>
+          <div className="font-medium">{healthData.glucoseUnit || 'mg/dL'}</div>
         </div>
       </div>
     </motion.div>

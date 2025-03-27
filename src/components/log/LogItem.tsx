@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
 import { MoreVertical, Trash2, Edit } from 'lucide-react';
 import { GlucoseLog } from '@/context/LogContext';
 import { 
@@ -14,24 +13,26 @@ import { Button } from '@/components/ui/button';
 import { useLogContext } from '@/context/LogContext';
 import LogDetailView from './LogDetailView';
 import { useToast } from '@/hooks/use-toast';
-import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
-import { convertGlucoseValue } from '@/utils/glucoseUtils';
 import LogDisplay from './LogDisplay';
 
 interface LogItemProps {
   log: GlucoseLog;
+  onClick?: (log: GlucoseLog) => void;
 }
 
-const LogItem: React.FC<LogItemProps> = ({ log }) => {
+const LogItem: React.FC<LogItemProps> = ({ log, onClick }) => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { deleteLog } = useLogContext();
   const { toast } = useToast();
-  const { glucoseUnit } = useGlucoseUnit();
 
   const handleOpenDetail = () => {
-    setIsDetailOpen(true);
+    if (onClick) {
+      onClick(log);
+    } else {
+      setIsDetailOpen(true);
+    }
   };
 
   const formatTime = (date: Date) => {

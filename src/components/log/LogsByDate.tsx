@@ -1,39 +1,45 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { GlucoseLog } from '@/types/logs';
+import { format } from 'date-fns';
+import { GlucoseLog } from '@/context/LogContext';
 import LogItem from './LogItem';
 
 interface LogsByDateProps {
-  dateStr: string;
+  date: string;
   logs: GlucoseLog[];
-  dateIndex: number;
-  onLogClick: (log: GlucoseLog) => void;
+  onLogSelect: (log: GlucoseLog) => void;
 }
 
-const LogsByDate: React.FC<LogsByDateProps> = ({ dateStr, logs, dateIndex, onLogClick }) => {
-  // If no logs for this date, don't render anything
-  if (logs.length === 0) return null;
-  
+const LogsByDate: React.FC<LogsByDateProps> = ({ date, logs, onLogSelect }) => {
+  // Format the date to a more readable form
+  const formattedDate = () => {
+    const logDate = new Date(date);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (format(logDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+      return 'Today';
+    } else if (format(logDate, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
+      return 'Yesterday';
+    } else {
+      return format(logDate, 'EEEE, MMMM d, yyyy');
+    }
+  };
+
   return (
-    <motion.div 
-      key={dateStr}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: dateIndex * 0.1 }}
-      className="space-y-3"
-    >
-      <h3 className="text-md font-medium text-gray-500 px-1">{dateStr}</h3>
-      
-      {logs.map((log, logIndex) => (
-        <LogItem 
-          key={log.id} 
-          log={log} 
-          index={logIndex} 
-          onClick={onLogClick} 
-        />
-      ))}
-    </motion.div>
+    <div className="mb-6">
+      <h3 className="text-md font-medium mb-3">{formattedDate()}</h3>
+      <div className="space-y-3">
+        {logs.map((log) => (
+          <LogItem 
+            key={log.id} 
+            log={log} 
+            onClick={onLogSelect}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 

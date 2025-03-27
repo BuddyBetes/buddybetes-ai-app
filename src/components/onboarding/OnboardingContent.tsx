@@ -3,6 +3,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import OnboardingPersonalInfo from './OnboardingPersonalInfo';
 import OnboardingHealthData from './OnboardingHealthData';
+import { GlucoseUnit } from '@/types/global';
 
 interface OnboardingContentProps {
   currentStep: number;
@@ -18,6 +19,7 @@ interface OnboardingContentProps {
     weight: string;
     weightUnit: string;
     diabetesType: string;
+    glucoseUnit: GlucoseUnit;
   };
   setPersonalInfo: React.Dispatch<React.SetStateAction<{
     firstName: string;
@@ -31,6 +33,7 @@ interface OnboardingContentProps {
     weight: string;
     weightUnit: string;
     diabetesType: string;
+    glucoseUnit: GlucoseUnit;
   }>>;
 }
 
