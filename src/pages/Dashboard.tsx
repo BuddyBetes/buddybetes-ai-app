@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
@@ -11,10 +10,13 @@ import { useNavigate } from 'react-router-dom';
 import { useGlucoseInsights } from '@/hooks/useGlucoseInsights';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
+import { convertGlucoseValue, formatGlucoseValue } from '@/utils/glucoseUtils';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
   const { getGlucoseLogsOnly, getLogsForToday, getAverageGlucose, logs } = useLogContext();
+  const { glucoseUnit } = useGlucoseUnit();
   const glucoseLogs = getGlucoseLogsOnly(30); // Only get logs with glucose values
   const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
   
@@ -22,10 +24,22 @@ const Dashboard = () => {
   
   // Use only logs with glucose readings for the last reading
   const lastReading = glucoseLogs[0]?.glucoseLevel || 0;
+  const displayLastReading = lastReading > 0 ? 
+    (glucoseUnit === 'mg/dL' ? 
+      lastReading : 
+      convertGlucoseValue(lastReading, 'mg/dL', 'mmol/L')
+    ) : 0;
+  
   const isInRange = lastReading >= 70 && lastReading <= 180;
   
   // Get count of logs today for the "Time in Range" card
   const logsToday = getLogsForToday().length;
+  
+  // Get the average glucose in the user's preferred unit
+  const averageGlucose = stats?.average || getAverageGlucose();
+  const displayAverage = glucoseUnit === 'mg/dL' ? 
+    averageGlucose : 
+    convertGlucoseValue(averageGlucose, 'mg/dL', 'mmol/L');
   
   // Get the most recent food entry
   const lastFoodEntry = [...logs].sort((a, b) => 
@@ -83,9 +97,9 @@ const Dashboard = () => {
                   ) : (
                     <>
                       <span className="text-3xl font-bold">
-                        {lastReading}
+                        {displayLastReading}
                       </span>
-                      <span className="ml-1 text-sm text-gray-500">mg/dL</span>
+                      <span className="ml-1 text-sm text-gray-500">{glucoseUnit}</span>
                     </>
                   )}
                 </div>
@@ -120,9 +134,9 @@ const Dashboard = () => {
             <h3 className="text-sm font-medium text-gray-600">Average</h3>
             <div className="flex items-baseline">
               <span className="text-xl font-bold text-gray-800">
-                {stats?.average || getAverageGlucose()}
+                {displayAverage}
               </span>
-              <span className="ml-1 text-xs text-gray-500">mg/dL</span>
+              <span className="ml-1 text-xs text-gray-500">{glucoseUnit}</span>
             </div>
           </motion.div>
 

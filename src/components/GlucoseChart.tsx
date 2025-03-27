@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ChartContainer, ChartTooltipContent, ChartTooltip } from '@/components/ui/chart';
 import { LineChart as LineChartIcon, AlertCircle } from 'lucide-react';
+import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
+import { convertGlucoseValue } from '@/utils/glucoseUtils';
 
 interface GlucoseChartProps {
   data: GlucoseLog[];
@@ -38,6 +40,7 @@ const formatDay = (timestamp: Date) => {
 
 const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls = false }) => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+  const { glucoseUnit } = useGlucoseUnit();
   
   // Filter data based on selected time range
   const getFilteredData = () => {
@@ -47,15 +50,27 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
     
     return data
       .filter(log => log.timestamp > cutoff && log.glucoseLevel !== undefined)
-      .map(log => ({
-        time: timeRange === '24h' ? formatDate(log.timestamp) : formatDay(log.timestamp),
-        value: log.glucoseLevel,
-        timestamp: log.timestamp.getTime(),
-      }))
+      .map(log => {
+        // Convert the glucose value to the user's preferred unit
+        const convertedValue = glucoseUnit === 'mg/dL' 
+          ? log.glucoseLevel 
+          : convertGlucoseValue(log.glucoseLevel as number, 'mg/dL', 'mmol/L');
+          
+        return {
+          time: timeRange === '24h' ? formatDate(log.timestamp) : formatDay(log.timestamp),
+          value: convertedValue,
+          originalValue: log.glucoseLevel,
+          timestamp: log.timestamp.getTime(),
+        };
+      })
       .sort((a, b) => a.timestamp - b.timestamp);
   };
   
   const chartData = getFilteredData();
+  
+  // Calculate target range values based on unit
+  const getLowerTarget = () => glucoseUnit === 'mg/dL' ? 80 : convertGlucoseValue(80, 'mg/dL', 'mmol/L');
+  const getUpperTarget = () => glucoseUnit === 'mg/dL' ? 140 : convertGlucoseValue(140, 'mg/dL', 'mmol/L');
   
   const calculateStats = () => {
     if (chartData.length === 0) return { avg: 0, min: 0, max: 0 };
@@ -65,7 +80,7 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
     
     const sum = values.reduce((acc, val) => acc + val, 0);
     return {
-      avg: Math.round(sum / values.length),
+      avg: glucoseUnit === 'mg/dL' ? Math.round(sum / values.length) : parseFloat((sum / values.length).toFixed(1)),
       min: Math.min(...values),
       max: Math.max(...values)
     };
@@ -85,15 +100,15 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
             <div className="flex flex-wrap gap-2">
               <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Avg: </span>
-                <span className="text-xs font-medium">{stats.avg} mg/dL</span>
+                <span className="text-xs font-medium">{stats.avg} {glucoseUnit}</span>
               </div>
               <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Min: </span>
-                <span className="text-xs font-medium">{stats.min} mg/dL</span>
+                <span className="text-xs font-medium">{stats.min} {glucoseUnit}</span>
               </div>
               <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
                 <span className="text-xs text-gray-500">Max: </span>
-                <span className="text-xs font-medium">{stats.max} mg/dL</span>
+                <span className="text-xs font-medium">{stats.max} {glucoseUnit}</span>
               </div>
             </div>
             
@@ -125,7 +140,10 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
                 tickLine={false}
               />
               <YAxis 
-                domain={[60, 200]} 
+                domain={[
+                  glucoseUnit === 'mg/dL' ? 60 : 3.3,
+                  glucoseUnit === 'mg/dL' ? 200 : 11.1
+                ]} 
                 tick={{ fontSize: 12 }} 
                 tickLine={false}
                 width={30}
@@ -138,9 +156,10 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                 }}
                 labelStyle={{ fontWeight: 'bold' }}
+                formatter={(value) => [`${value} ${glucoseUnit}`, 'Glucose']}
               />
-              <ReferenceLine y={80} stroke="#5ECFB9" strokeDasharray="3 3" />
-              <ReferenceLine y={140} stroke="#5ECFB9" strokeDasharray="3 3" />
+              <ReferenceLine y={getLowerTarget()} stroke="#5ECFB9" strokeDasharray="3 3" />
+              <ReferenceLine y={getUpperTarget()} stroke="#5ECFB9" strokeDasharray="3 3" />
               <Line
                 type="monotone"
                 dataKey="value"

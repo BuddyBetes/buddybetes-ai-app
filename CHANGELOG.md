@@ -50,6 +50,7 @@ All notable changes to this project will be documented in this file.
 - Refactored ResetPassword page into smaller, focused components
 - Enhanced log detail view with better visual organization
 - Improved UI differentiation between log entry types
+- Updated dashboard to properly display glucose values in user's preferred unit (mg/dL or mmol/L)
 
 ### Fixed
 - Various UI/UX improvements
@@ -60,7 +61,9 @@ All notable changes to this project will be documented in this file.
 - Resolved invalid prop warnings in React components
 - Corrected empty dropdown values in health data edit forms
 - Improved error handling for invalid date values
+- Fixed glucose unit conversion in dashboard and charts when switching between mg/dL and mmol/L
 
 ## [0.1.0] - Initial Release
 - Core functionality established
+
 
