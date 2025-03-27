@@ -149,7 +149,7 @@ const Assistant = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full w-full mx-auto max-w-md mt-[-5vh]"
+              className="flex flex-col items-center justify-center h-full w-full mx-auto max-w-md"
             >
               <VoiceButton 
                 onStartSession={handleStartSession}

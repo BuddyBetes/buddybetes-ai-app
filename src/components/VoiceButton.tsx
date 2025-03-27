@@ -60,7 +60,7 @@ const VoiceButton: React.FC<VoiceButtonProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto pt-10">
+    <div className="flex flex-col items-center justify-center h-full w-full px-4 max-w-md mx-auto">
       <VoiceStatusHeading status={status} />
       
       <VoiceProcessor
