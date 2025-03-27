@@ -79,10 +79,10 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
             <div className="log-detail-container">
               <LogDisplay log={log} />
               
-              <div className="action-buttons mt-8 flex gap-3">
+              <div className="action-buttons mt-8 space-y-3">
                 <Button 
                   variant="outline" 
-                  className="flex-1 gap-2"
+                  className="w-full gap-2 justify-center"
                   onClick={() => setIsEditing(true)}
                 >
                   <Edit className="h-4 w-4" />
@@ -90,7 +90,7 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
                 </Button>
                 <Button 
                   variant="destructive" 
-                  className="flex-1 gap-2"
+                  className="w-full gap-2 justify-center"
                   onClick={() => setIsDeleteDialogOpen(true)}
                 >
                   <Trash2 className="h-4 w-4" />
