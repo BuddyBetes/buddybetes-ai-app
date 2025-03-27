@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -28,10 +29,7 @@ export function usePwaInstall() {
         toast({
           title: "✨ You can now install BuddyBetes!",
           description: "Keep BuddyBetes on your device for quick access",
-          action: {
-            label: "Install",
-            onClick: () => installPwa(promptEvent)
-          },
+          action: <ToastAction altText="Install" onClick={() => installPwa(promptEvent)}>Install</ToastAction>,
           duration: 8000,
         });
       }
