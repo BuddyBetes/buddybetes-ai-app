@@ -13,6 +13,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import LogEditForm from './LogEditForm';
 
 interface LogDetailViewProps {
   log: GlucoseLog | null;
@@ -23,6 +24,7 @@ interface LogDetailViewProps {
 const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { deleteLog } = useLogContext();
   const { toast } = useToast();
 
@@ -51,35 +53,52 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
     }
   };
 
+  const handleEditComplete = () => {
+    setIsEditing(false);
+    toast({
+      title: "Log updated",
+      description: "Your log entry has been successfully updated.",
+    });
+  };
+
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <SheetContent className="sm:max-w-md md:max-w-lg" side="right">
           <SheetHeader className="mb-4">
-            <SheetTitle>Log Details</SheetTitle>
+            <SheetTitle>{isEditing ? "Edit Log" : "Log Details"}</SheetTitle>
           </SheetHeader>
-          <div className="log-detail-container">
-            <LogDisplay log={log} />
-            
-            <div className="action-buttons mt-8 flex gap-3">
-              <Button 
-                variant="outline" 
-                className="flex-1 gap-2"
-                onClick={() => console.log('Edit log:', log)}
-              >
-                <Edit className="h-4 w-4" />
-                Edit
-              </Button>
-              <Button 
-                variant="destructive" 
-                className="flex-1 gap-2"
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
+          
+          {isEditing ? (
+            <LogEditForm 
+              log={log} 
+              onCancel={() => setIsEditing(false)}
+              onComplete={handleEditComplete}
+            />
+          ) : (
+            <div className="log-detail-container">
+              <LogDisplay log={log} />
+              
+              <div className="action-buttons mt-8 flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 gap-2"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  className="flex-1 gap-2"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </SheetContent>
       </Sheet>
 

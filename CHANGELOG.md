@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Improved log details display with better layout and visual hierarchy
 - Move edit and delete actions to log detail view for cleaner list display
 - Replace three-dot menu with chevron icon in log list for better navigation indication
+- Added edit functionality to log entries with simplified form layout and manual date/time inputs
 
 ### Authentication Improvements
 - Enhanced password reset flow with more intuitive user experience
@@ -57,6 +58,7 @@ All notable changes to this project will be documented in this file.
 - Moved log management actions to detail view for better user experience
 - Simplified application header by removing text and keeping only the logo icon
 - Improved date handling in logs display to prevent undefined or invalid dates
+- Updated log edit form with single-row layout and manual date/time inputs
 
 ### Fixed
 - Various UI/UX improvements
