@@ -1,9 +1,10 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, X, Check } from 'lucide-react';
+import { Camera, X, Check, Edit3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { processGlucometerImage } from '@/utils/glucometerProcessing';
+import { Input } from '@/components/ui/input';
 
 interface GlucometerCaptureProps {
   onCapture: (reading: number) => void;
@@ -18,6 +19,8 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [manualEntryMode, setManualEntryMode] = useState(false);
+  const [manualReading, setManualReading] = useState<string>('');
   const { toast } = useToast();
 
   // Initialize camera
@@ -94,19 +97,20 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
           console.log('Extracted glucometer reading:', reading);
           onCapture(reading);
         } else {
+          // No reading detected - switch to manual entry mode
           toast({
-            title: "Reading Failed",
-            description: "Couldn't detect a valid glucose reading. Please try again or enter manually.",
-            variant: "destructive"
+            title: "Reading Not Detected",
+            description: "We couldn't automatically read the value. Please enter it manually.",
+            variant: "default"
           });
           setIsProcessing(false);
-          retakeImage();
+          setManualEntryMode(true);
         }
       } catch (error) {
         console.error('Error processing glucometer image:', error);
         toast({
           title: "Processing Error",
-          description: "There was a problem processing the image. Please try again.",
+          description: "There was a problem processing the image. Please try again or enter manually.",
           variant: "destructive"
         });
         setIsProcessing(false);
@@ -114,10 +118,31 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
       }
     }
   };
+  
+  const handleManualEntry = () => {
+    setManualEntryMode(true);
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  const submitManualReading = () => {
+    const reading = parseInt(manualReading, 10);
+    if (!isNaN(reading) && reading > 0) {
+      onCapture(reading);
+    } else {
+      toast({
+        title: "Invalid Reading",
+        description: "Please enter a valid number.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const retakeImage = () => {
     setCapturedImage(null);
     setIsCapturing(true);
+    setManualEntryMode(false);
   };
 
   if (error) {
@@ -125,6 +150,42 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
       <div className="flex flex-col items-center justify-center p-4">
         <p className="text-red-500 mb-4">{error}</p>
         <Button onClick={onClose} variant="outline">Close</Button>
+      </div>
+    );
+  }
+
+  if (manualEntryMode) {
+    return (
+      <div className="flex flex-col items-center space-y-4 p-4">
+        <h2 className="text-lg font-medium text-center">
+          Enter Glucose Reading
+        </h2>
+        <p className="text-sm text-gray-500 text-center -mt-2 mb-2">
+          Please enter your reading manually
+        </p>
+        
+        <Input
+          type="number"
+          value={manualReading}
+          onChange={(e) => setManualReading(e.target.value)}
+          placeholder="Enter reading (mg/dL)"
+          className="w-full max-w-xs text-center text-xl"
+        />
+        
+        <div className="flex justify-center space-x-4 w-full mt-4">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={submitManualReading} 
+            className="bg-buddy-500 hover:bg-buddy-600"
+          >
+            Submit
+          </Button>
+        </div>
       </div>
     );
   }
@@ -165,7 +226,7 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
-      <div className="flex justify-center space-x-4 w-full">
+      <div className="flex justify-center items-center space-x-4 w-full">
         {isCapturing ? (
           <>
             <Button 
@@ -182,6 +243,15 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
               className="bg-buddy-500 hover:bg-buddy-600 rounded-full h-16 w-16"
             >
               <Camera className="h-8 w-8" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleManualEntry}
+              className="rounded-full"
+              title="Enter reading manually"
+            >
+              <Edit3 className="h-6 w-6" />
             </Button>
           </>
         ) : (
@@ -206,6 +276,16 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
               ) : (
                 <Check className="h-6 w-6" />
               )}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleManualEntry}
+              className="rounded-full"
+              disabled={isProcessing}
+              title="Enter reading manually"
+            >
+              <Edit3 className="h-6 w-6" />
             </Button>
           </>
         )}

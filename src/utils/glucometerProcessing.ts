@@ -38,27 +38,39 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
       throw new Error(response.error.message || 'Error analyzing glucometer image');
     }
     
-    const result = response.data as GlucometerAnalysisResult;
+    // The response might be formatted differently when in glucometer mode
+    // Handle both potential formats
     
-    if (result.error) {
-      throw new Error(result.error);
+    // Format 1: Direct glucometer result format
+    if (response.data && typeof response.data.reading === 'number') {
+      return response.data.reading;
     }
     
-    if (typeof result.reading === 'number') {
-      // Success - we have a reading
-      return result.reading;
+    // Format 2: Food analysis format being used for glucometer
+    // In this case, we need to check if there's an error about no food being detected
+    // and treat it differently than a true error
+    if (response.data && response.data.error && 
+        response.data.error.includes('No food detected')) {
+      // This isn't an actual error for glucometer - we need to do manual entry
+      console.log('No reading detected automatically - user will need to enter manually');
+      return null;
+    }
+    
+    // If there's an actual error message, propagate it
+    if (response.data && response.data.error) {
+      throw new Error(response.data.error);
     }
     
     // Check for reading as a string and convert to number
-    if (typeof result.reading === 'string') {
-      const numReading = parseInt(result.reading, 10);
+    if (response.data && typeof response.data.reading === 'string') {
+      const numReading = parseInt(response.data.reading, 10);
       if (!isNaN(numReading)) {
         return numReading;
       }
     }
     
     // If we reach here, no valid reading was found
-    console.warn('No valid reading found in the analysis result:', result);
+    console.warn('No valid reading found in the analysis result:', response.data);
     return null;
     
   } catch (err) {
