@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
+import { convertGlucoseValue } from '@/utils/glucoseUtils';
 
 interface LogFormProps {
   onLogAdded?: () => void;
@@ -18,6 +20,7 @@ interface LogFormProps {
 const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) => {
   const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
+  const { glucoseUnit } = useGlucoseUnit();
   const [glucoseLevel, setGlucoseLevel] = useState('');
   const [food, setFood] = useState('');
   const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
@@ -33,10 +36,11 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!food.trim()) {
+    // At least one of glucose level or food must be entered
+    if (!glucoseLevel && !food.trim()) {
       toast({
         title: "Missing information",
-        description: "Please enter food information",
+        description: "Please enter either glucose level or food information",
         variant: "destructive",
       });
       return;
@@ -51,10 +55,26 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       return;
     }
     
+    let numericGlucoseLevel: number | undefined = undefined;
+    
+    if (glucoseLevel) {
+      numericGlucoseLevel = Number(glucoseLevel);
+      
+      // Convert from mmol/L to mg/dL if necessary for storage
+      // (We always store as mg/dL in the database for consistency)
+      if (glucoseUnit === 'mmol/L') {
+        numericGlucoseLevel = convertGlucoseValue(
+          numericGlucoseLevel,
+          'mmol/L',
+          'mg/dL'
+        );
+      }
+    }
+    
     const newLog = {
       timestamp: new Date(),
-      glucoseLevel: glucoseLevel ? Number(glucoseLevel) : undefined,
-      food: food.trim(),
+      glucoseLevel: numericGlucoseLevel,
+      food: food.trim() || undefined,
       mealContext,
       notes: notes.trim() || undefined,
     };
@@ -85,7 +105,7 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       
       <div className="space-y-1.5">
         <Label htmlFor="food" className="text-sm font-medium">
-          Food <span className="text-red-500">*</span>
+          Food (optional)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
           <Input
@@ -95,7 +115,6 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
             placeholder="What did you eat?"
             className="h-11 text-base"
             disabled={isLoading}
-            required
           />
         </motion.div>
       </div>
@@ -127,7 +146,7 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       
       <div className="space-y-1.5">
         <Label htmlFor="glucoseLevel" className="text-sm">
-          Glucose Level (mg/dL) (optional)
+          Glucose Level ({glucoseUnit}) (optional)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
           <Input
@@ -135,7 +154,7 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
             type="number"
             value={glucoseLevel}
             onChange={(e) => setGlucoseLevel(e.target.value)}
-            placeholder="Enter your glucose reading"
+            placeholder={`Enter your glucose reading (${glucoseUnit})`}
             className="h-11 text-base"
             disabled={isLoading}
           />

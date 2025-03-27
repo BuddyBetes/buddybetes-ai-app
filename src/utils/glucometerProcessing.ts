@@ -1,10 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { detectGlucoseUnit, convertGlucoseValue } from '@/utils/glucoseUtils';
+import { GlucoseUnit } from '@/types/global';
 
 interface GlucometerAnalysisResult {
   reading?: number;
   confidence?: number;
   error?: string;
+  detectedUnit?: GlucoseUnit;
 }
 
 /**
@@ -40,6 +43,25 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
     // If there's a direct reading in the response
     if (response.data && typeof response.data.reading === 'number') {
       console.log(`Successfully extracted reading: ${response.data.reading}`);
+      
+      // Get the user's preferred unit
+      const preferredUnit = localStorage.getItem('glucoseUnit') as GlucoseUnit || 'mg/dL';
+      
+      // Detect the likely unit of the measurement based on the value
+      const detectedUnit = response.data.detectedUnit || detectGlucoseUnit(response.data.reading);
+      console.log(`Detected glucose unit: ${detectedUnit}, Preferred unit: ${preferredUnit}`);
+      
+      // Convert if necessary
+      if (detectedUnit !== preferredUnit) {
+        const convertedReading = convertGlucoseValue(
+          response.data.reading, 
+          detectedUnit, 
+          preferredUnit
+        );
+        console.log(`Converted glucose reading from ${response.data.reading} ${detectedUnit} to ${convertedReading} ${preferredUnit}`);
+        return convertedReading;
+      }
+      
       return response.data.reading;
     }
     
@@ -61,6 +83,25 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
       const numReading = parseInt(response.data.reading, 10);
       if (!isNaN(numReading)) {
         console.log(`Successfully converted string reading "${response.data.reading}" to number: ${numReading}`);
+        
+        // Get the user's preferred unit
+        const preferredUnit = localStorage.getItem('glucoseUnit') as GlucoseUnit || 'mg/dL';
+        
+        // Detect the likely unit of the measurement based on the value
+        const detectedUnit = response.data.detectedUnit || detectGlucoseUnit(numReading);
+        console.log(`Detected glucose unit: ${detectedUnit}, Preferred unit: ${preferredUnit}`);
+        
+        // Convert if necessary
+        if (detectedUnit !== preferredUnit) {
+          const convertedReading = convertGlucoseValue(
+            numReading, 
+            detectedUnit, 
+            preferredUnit
+          );
+          console.log(`Converted glucose reading from ${numReading} ${detectedUnit} to ${convertedReading} ${preferredUnit}`);
+          return convertedReading;
+        }
+        
         return numReading;
       }
     }

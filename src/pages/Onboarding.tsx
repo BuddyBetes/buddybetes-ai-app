@@ -9,6 +9,8 @@ import OnboardingHeader from '@/components/onboarding/OnboardingHeader';
 import OnboardingStepIndicator from '@/components/onboarding/OnboardingStepIndicator';
 import OnboardingContent from '@/components/onboarding/OnboardingContent';
 import OnboardingNavigation from '@/components/onboarding/OnboardingNavigation';
+import { GlucoseUnit } from '@/types/global';
+import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 
 const steps = [
   "Personal Information",
@@ -17,6 +19,7 @@ const steps = [
 
 const Onboarding = () => {
   const { user, isAuthenticated, hasCompletedOnboarding, setHasCompletedOnboarding } = useAuth();
+  const { setGlucoseUnit } = useGlucoseUnit();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -36,6 +39,7 @@ const Onboarding = () => {
     weight: '',
     weightUnit: 'kg',
     diabetesType: '',
+    glucoseUnit: 'mg/dL' as GlucoseUnit,
   });
 
   // If not authenticated, redirect to sign in
@@ -95,6 +99,7 @@ const Onboarding = () => {
             weight: healthData.weight,
             weight_unit: healthData.weightUnit,
             diabetes_type: healthData.diabetesType,
+            glucose_unit: healthData.glucoseUnit,
             completed_onboarding: true,
             updated_at: new Date().toISOString()
           })
@@ -112,12 +117,16 @@ const Onboarding = () => {
             weight: healthData.weight,
             weight_unit: healthData.weightUnit,
             diabetes_type: healthData.diabetesType,
+            glucose_unit: healthData.glucoseUnit,
             completed_onboarding: true,
           });
       }
       
       // Update context state
       setHasCompletedOnboarding(true);
+      
+      // Update glucose unit in context
+      await setGlucoseUnit(healthData.glucoseUnit);
       
       toast({
         title: "Onboarding completed!",

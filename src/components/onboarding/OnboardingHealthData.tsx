@@ -1,15 +1,15 @@
 
-import React, { useState } from 'react';
-import { format, parse } from 'date-fns';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { CalendarIcon } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { GlucoseUnit } from '@/types/global';
 
 interface OnboardingHealthDataProps {
   healthData: {
@@ -20,6 +20,7 @@ interface OnboardingHealthDataProps {
     weight: string;
     weightUnit: string;
     diabetesType: string;
+    glucoseUnit: GlucoseUnit;
   };
   setHealthData: React.Dispatch<React.SetStateAction<{
     gender: string;
@@ -29,196 +30,204 @@ interface OnboardingHealthDataProps {
     weight: string;
     weightUnit: string;
     diabetesType: string;
+    glucoseUnit: GlucoseUnit;
   }>>;
 }
 
 const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData, setHealthData }) => {
-  // Calculate max date (18 years ago) and min date (100 years ago)
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() - 1); // Allow children (minimum 1 year old)
-  
-  const minDate = new Date();
-  minDate.setFullYear(minDate.getFullYear() - 100);
+  const genders = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'non-binary', label: 'Non-binary' },
+    { value: 'other', label: 'Other' },
+    { value: 'prefer-not-to-say', label: 'Prefer not to say' }
+  ];
 
-  const [dateInputValue, setDateInputValue] = useState(
-    healthData.birthdate ? format(healthData.birthdate, 'yyyy-MM-dd') : ''
-  );
+  const diabetesTypes = [
+    { value: 'type1', label: 'Type 1' },
+    { value: 'type2', label: 'Type 2' },
+    { value: 'gestational', label: 'Gestational' },
+    { value: 'prediabetes', label: 'Prediabetes' },
+    { value: 'other', label: 'Other' }
+  ];
 
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDateInputValue(value);
-    
-    try {
-      // Try to parse the date
-      if (value) {
-        const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
-        // Check if the date is valid and within range
-        if (!isNaN(parsedDate.getTime()) && parsedDate <= maxDate && parsedDate >= minDate) {
-          setHealthData({...healthData, birthdate: parsedDate});
-        }
-      } else {
-        // If input is cleared, clear the date
-        setHealthData({...healthData, birthdate: undefined});
-      }
-    } catch (error) {
-      console.error("Error parsing date:", error);
-    }
+  const heightUnits = [
+    { value: 'cm', label: 'Centimeters (cm)' },
+    { value: 'ft', label: 'Feet (ft)' }
+  ];
+
+  const weightUnits = [
+    { value: 'kg', label: 'Kilograms (kg)' },
+    { value: 'lbs', label: 'Pounds (lbs)' }
+  ];
+
+  const glucoseUnits = [
+    { value: 'mg/dL', label: 'mg/dL' },
+    { value: 'mmol/L', label: 'mmol/L' }
+  ];
+
+  const handleHeightUnitChange = (value: string) => {
+    setHealthData(prev => ({
+      ...prev,
+      heightUnit: value
+    }));
+  };
+
+  const handleWeightUnitChange = (value: string) => {
+    setHealthData(prev => ({
+      ...prev,
+      weightUnit: value
+    }));
+  };
+
+  const handleGlucoseUnitChange = (value: string) => {
+    setHealthData(prev => ({
+      ...prev,
+      glucoseUnit: value as GlucoseUnit
+    }));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setHealthData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold mb-4">Health Information</h3>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-4"
+    >
+      <h2 className="text-xl font-semibold mb-4">Tell us about your health</h2>
       
-      <div className="space-y-6">
-        <div>
-          <Label className="mb-2 block text-gray-700 font-medium">Gender</Label>
-          <RadioGroup 
-            value={healthData.gender} 
-            onValueChange={(value) => setHealthData({...healthData, gender: value})}
-            className="flex flex-col space-y-2 mt-2"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="male" id="male" />
-              <Label htmlFor="male" className="font-normal">Male</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="female" id="female" />
-              <Label htmlFor="female" className="font-normal">Female</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="other" id="other" />
-              <Label htmlFor="other" className="font-normal">Other</Label>
-            </div>
-          </RadioGroup>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="gender">Gender</Label>
+          <Select value={healthData.gender} onValueChange={(value) => setHealthData(prev => ({ ...prev, gender: value }))}>
+            <SelectTrigger id="gender" className="w-full">
+              <SelectValue placeholder="Select gender" />
+            </SelectTrigger>
+            <SelectContent>
+              {genders.map(gender => (
+                <SelectItem key={gender.value} value={gender.value}>{gender.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div>
-          <Label className="mb-2 block text-gray-700 font-medium">Date of Birth</Label>
-          <div className="space-y-2">
-            <Input
-              type="date"
-              value={dateInputValue}
-              onChange={handleDateInputChange}
-              max={format(maxDate, 'yyyy-MM-dd')}
-              min={format(minDate, 'yyyy-MM-dd')}
-              className="w-full h-12 rounded-xl"
-            />
-            <p className="text-xs text-gray-500">Or select from calendar:</p>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full h-12 justify-start text-left font-normal rounded-xl",
-                    !healthData.birthdate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {healthData.birthdate ? (
-                    format(healthData.birthdate, "PPP")
-                  ) : (
-                    <span>Select your date of birth</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={healthData.birthdate}
-                  onSelect={(date) => {
-                    setHealthData({...healthData, birthdate: date || undefined});
-                    if (date) {
-                      setDateInputValue(format(date, 'yyyy-MM-dd'));
-                    }
-                  }}
-                  disabled={(date) => date > maxDate || date < minDate}
-                  initialFocus
-                  captionLayout="dropdown-buttons"
-                  fromYear={maxDate.getFullYear() - 100}
-                  toYear={maxDate.getFullYear()}
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="height" className="mb-2 block text-gray-700 font-medium">Height</Label>
-            <div className="flex space-x-2">
-              <Input 
-                id="height" 
-                type="number" 
-                value={healthData.height} 
-                onChange={(e) => setHealthData({...healthData, height: e.target.value})}
-                className="flex-1 h-12 rounded-xl"
-                placeholder="Enter height"
-              />
-              <Select 
-                value={healthData.heightUnit} 
-                onValueChange={(value) => setHealthData({...healthData, heightUnit: value})}
+        <div className="space-y-2">
+          <Label htmlFor="birthdate">Birthdate</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                id="birthdate"
+                className={cn(
+                  "w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                  !healthData.birthdate && "text-muted-foreground"
+                )}
               >
-                <SelectTrigger className="w-24 h-12 rounded-xl">
+                {healthData.birthdate ? format(healthData.birthdate, "PPP") : "Pick a date"}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={healthData.birthdate}
+                onSelect={(date) => setHealthData(prev => ({ ...prev, birthdate: date }))}
+                disabled={(date) => date > new Date()}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="height">Height</Label>
+            <div className="flex space-x-2">
+              <Input
+                id="height"
+                name="height"
+                placeholder="Height"
+                value={healthData.height}
+                onChange={handleInputChange}
+                className="flex-1"
+              />
+              <Select value={healthData.heightUnit} onValueChange={handleHeightUnitChange}>
+                <SelectTrigger className="w-24">
                   <SelectValue placeholder="Unit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cm">cm</SelectItem>
-                  <SelectItem value="ft">ft</SelectItem>
+                  {heightUnits.map(unit => (
+                    <SelectItem key={unit.value} value={unit.value}>{unit.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           
-          <div>
-            <Label htmlFor="weight" className="mb-2 block text-gray-700 font-medium">Weight</Label>
+          <div className="space-y-2">
+            <Label htmlFor="weight">Weight</Label>
             <div className="flex space-x-2">
-              <Input 
-                id="weight" 
-                type="number" 
-                value={healthData.weight} 
-                onChange={(e) => setHealthData({...healthData, weight: e.target.value})}
-                className="flex-1 h-12 rounded-xl"
-                placeholder="Enter weight"
+              <Input
+                id="weight"
+                name="weight"
+                placeholder="Weight"
+                value={healthData.weight}
+                onChange={handleInputChange}
+                className="flex-1"
               />
-              <Select 
-                value={healthData.weightUnit} 
-                onValueChange={(value) => setHealthData({...healthData, weightUnit: value})}
-              >
-                <SelectTrigger className="w-24 h-12 rounded-xl">
+              <Select value={healthData.weightUnit} onValueChange={handleWeightUnitChange}>
+                <SelectTrigger className="w-24">
                   <SelectValue placeholder="Unit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="kg">kg</SelectItem>
-                  <SelectItem value="lbs">lbs</SelectItem>
+                  {weightUnits.map(unit => (
+                    <SelectItem key={unit.value} value={unit.value}>{unit.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="diabetesType" className="mb-2 block text-gray-700 font-medium">Diabetes Type</Label>
-          <Select 
-            value={healthData.diabetesType} 
-            onValueChange={(value) => setHealthData({...healthData, diabetesType: value})}
-          >
-            <SelectTrigger className="w-full h-12 rounded-xl" id="diabetesType">
-              <SelectValue placeholder="Select your diabetes type" />
+        <div className="space-y-2">
+          <Label htmlFor="diabetesType">Diabetes Type</Label>
+          <Select value={healthData.diabetesType} onValueChange={(value) => setHealthData(prev => ({ ...prev, diabetesType: value }))}>
+            <SelectTrigger id="diabetesType" className="w-full">
+              <SelectValue placeholder="Select diabetes type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="type1">Type 1</SelectItem>
-              <SelectItem value="type2">Type 2</SelectItem>
-              <SelectItem value="gestational">Gestational</SelectItem>
-              <SelectItem value="prediabetes">Prediabetes</SelectItem>
-              <SelectItem value="lada">LADA</SelectItem>
-              <SelectItem value="mody">MODY</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              {diabetesTypes.map(type => (
+                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="glucoseUnit">Preferred Glucose Unit</Label>
+          <Select value={healthData.glucoseUnit} onValueChange={handleGlucoseUnitChange}>
+            <SelectTrigger id="glucoseUnit" className="w-full">
+              <SelectValue placeholder="Select glucose unit" />
+            </SelectTrigger>
+            <SelectContent>
+              {glucoseUnits.map(unit => (
+                <SelectItem key={unit.value} value={unit.value}>{unit.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500 mt-1">
+            This setting can be changed later in your profile settings.
+          </p>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

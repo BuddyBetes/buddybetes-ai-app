@@ -6,7 +6,6 @@ const SignInLogo: React.FC = () => {
   return (
     <div className="flex flex-col items-center space-y-6 mb-8">
       <motion.div 
-        className="w-20 h-20 rounded-full bg-white flex items-center justify-center"
         animate={{ scale: [1, 1.05, 1] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >

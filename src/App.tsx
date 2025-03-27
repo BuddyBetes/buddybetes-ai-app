@@ -1,20 +1,25 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { LogProvider } from './context/LogContext';
-import AppRoutes from './components/AppRoutes';
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./components/AppRoutes";
+import { AuthProvider } from "./context/AuthContext";
+import { LogProvider } from "./context/LogContext";
+import { Toaster } from "@/components/ui/toaster";
+import { GlucoseUnitProvider } from "@/context/GlucoseUnitContext";
 
-const App: React.FC = () => {
+function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <AuthProvider>
-        <LogProvider>
-          <AppRoutes />
-        </LogProvider>
+        <GlucoseUnitProvider>
+          <LogProvider>
+            <AppRoutes />
+            <Toaster />
+          </LogProvider>
+        </GlucoseUnitProvider>
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   );
-};
+}
 
 export default App;

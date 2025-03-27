@@ -1,222 +1,278 @@
 
 import React, { useState } from 'react';
-import { SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { format, parse } from 'date-fns';
+import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CalendarIcon, Loader2 } from 'lucide-react';
+import { GlucoseUnit } from '@/types/global';
 
-interface HealthDataEditProps {
-  healthData: {
-    gender: string;
-    birthdate: Date | undefined;
-    height: string;
-    heightUnit: string;
-    weight: string;
-    weightUnit: string;
-    diabetesType: string;
-  };
-  setHealthData: React.Dispatch<React.SetStateAction<{
-    gender: string;
-    birthdate: Date | undefined;
-    height: string;
-    heightUnit: string;
-    weight: string;
-    weightUnit: string;
-    diabetesType: string;
-  }>>;
+interface HealthData {
+  height: string;
+  height_unit: string;
+  weight: string;
+  weight_unit: string;
+  birthdate: string;
+  gender: string;
+  diabetes_type: string;
+  glucose_unit: GlucoseUnit;
 }
 
-const HealthDataEdit = ({ healthData, setHealthData }: HealthDataEditProps) => {
+interface HealthDataEditProps {
+  healthData: HealthData;
+  onUpdate: () => void;
+  onCancel: () => void;
+}
+
+const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, onCancel }) => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [localHealthData, setLocalHealthData] = useState(healthData);
-  const [isSaving, setIsSaving] = useState(false);
-  const [dateInputValue, setDateInputValue] = useState(
-    localHealthData.birthdate ? format(localHealthData.birthdate, 'yyyy-MM-dd') : ''
-  );
+  const { setGlucoseUnit } = useGlucoseUnit();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    height: healthData.height || '',
+    height_unit: healthData.height_unit || 'cm',
+    weight: healthData.weight || '',
+    weight_unit: healthData.weight_unit || 'kg',
+    birthdate: healthData.birthdate ? new Date(healthData.birthdate) : undefined,
+    gender: healthData.gender || '',
+    diabetes_type: healthData.diabetes_type || '',
+    glucose_unit: healthData.glucose_unit || 'mg/dL' as GlucoseUnit,
+  });
+  
+  const genders = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'non-binary', label: 'Non-binary' },
+    { value: 'other', label: 'Other' },
+    { value: 'prefer-not-to-say', label: 'Prefer not to say' }
+  ];
 
-  const handleHealthDataChange = (field: string, value: string | Date) => {
-    setLocalHealthData(prev => ({ ...prev, [field]: value }));
+  const diabetesTypes = [
+    { value: 'type1', label: 'Type 1' },
+    { value: 'type2', label: 'Type 2' },
+    { value: 'gestational', label: 'Gestational' },
+    { value: 'prediabetes', label: 'Prediabetes' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDateInputValue(value);
+  
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) return;
+    
+    setLoading(true);
     
     try {
-      // Try to parse the date
-      if (value) {
-        const parsedDate = parse(value, 'yyyy-MM-dd', new Date());
-        // Check if the date is valid
-        if (!isNaN(parsedDate.getTime())) {
-          handleHealthDataChange('birthdate', parsedDate);
-        }
-      } else {
-        // If input is cleared, clear the date
-        handleHealthDataChange('birthdate', undefined as unknown as Date);
+      // Format the date for database
+      const formattedData = {
+        ...formData,
+        birthdate: formData.birthdate ? formData.birthdate.toISOString() : null,
+      };
+      
+      const { error } = await supabase
+        .from('health_data')
+        .update(formattedData)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      
+      // Update the glucose unit in the context
+      if (formData.glucose_unit !== healthData.glucose_unit) {
+        await setGlucoseUnit(formData.glucose_unit);
       }
-    } catch (error) {
-      console.error("Error parsing date:", error);
-    }
-  };
-
-  const saveHealthData = async () => {
-    setIsSaving(true);
-    try {
-      await setHealthData(localHealthData);
       
       toast({
-        title: "Success",
-        description: "Your health data has been updated",
+        title: "Health data updated",
+        description: "Your health information has been saved."
       });
+      
+      onUpdate();
     } catch (error) {
-      console.error('Error saving health data:', error);
+      console.error('Error updating health data:', error);
       toast({
-        title: "Error",
-        description: "Failed to update your health data",
-        variant: "destructive",
+        title: "Update failed",
+        description: "Failed to update your health data.",
+        variant: "destructive"
       });
     } finally {
-      setIsSaving(false);
+      setLoading(false);
     }
   };
-
+  
   return (
-    <SheetContent>
-      <SheetHeader>
-        <SheetTitle className="text-base">Edit Health Data</SheetTitle>
-        <SheetDescription className="text-xs">
-          Make changes to your health profile here.
-        </SheetDescription>
-      </SheetHeader>
-      <div className="space-y-4 py-3">
-        <div>
-          <Label htmlFor="gender" className="block mb-1.5 text-sm">
-            Gender
-          </Label>
-          <RadioGroup 
-            value={localHealthData.gender} 
-            onValueChange={(value) => handleHealthDataChange('gender', value)}
-            className="flex flex-col space-y-1.5"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Female" id="female-edit" />
-              <Label htmlFor="female-edit" className="font-normal text-sm">Female</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Male" id="male-edit" />
-              <Label htmlFor="male-edit" className="font-normal text-sm">Male</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Other" id="other-edit" />
-              <Label htmlFor="other-edit" className="font-normal text-sm">Other</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        <div>
-          <Label htmlFor="birthdate" className="block mb-1.5 text-sm">
-            Date of Birth
-          </Label>
-          <Input
-            id="birthdate"
-            type="date"
-            value={dateInputValue}
-            onChange={handleDateInputChange}
-            className="w-full text-sm"
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="height" className="block mb-1.5 text-sm">
-              Height
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="height"
-                value={localHealthData.height}
-                onChange={(e) => handleHealthDataChange('height', e.target.value)}
-                className="flex-1 text-sm"
-              />
-              <Select 
-                value={localHealthData.heightUnit} 
-                onValueChange={(value) => handleHealthDataChange('heightUnit', value)}
-              >
-                <SelectTrigger className="w-20 text-sm">
-                  <SelectValue placeholder="Unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cm" className="text-sm">cm</SelectItem>
-                  <SelectItem value="in" className="text-sm">in</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="weight" className="block mb-1.5 text-sm">
-              Weight
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="weight"
-                value={localHealthData.weight}
-                onChange={(e) => handleHealthDataChange('weight', e.target.value)}
-                className="flex-1 text-sm"
-              />
-              <Select 
-                value={localHealthData.weightUnit} 
-                onValueChange={(value) => handleHealthDataChange('weightUnit', value)}
-              >
-                <SelectTrigger className="w-20 text-sm">
-                  <SelectValue placeholder="Unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="kg" className="text-sm">kg</SelectItem>
-                  <SelectItem value="lbs" className="text-sm">lbs</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <Label htmlFor="diabetesType" className="block mb-1.5 text-sm">
-            Diabetes Type
-          </Label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="gender">Gender</Label>
           <Select 
-            value={localHealthData.diabetesType} 
-            onValueChange={(value) => handleHealthDataChange('diabetesType', value)}
+            value={formData.gender} 
+            onValueChange={value => handleSelectChange('gender', value)}
           >
-            <SelectTrigger className="w-full text-sm">
-              <SelectValue placeholder="Select diabetes type" />
+            <SelectTrigger id="gender">
+              <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Type 1" className="text-sm">Type 1</SelectItem>
-              <SelectItem value="Type 2" className="text-sm">Type 2</SelectItem>
-              <SelectItem value="Gestational" className="text-sm">Gestational</SelectItem>
-              <SelectItem value="Pre-diabetes" className="text-sm">Pre-diabetes</SelectItem>
+              {genders.map(item => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="birthdate">Birthdate</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                id="birthdate"
+                className="w-full justify-start text-left font-normal"
+              >
+                {formData.birthdate ? (
+                  format(formData.birthdate, "PP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.birthdate}
+                onSelect={date => setFormData(prev => ({ ...prev, birthdate: date }))}
+                disabled={(date) => date > new Date()}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="height">Height</Label>
+          <div className="flex">
+            <Input
+              id="height"
+              name="height"
+              value={formData.height}
+              onChange={handleInputChange}
+              className="rounded-r-none"
+            />
+            <Select 
+              value={formData.height_unit}
+              onValueChange={value => handleSelectChange('height_unit', value)}
+            >
+              <SelectTrigger className="w-24 rounded-l-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cm">cm</SelectItem>
+                <SelectItem value="ft">ft</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="weight">Weight</Label>
+          <div className="flex">
+            <Input
+              id="weight"
+              name="weight"
+              value={formData.weight}
+              onChange={handleInputChange}
+              className="rounded-r-none"
+            />
+            <Select 
+              value={formData.weight_unit}
+              onValueChange={value => handleSelectChange('weight_unit', value)}
+            >
+              <SelectTrigger className="w-24 rounded-l-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kg">kg</SelectItem>
+                <SelectItem value="lbs">lbs</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="diabetes_type">Diabetes Type</Label>
+          <Select 
+            value={formData.diabetes_type} 
+            onValueChange={value => handleSelectChange('diabetes_type', value)}
+          >
+            <SelectTrigger id="diabetes_type">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {diabetesTypes.map(item => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="glucose_unit">Glucose Unit</Label>
+          <Select 
+            value={formData.glucose_unit} 
+            onValueChange={value => handleSelectChange('glucose_unit', value as GlucoseUnit)}
+          >
+            <SelectTrigger id="glucose_unit">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mg/dL">mg/dL</SelectItem>
+              <SelectItem value="mmol/L">mmol/L</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
-      <div className="flex justify-end mt-3">
-        <SheetClose asChild>
-          <Button 
-            onClick={saveHealthData} 
-            disabled={isSaving}
-            size="sm"
-            className="text-sm"
-          >
-            {isSaving ? "Saving..." : "Save changes"}
-          </Button>
-        </SheetClose>
+      
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button variant="outline" onClick={onCancel} disabled={loading}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save Changes'
+          )}
+        </Button>
       </div>
-    </SheetContent>
+    </form>
   );
 };
 

@@ -7,9 +7,30 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { glucoseUnit, setGlucoseUnit } = useGlucoseUnit();
+  const { toast } = useToast();
+  
+  const handleGlucoseUnitChange = async (unit: string) => {
+    try {
+      await setGlucoseUnit(unit as 'mg/dL' | 'mmol/L');
+      toast({
+        title: "Unit updated",
+        description: `Glucose unit is now set to ${unit}`,
+      });
+    } catch (error) {
+      console.error('Error updating glucose unit:', error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update glucose unit",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Layout title="Settings">
@@ -123,20 +144,23 @@ const Settings = () => {
             <div className="p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <span>Glucose Unit</span>
-                <Select defaultValue="mg">
+                <Select 
+                  value={glucoseUnit}
+                  onValueChange={handleGlucoseUnitChange}
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Unit" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="mg">mg/dL</SelectItem>
-                    <SelectItem value="mmol">mmol/L</SelectItem>
+                    <SelectItem value="mg/dL">mg/dL</SelectItem>
+                    <SelectItem value="mmol/L">mmol/L</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="flex items-center justify-between">
                 <span>Weight Unit</span>
-                <Select defaultValue="lbs">
+                <Select defaultValue="kg">
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Unit" />
                   </SelectTrigger>
