@@ -39,6 +39,7 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
     
     // If there's a direct reading in the response
     if (response.data && typeof response.data.reading === 'number') {
+      console.log(`Successfully extracted reading: ${response.data.reading}`);
       return response.data.reading;
     }
     
@@ -59,6 +60,7 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
     if (response.data && typeof response.data.reading === 'string') {
       const numReading = parseInt(response.data.reading, 10);
       if (!isNaN(numReading)) {
+        console.log(`Successfully converted string reading "${response.data.reading}" to number: ${numReading}`);
         return numReading;
       }
     }

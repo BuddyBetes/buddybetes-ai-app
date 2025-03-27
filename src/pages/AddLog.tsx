@@ -36,10 +36,37 @@ const AddLog: React.FC = () => {
     }, 50);
   };
 
-  const handleGlucometerCapture = (reading: number) => {
+  const handleGlucometerCapture = async (reading: number) => {
     console.log('Glucometer reading captured:', reading);
-    setCapturedGlucoseReading(reading);
-    setShowManualLog(true);
+    
+    try {
+      // Directly add the glucose log
+      await addLog({
+        timestamp: new Date(),
+        glucoseLevel: reading,
+        food: "",
+        notes: "Captured via glucometer scan"
+      });
+      
+      toast({
+        title: "Glucose reading logged",
+        description: `Reading of ${reading} mg/dL has been added to your logs`,
+      });
+      
+      // Navigate to logs page after successful save
+      navigate('/logs');
+    } catch (err) {
+      console.error('Error saving glucose reading:', err);
+      toast({
+        title: "Error saving reading",
+        description: "There was a problem saving your glucose reading",
+        variant: "destructive",
+      });
+      
+      // If there's an error, show the manual log form with the captured reading
+      setCapturedGlucoseReading(reading);
+      setShowManualLog(true);
+    }
   };
 
   const handleSaveFood = async (foodItems: FoodItem[]) => {
