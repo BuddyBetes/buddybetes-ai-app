@@ -23,7 +23,7 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
     }
     
     // Call Supabase edge function for glucometer OCR
-    console.log('Calling analyze-glucometer-image function...');
+    console.log('Calling analyze-food-image function with glucometer mode...');
     const response = await supabase.functions.invoke('analyze-food-image', {
       body: { 
         image: base64Image,
