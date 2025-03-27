@@ -102,7 +102,7 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
           onCapture(reading);
         } else {
           // No reading detected - set error and stay on the current screen
-          setProcessingError('No glucose reading detected. Please try again with a clearer photo or enter manually.');
+          setProcessingError('No glucose reading detected. Please try again with a clearer photo, ensure the display is well-lit and centered, or enter the reading manually.');
           setIsProcessing(false);
         }
       } catch (error) {

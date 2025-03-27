@@ -38,21 +38,16 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
       throw new Error(response.error.message || 'Error analyzing glucometer image');
     }
     
-    // The response might be formatted differently when in glucometer mode
-    // Handle both potential formats
-    
-    // Format 1: Direct glucometer result format
+    // If there's a direct reading in the response
     if (response.data && typeof response.data.reading === 'number') {
       return response.data.reading;
     }
     
-    // Format 2: Food analysis format being used for glucometer
-    // In this case, we need to check if there's an error about no food being detected
-    // and treat it differently than a true error
+    // If there's an error about no reading detected
     if (response.data && response.data.error && 
-        response.data.error.includes('No food detected')) {
-      // This isn't an actual error for glucometer - we need to do manual entry
-      console.log('No reading detected automatically - user will need to enter manually');
+        (response.data.error.includes('No glucose reading') || 
+         response.data.error.includes('Unable to detect a valid glucose reading'))) {
+      console.log('No valid glucose reading detected - user will need to try again or enter manually');
       return null;
     }
     
