@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
@@ -10,8 +9,8 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [hasShownInstallPrompt, setHasShownInstallPrompt] = useState(false);
-  
+  const [hasShownInstallPrompt, setHasShownInstallPrompt] = useState(true);
+
   useEffect(() => {
     // Check if the app is already installed
     const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches || 
@@ -29,21 +28,24 @@ export function usePwaInstall() {
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
       
-      // Only show the toast once per session
+      // Toast disabled - set to true above to prevent showing
       if (!hasShownInstallPrompt && !isAppInstalled) {
         setHasShownInstallPrompt(true);
         
-        console.log("PWA detection: Showing installation toast");
+        console.log("PWA detection: Toast notification disabled");
         
-        // Show the installation toast with a proper action
+        // Toast is now disabled by default
+        // Uncomment below to re-enable
+        /*
         setTimeout(() => {
           toast({
             title: "✨ Install BuddyBetes on your device!",
             description: "Add to homescreen for the best experience",
             action: <ToastAction altText="Install" onClick={() => installPwa(promptEvent)}>Install</ToastAction>,
-            duration: 10000, // Show for longer to ensure visibility
+            duration: 10000,
           });
-        }, 2000); // Small delay to ensure toast appears after page load
+        }, 2000);
+        */
       }
     };
 
@@ -54,9 +56,11 @@ export function usePwaInstall() {
     
     if (isIOS && !isAppInstalled && !hasShownInstallPrompt) {
       setHasShownInstallPrompt(true);
-      console.log("PWA detection: iOS device detected, showing safari instructions");
+      console.log("PWA detection: iOS device detected, toast disabled");
       
-      // Show iOS-specific installation instructions
+      // iOS-specific installation toast also disabled
+      // Uncomment below to re-enable
+      /*
       setTimeout(() => {
         toast({
           title: "📱 Install BuddyBetes on iOS",
@@ -64,6 +68,7 @@ export function usePwaInstall() {
           duration: 10000,
         });
       }, 3000);
+      */
     }
 
     return () => {
@@ -71,6 +76,7 @@ export function usePwaInstall() {
     };
   }, [hasShownInstallPrompt]);
 
+  // Keep the installation function available for potential manual triggering
   const installPwa = async (promptEvent: BeforeInstallPromptEvent) => {
     if (!promptEvent) return;
     
