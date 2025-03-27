@@ -1,0 +1,6 @@
+
+# BuddyBetes robots.txt file
+User-agent: *
+Allow: /
+
+Sitemap: https://buddybetes.com/sitemap.xml
