@@ -1,10 +1,11 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, X, Check, Edit3 } from 'lucide-react';
+import { Camera, X, Check, Edit3, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { processGlucometerImage } from '@/utils/glucometerProcessing';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface GlucometerCaptureProps {
   onCapture: (reading: number) => void;
@@ -18,6 +19,7 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
   const [isCapturing, setIsCapturing] = useState(true);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [processingError, setProcessingError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [manualEntryMode, setManualEntryMode] = useState(false);
   const [manualReading, setManualReading] = useState<string>('');
@@ -81,6 +83,7 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
         
         setCapturedImage(imageData);
         setIsCapturing(false);
+        setProcessingError(null); // Clear any previous errors
       }
     }
   };
@@ -88,6 +91,7 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
   const confirmImage = async () => {
     if (capturedImage) {
       setIsProcessing(true);
+      setProcessingError(null);
       
       try {
         // Process the image to extract the glucometer reading
@@ -97,30 +101,21 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
           console.log('Extracted glucometer reading:', reading);
           onCapture(reading);
         } else {
-          // No reading detected - switch to manual entry mode
-          toast({
-            title: "Reading Not Detected",
-            description: "We couldn't automatically read the value. Please enter it manually.",
-            variant: "default"
-          });
+          // No reading detected - set error and stay on the current screen
+          setProcessingError('No glucose reading detected. Please try again with a clearer photo or enter manually.');
           setIsProcessing(false);
-          setManualEntryMode(true);
         }
       } catch (error) {
         console.error('Error processing glucometer image:', error);
-        toast({
-          title: "Processing Error",
-          description: "There was a problem processing the image. Please try again or enter manually.",
-          variant: "destructive"
-        });
+        setProcessingError(error instanceof Error ? error.message : 'Processing error');
         setIsProcessing(false);
-        retakeImage();
       }
     }
   };
   
   const handleManualEntry = () => {
     setManualEntryMode(true);
+    setProcessingError(null);
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
@@ -143,6 +138,7 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
     setCapturedImage(null);
     setIsCapturing(true);
     setManualEntryMode(false);
+    setProcessingError(null);
   };
 
   if (error) {
@@ -198,6 +194,14 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
       <p className="text-sm text-gray-500 text-center -mt-2 mb-2">
         Align the display in the center of your camera
       </p>
+      
+      {processingError && (
+        <Alert variant="destructive" className="mx-2 mb-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{processingError}</AlertDescription>
+        </Alert>
+      )}
       
       <div className="relative w-full max-w-md rounded-lg overflow-hidden bg-black">
         {isCapturing ? (
