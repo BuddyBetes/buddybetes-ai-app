@@ -81,12 +81,16 @@ const Navigation: React.FC = () => {
         );
       })}
 
-      {/* Add button for Dashboard and Logs pages */}
+      {/* Add button for Dashboard and Logs pages with responsive positioning */}
       {(currentPath === '/dashboard' || currentPath === '/logs') && (
         <button
           onClick={handleAddClick}
           aria-label="Add new log"
-          className="fixed bottom-24 right-6 w-14 h-14 bg-buddy-500 rounded-full shadow-lg flex items-center justify-center text-white touch-manipulation"
+          className="fixed right-6 w-14 h-14 bg-buddy-500 rounded-full shadow-lg flex items-center justify-center text-white touch-manipulation transition-all duration-300"
+          style={{
+            bottom: `calc(${isMobile ? '70px' : '80px'} + var(--safe-area-bottom, 0px))`,
+            zIndex: 40
+          }}
         >
           <Plus size={24} />
         </button>
