@@ -9,7 +9,7 @@ interface GlucometerAnalysisResult {
 
 /**
  * Processes a glucometer image to extract the glucose reading
- * This uses Supabase Edge Function with AI to extract the number from the image
+ * This uses a dedicated Supabase Edge Function with AI to extract the number from the image
  */
 export const processGlucometerImage = async (imageData: string): Promise<number | null> => {
   try {
@@ -22,12 +22,11 @@ export const processGlucometerImage = async (imageData: string): Promise<number 
       throw new Error('Invalid image data. Please try taking another photo.');
     }
     
-    // Call Supabase edge function for glucometer OCR
-    console.log('Calling analyze-food-image function with glucometer mode...');
-    const response = await supabase.functions.invoke('analyze-food-image', {
+    // Call the dedicated Supabase edge function for glucometer OCR
+    console.log('Calling glucometer-ocr edge function...');
+    const response = await supabase.functions.invoke('glucometer-ocr', {
       body: { 
-        image: base64Image,
-        mode: 'glucometer' // Specify we want glucometer reading mode
+        image: base64Image
       }
     });
     

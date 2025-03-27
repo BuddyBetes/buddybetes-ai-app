@@ -1,3 +1,4 @@
 
 project_id = "zjqiikollqinafveesvo"
 [functions.analyze-food-image]
+[functions.glucometer-ocr]
