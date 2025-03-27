@@ -59,6 +59,7 @@ All notable changes to this project will be documented in this file.
 - Simplified application header by removing text and keeping only the logo icon
 - Improved date handling in logs display to prevent undefined or invalid dates
 - Updated log edit form with single-row layout and manual date/time inputs
+- Redesigned health data edit form with one-row-per-field layout and manual date input
 
 ### Fixed
 - Various UI/UX improvements
@@ -74,4 +75,3 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.0] - Initial Release
 - Core functionality established
-

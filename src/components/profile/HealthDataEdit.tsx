@@ -8,10 +8,8 @@ import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { GlucoseUnit } from '@/types/global';
 
 interface HealthData {
@@ -37,19 +35,23 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
   const { setGlucoseUnit } = useGlucoseUnit();
   const [loading, setLoading] = useState(false);
   
-  // Ensure the birthdate is a Date object
-  const initialBirthdate = typeof healthData.birthdate === 'string' && healthData.birthdate
-    ? new Date(healthData.birthdate)
-    : healthData.birthdate instanceof Date 
-      ? healthData.birthdate 
-      : undefined;
+  // Format initial date for the date input (YYYY-MM-DD)
+  const formatDateForInput = (date: Date | string | undefined): string => {
+    if (!date) return '';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return isValidDate(dateObj) ? format(dateObj, 'yyyy-MM-dd') : '';
+  };
+  
+  const isValidDate = (date: any): boolean => {
+    return date instanceof Date && !isNaN(date.getTime());
+  };
   
   const [formData, setFormData] = useState({
     height: healthData.height || '',
     height_unit: healthData.height_unit || 'cm',
     weight: healthData.weight || '',
     weight_unit: healthData.weight_unit || 'kg',
-    birthdate: initialBirthdate,
+    birthdate_input: formatDateForInput(healthData.birthdate),
     gender: healthData.gender || '',
     diabetes_type: healthData.diabetes_type || '',
     glucose_unit: healthData.glucose_unit || 'mg/dL' as GlucoseUnit,
@@ -95,10 +97,26 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
     setLoading(true);
     
     try {
+      // Parse the date from the input
+      let birthdateObj: Date | null = null;
+      if (formData.birthdate_input) {
+        birthdateObj = new Date(formData.birthdate_input);
+        // Check if date is valid
+        if (!isValidDate(birthdateObj)) {
+          throw new Error("Invalid date format");
+        }
+      }
+      
       // Format the date for database
       const formattedData = {
-        ...formData,
-        birthdate: formData.birthdate instanceof Date ? formData.birthdate.toISOString() : null,
+        height: formData.height,
+        height_unit: formData.height_unit,
+        weight: formData.weight,
+        weight_unit: formData.weight_unit,
+        birthdate: birthdateObj ? birthdateObj.toISOString() : null,
+        gender: formData.gender,
+        diabetes_type: formData.diabetes_type,
+        glucose_unit: formData.glucose_unit,
       };
       
       const { error } = await supabase
@@ -133,14 +151,14 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
   
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="space-y-3">
+        <div className="space-y-1.5">
           <Label htmlFor="gender">Gender</Label>
           <Select 
             value={formData.gender || ""} 
             onValueChange={value => handleSelectChange('gender', value)}
           >
-            <SelectTrigger id="gender">
+            <SelectTrigger id="gender" className="w-full">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
@@ -153,38 +171,19 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
           </Select>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="birthdate">Birthdate</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                id="birthdate"
-                className="w-full justify-start text-left font-normal"
-              >
-                {formData.birthdate instanceof Date ? (
-                  format(formData.birthdate, "PP")
-                ) : (
-                  <span>Pick a date</span>
-                )}
-                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={formData.birthdate instanceof Date ? formData.birthdate : undefined}
-                onSelect={date => setFormData(prev => ({ ...prev, birthdate: date }))}
-                disabled={(date) => date > new Date()}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+        <div className="space-y-1.5">
+          <Label htmlFor="birthdate_input">Birthdate</Label>
+          <Input
+            id="birthdate_input"
+            name="birthdate_input"
+            type="date"
+            value={formData.birthdate_input}
+            onChange={handleInputChange}
+            className="w-full"
+          />
         </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+        
+        <div className="space-y-1.5">
           <Label htmlFor="height">Height</Label>
           <div className="flex">
             <Input
@@ -209,7 +208,7 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="weight">Weight</Label>
           <div className="flex">
             <Input
@@ -233,16 +232,14 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
             </Select>
           </div>
         </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+        
+        <div className="space-y-1.5">
           <Label htmlFor="diabetes_type">Diabetes Type</Label>
           <Select 
             value={formData.diabetes_type || ""} 
             onValueChange={value => handleSelectChange('diabetes_type', value)}
           >
-            <SelectTrigger id="diabetes_type">
+            <SelectTrigger id="diabetes_type" className="w-full">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
@@ -255,13 +252,13 @@ const HealthDataEdit: React.FC<HealthDataEditProps> = ({ healthData, onUpdate, o
           </Select>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="glucose_unit">Glucose Unit</Label>
           <Select 
             value={formData.glucose_unit} 
             onValueChange={value => handleSelectChange('glucose_unit', value as GlucoseUnit)}
           >
-            <SelectTrigger id="glucose_unit">
+            <SelectTrigger id="glucose_unit" className="w-full">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
