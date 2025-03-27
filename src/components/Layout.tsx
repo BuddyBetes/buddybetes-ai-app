@@ -24,14 +24,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no');
     }
     
-    // Set body style to prevent overscroll bouncing on iOS
+    // Set body style to prevent overscroll bouncing on iOS but allow scrolling
     document.body.style.overscrollBehavior = 'none';
     
-    // Prevent elastic scrolling on iOS
-    document.body.style.position = 'fixed';
+    // Remove fixed positioning that prevents scrolling
+    document.body.style.position = '';
     document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    document.body.style.overflowY = 'scroll';
+    document.body.style.height = 'auto'; // Allow body to expand with content
+    document.body.style.overflowY = 'auto'; // Allow vertical scrolling
     
     return () => {
       // Clean up when component unmounts
