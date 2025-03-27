@@ -29,7 +29,7 @@ const AppRoutes: React.FC = () => {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Wrap authenticated routes with GlucoseUnitProvider
+  // Wrap all authenticated routes with GlucoseUnitProvider, including onboarding
   const renderProtectedRoute = (component: React.ReactNode, requireOnboarding: boolean = true) => (
     <ProtectedRoute requireOnboarding={requireOnboarding}>
       <GlucoseUnitProvider>

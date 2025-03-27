@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import HealthDataEdit from './HealthDataEdit';
 import { format } from 'date-fns';
 import { GlucoseUnit } from '@/types/global';
@@ -20,7 +20,7 @@ interface HealthDataType {
 
 interface HealthDataDisplayProps {
   healthData: HealthDataType;
-  setHealthData: React.Dispatch<React.SetStateAction<HealthDataType>>;
+  setHealthData: (data: HealthDataType) => void;
 }
 
 const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps) => {
@@ -50,6 +50,11 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
     return age.toString();
   };
 
+  const handleUpdate = () => {
+    // This function is called after the health data is updated
+    console.log("Health data updated");
+  };
+
   return (
     <motion.div 
       custom={1}
@@ -62,20 +67,22 @@ const HealthDataDisplay = ({ healthData, setHealthData }: HealthDataDisplayProps
           <SheetTrigger asChild>
             <Button variant="outline" size="sm">Edit</Button>
           </SheetTrigger>
-          <HealthDataEdit 
-            healthData={{
-              gender: healthData.gender,
-              birthdate: healthData.birthdate,
-              height: healthData.height,
-              height_unit: healthData.heightUnit,
-              weight: healthData.weight,
-              weight_unit: healthData.weightUnit,
-              diabetes_type: healthData.diabetesType,
-              glucose_unit: healthData.glucoseUnit,
-            }} 
-            onUpdate={() => {}} 
-            onCancel={() => {}} 
-          />
+          <SheetContent>
+            <HealthDataEdit 
+              healthData={{
+                gender: healthData.gender,
+                birthdate: healthData.birthdate,
+                height: healthData.height,
+                height_unit: healthData.heightUnit,
+                weight: healthData.weight,
+                weight_unit: healthData.weightUnit,
+                diabetes_type: healthData.diabetesType,
+                glucose_unit: healthData.glucoseUnit,
+              }} 
+              onUpdate={handleUpdate} 
+              onCancel={() => {}} 
+            />
+          </SheetContent>
         </Sheet>
       </div>
       

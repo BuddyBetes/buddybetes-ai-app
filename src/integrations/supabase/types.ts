@@ -109,6 +109,7 @@ export type Database = {
           created_at: string | null
           diabetes_type: string | null
           gender: string | null
+          glucose_unit: string | null
           height: string | null
           height_unit: string | null
           id: string
@@ -124,6 +125,7 @@ export type Database = {
           created_at?: string | null
           diabetes_type?: string | null
           gender?: string | null
+          glucose_unit?: string | null
           height?: string | null
           height_unit?: string | null
           id?: string
@@ -139,6 +141,7 @@ export type Database = {
           created_at?: string | null
           diabetes_type?: string | null
           gender?: string | null
+          glucose_unit?: string | null
           height?: string | null
           height_unit?: string | null
           id?: string

@@ -44,29 +44,18 @@ export const GlucoseUnitProvider: React.FC<GlucoseUnitProviderProps> = ({ childr
     if (!user) return;
 
     try {
-      // Check if the glucose_unit column exists
-      const { data: columns } = await supabase
+      const { data, error } = await supabase
         .from('health_data')
-        .select()
-        .limit(1);
-      
-      // If the column exists, fetch it
-      if (columns && Object.keys(columns[0] || {}).includes('glucose_unit')) {
-        const { data, error } = await supabase
-          .from('health_data')
-          .select('glucose_unit')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        .select('glucose_unit')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching glucose unit preference:', error);
-        } else if (data && data.glucose_unit) {
-          const unit = data.glucose_unit as GlucoseUnit;
-          setGlucoseUnitState(unit);
-          localStorage.setItem('glucoseUnit', unit);
-        }
-      } else {
-        console.log('glucose_unit column does not exist yet');
+      if (error) {
+        console.error('Error fetching glucose unit preference:', error);
+      } else if (data && data.glucose_unit) {
+        const unit = data.glucose_unit as GlucoseUnit;
+        setGlucoseUnitState(unit);
+        localStorage.setItem('glucoseUnit', unit);
       }
     } catch (error) {
       console.error('Error fetching glucose unit preference:', error);
@@ -82,32 +71,18 @@ export const GlucoseUnitProvider: React.FC<GlucoseUnitProviderProps> = ({ childr
     }
 
     try {
-      // Check if the glucose_unit column exists
-      const { data: columns } = await supabase
+      // Update the database
+      const { error } = await supabase
         .from('health_data')
-        .select()
-        .limit(1);
-      
-      // If the column exists, update it
-      if (columns && Object.keys(columns[0] || {}).includes('glucose_unit')) {
-        // Update the database
-        const { error } = await supabase
-          .from('health_data')
-          .update({ glucose_unit: unit })
-          .eq('user_id', user.id);
+        .update({ glucose_unit: unit })
+        .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error updating glucose unit preference:', error);
-        } else {
-          // Update localStorage and state
-          localStorage.setItem('glucoseUnit', unit);
-          setGlucoseUnitState(unit);
-        }
+      if (error) {
+        console.error('Error updating glucose unit preference:', error);
       } else {
-        // Just update localStorage and state for now
+        // Update localStorage and state
         localStorage.setItem('glucoseUnit', unit);
         setGlucoseUnitState(unit);
-        console.log('glucose_unit column does not exist yet, only updating local state');
       }
     } catch (error) {
       console.error('Error updating glucose unit preference:', error);
