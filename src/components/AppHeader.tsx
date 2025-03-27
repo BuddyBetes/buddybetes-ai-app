@@ -19,7 +19,10 @@ const AppHeader = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full px-4 py-3 flex justify-between items-center bg-white shadow-sm">
-      <div className="text-xl font-bold text-buddy-600">BuddyBetes</div>
+      <div className="flex items-center">
+        <img src="/logo.png" alt="BuddyBetes Logo" className="w-6 h-6 mr-2" />
+        <div className="text-xl font-bold text-buddy-600">BuddyBetes</div>
+      </div>
       <div className="flex items-center space-x-4">
         <ProfileNotifications>
           <NotificationIndicator className="p-2 rounded-full hover:bg-gray-100 relative" />
