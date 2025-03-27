@@ -149,16 +149,18 @@ const Assistant = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-full w-full mx-auto max-w-md"
+              className="flex flex-col items-center justify-center h-full w-full flex-grow"
             >
-              <VoiceButton 
-                onStartSession={handleStartSession}
-                onEndSession={handleEndSession}
-                onTextMode={handleTextMode}
-                onSpeechResult={handleSpeechResult}
-                isPlayingResponse={isPlayingResponse}
-                isLoading={isLoading}
-              />
+              <div className="flex items-center justify-center w-full h-full">
+                <VoiceButton 
+                  onStartSession={handleStartSession}
+                  onEndSession={handleEndSession}
+                  onTextMode={handleTextMode}
+                  onSpeechResult={handleSpeechResult}
+                  isPlayingResponse={isPlayingResponse}
+                  isLoading={isLoading}
+                />
+              </div>
             </motion.div>
           ) : (
             <motion.div
