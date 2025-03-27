@@ -24,18 +24,14 @@ export function usePwaInstall() {
       if (!hasShownInstallPrompt) {
         setHasShownInstallPrompt(true);
         
-        // Show the installation toast
+        // Show the installation toast with a proper action
         toast({
           title: "✨ You can now install BuddyBetes!",
           description: "Keep BuddyBetes on your device for quick access",
-          action: (
-            <button 
-              onClick={() => installPwa(promptEvent)}
-              className="rounded bg-[#4ABEB6] px-3 py-1 text-white hover:bg-[#3da59d] transition-colors"
-            >
-              Install
-            </button>
-          ),
+          action: {
+            label: "Install",
+            onClick: () => installPwa(promptEvent)
+          },
           duration: 8000,
         });
       }
