@@ -55,6 +55,8 @@ All notable changes to this project will be documented in this file.
 - Updated dashboard to properly display glucose values in user's preferred unit (mg/dL or mmol/L)
 - Redesigned log list with cleaner UI and right-arrow navigation indicator
 - Moved log management actions to detail view for better user experience
+- Simplified application header by removing text and keeping only the logo icon
+- Improved date handling in logs display to prevent undefined or invalid dates
 
 ### Fixed
 - Various UI/UX improvements
@@ -66,6 +68,8 @@ All notable changes to this project will be documented in this file.
 - Corrected empty dropdown values in health data edit forms
 - Improved error handling for invalid date values
 - Fixed glucose unit conversion in dashboard and charts when switching between mg/dL and mmol/L
+- Fixed issue with undefined dates in message list
 
 ## [0.1.0] - Initial Release
 - Core functionality established
+

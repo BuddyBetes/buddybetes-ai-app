@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { format, isValid } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { GlucoseLog } from '@/types/logs';
 import LogItem from './LogItem';
 
@@ -14,10 +14,18 @@ const LogsByDate: React.FC<LogsByDateProps> = ({ date, logs, onLogSelect }) => {
   // Format the date to a more readable form
   const formattedDate = () => {
     try {
-      const logDate = new Date(date);
+      // Check if the date is valid before trying to parse it
+      if (!date || date === 'undefined' || date === 'null') {
+        console.error('Invalid date value received:', date);
+        return 'Unknown date';
+      }
       
-      // Check if the date is valid before formatting
+      // Parse the date string to a Date object
+      const logDate = parseISO(date);
+      
+      // Check if the date is valid after parsing
       if (!isValid(logDate)) {
+        console.error('Failed to parse date:', date);
         return 'Invalid date';
       }
       
