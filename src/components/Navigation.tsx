@@ -60,19 +60,19 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex z-50 px-2 pb-safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-50 px-2 pb-safe-bottom pt-3">
       {navItems.map((item) => {
         const isActive = currentPath === item.path;
         
         return (
           <div 
             key={item.name}
-            className="relative flex-1 flex items-center justify-center cursor-pointer touch-manipulation"
+            className="relative flex-1 flex flex-col items-center justify-center cursor-pointer touch-manipulation py-2"
             onClick={() => handleNavigation(item.path)}
           >
-            <div className={`nav-item ${isActive ? 'active' : 'inactive'} ${isMobile ? 'text-[10px]' : ''}`}>
-              <item.icon size={isMobile ? 18 : 20} className="mx-auto" />
-              <span className={`mt-1 ${isMobile ? 'text-[10px]' : ''}`}>{item.name}</span>
+            <div className={`nav-item flex flex-col items-center ${isActive ? 'active' : 'inactive'}`}>
+              <item.icon size={isMobile ? 20 : 22} className="mb-1" />
+              <span className={`text-xs ${isMobile ? 'text-[10px]' : ''}`}>{item.name}</span>
               {isActive && (
                 <div className="absolute bottom-0 w-8 h-1 bg-buddy-500 rounded-t-md" />
               )}
@@ -86,7 +86,7 @@ const Navigation: React.FC = () => {
         <button
           onClick={handleAddClick}
           aria-label="Add new log"
-          className="fixed bottom-20 right-6 w-14 h-14 bg-buddy-500 rounded-full shadow-lg flex items-center justify-center text-white touch-manipulation"
+          className="fixed bottom-24 right-6 w-14 h-14 bg-buddy-500 rounded-full shadow-lg flex items-center justify-center text-white touch-manipulation"
         >
           <Plus size={24} />
         </button>

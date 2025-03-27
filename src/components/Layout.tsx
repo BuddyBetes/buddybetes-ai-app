@@ -51,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Only show AppHeader if not on assistant page */}
       {isAuthenticated && !isAssistant && <AppHeader />}
       
-      <main className={`flex-1 page-container ${isAssistant ? 'pt-0' : 'pt-16'} pb-16 px-4 mt-safe-top`}>
+      <main className={`flex-1 page-container ${isAssistant ? 'pt-0' : 'pt-16'} pb-20 px-4 mt-safe-top`}>
         {children}
       </main>
       
