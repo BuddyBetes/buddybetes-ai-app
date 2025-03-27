@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
 - Delete log functionality with confirmation dialog
 - Enhanced visual differentiation between food and glucose entries with distinctive icons and badges
 - Improved log details display with better layout and visual hierarchy
+- Move edit and delete actions to log detail view for cleaner list display
+- Replace three-dot menu with chevron icon in log list for better navigation indication
 
 ### Authentication Improvements
 - Enhanced password reset flow with more intuitive user experience
@@ -51,6 +53,8 @@ All notable changes to this project will be documented in this file.
 - Enhanced log detail view with better visual organization
 - Improved UI differentiation between log entry types
 - Updated dashboard to properly display glucose values in user's preferred unit (mg/dL or mmol/L)
+- Redesigned log list with cleaner UI and right-arrow navigation indicator
+- Moved log management actions to detail view for better user experience
 
 ### Fixed
 - Various UI/UX improvements
@@ -65,5 +69,3 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.0] - Initial Release
 - Core functionality established
-
-
