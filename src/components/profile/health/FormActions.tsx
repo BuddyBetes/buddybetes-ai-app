@@ -10,7 +10,7 @@ interface FormActionsProps {
 
 const FormActions: React.FC<FormActionsProps> = ({ onCancel, loading }) => {
   return (
-    <div className="flex justify-end space-x-2 pt-4">
+    <div className="flex justify-end space-x-2 pt-4 mb-10">
       <Button variant="outline" onClick={onCancel} disabled={loading}>
         Cancel
       </Button>

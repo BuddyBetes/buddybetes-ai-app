@@ -64,7 +64,7 @@ const LogDetailView: React.FC<LogDetailViewProps> = ({ log, isOpen, onClose }) =
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent className="sm:max-w-md md:max-w-lg" side="right">
+        <SheetContent className="sm:max-w-md md:max-w-lg pb-20 sm:pb-16 overflow-y-auto" side="right">
           <SheetHeader className="mb-4">
             <SheetTitle>{isEditing ? "Edit Log" : "Log Details"}</SheetTitle>
           </SheetHeader>

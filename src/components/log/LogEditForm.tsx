@@ -182,7 +182,7 @@ const LogEditForm: React.FC<LogEditFormProps> = ({ log, onCancel, onComplete }) 
         </div>
       </div>
       
-      <div className="flex justify-end gap-3 pt-4">
+      <div className="flex justify-end gap-3 pt-4 mb-10">
         <Button
           type="button"
           variant="outline"
