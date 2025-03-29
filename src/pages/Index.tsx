@@ -7,19 +7,11 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery } = useAuth();
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [isInitializing, setIsInitializing = useState(true);
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (location.pathname === '/terms') {
-      navigate('/terms', { replace: true });
-      return;
-    }
-    
-    if (redirectTimeout) {
-      clearTimeout(redirectTimeout);
-    }
-
+    // Terms path is now handled by AppRoutes directly, so we can remove this check
     if (loading) {
       return;
     }

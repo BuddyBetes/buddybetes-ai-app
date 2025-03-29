@@ -16,6 +16,7 @@ import EmailConfirmed from '@/pages/auth/EmailConfirmed';
 import Profile from '@/pages/Profile';
 import Assistant from '@/pages/Assistant';
 import Settings from '@/pages/settings/Settings';
+import Terms from '@/pages/Terms';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -52,6 +53,7 @@ const AppRoutes: React.FC = () => {
           )
         }
       />
+      <Route path="/terms" element={<Terms />} />
       <Route
         path="/dashboard"
         element={renderProtectedRoute(<Dashboard />)}

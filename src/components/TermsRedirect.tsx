@@ -1,28 +1,28 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import Terms from '../pages/Terms';
+
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const TermsRedirect = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   
-  useEffect(() => {
-    // Check if this is the /terms route and render the Terms component
-    if (location.pathname === '/terms') {
-      return;
-    } else {
-      // If not on terms route, we'll let the normal routing work
-      navigate('/', { replace: true });
-    }
-  }, [location.pathname, navigate]);
+  const handleBack = () => {
+    navigate(-1); // Go back to previous page
+  };
 
-  // If we're on the terms route, render the Terms component
-  if (location.pathname === '/terms') {
-    return <Terms />;
-  }
-  
-  // Otherwise return null
-  return null;
+  return (
+    <div className="fixed top-4 left-4 z-50">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={handleBack}
+        aria-label="Go back"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Button>
+    </div>
+  );
 };
 
 export default TermsRedirect;
