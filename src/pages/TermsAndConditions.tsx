@@ -57,7 +57,7 @@ const TermsAndConditions = () => {
               <p>We reserve the right to modify these terms at any time. When we do, we will revise the updated date at the bottom of this page. We encourage you to frequently check this page for any changes.</p>
               
               <h2 className="text-xl font-medium mt-6">11. Contact Information</h2>
-              <p>If you have any questions about these Terms and Conditions, please contact us at support@buddybetes.com.</p>
+              <p>If you have any questions about these Terms and Conditions, please contact us at hello@buddybetes.com.</p>
               
               <h2 className="text-xl font-medium mt-6">12. Data Storage and Security</h2>
               <p>We implement a variety of security measures to maintain the safety of your personal information. Your personal information is contained behind secured networks and is only accessible by a limited number of persons who have special access rights to such systems, and are required to keep the information confidential.</p>

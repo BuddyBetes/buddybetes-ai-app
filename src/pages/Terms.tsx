@@ -57,7 +57,7 @@ const Terms = () => {
               <p>We reserve the right to modify these terms at any time. When we do, we will revise the updated date at the bottom of this page. We encourage you to frequently check this page for any changes.</p>
               
               <h2 className="text-xl font-medium mt-6">11. Contact Information</h2>
-              <p>If you have any questions about these Terms of Service, please contact us at support@buddybetes.com.</p>
+              <p>If you have any questions about these Terms of Service, please contact us at hello@buddybetes.com.</p>
               
               <h2 className="text-xl font-medium mt-6">12. Governing Law</h2>
               <p>These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which we operate, without regard to its conflict of law provisions.</p>
