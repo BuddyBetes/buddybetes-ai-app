@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -7,7 +8,7 @@ const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery } = useAuth();
-  const [isInitializing, setIsInitializing = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
