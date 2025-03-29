@@ -11,6 +11,11 @@ const Index = () => {
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    if (location.pathname === '/terms') {
+      navigate('/terms', { replace: true });
+      return;
+    }
+    
     if (redirectTimeout) {
       clearTimeout(redirectTimeout);
     }
@@ -63,7 +68,7 @@ const Index = () => {
 
     setRedirectTimeout(timer);
     return () => clearTimeout(timer);
-  }, [navigate, isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery]);
+  }, [navigate, isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery, location.pathname]);
 
   if (loading || isInitializing) {
     return (
