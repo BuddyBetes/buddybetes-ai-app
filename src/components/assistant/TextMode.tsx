@@ -67,7 +67,7 @@ const TextMode: React.FC<TextModeProps> = ({
       <div 
         className="fixed bottom-0 left-0 right-0 z-20 bg-white pt-2 border-t border-gray-100"
         style={{
-          paddingBottom: isPWA && isMobile ? 
+          paddingBottom: isPWA ? 
             'calc(70px + var(--safe-area-bottom, 0px))' : 
             'calc(20px + var(--safe-area-bottom, 0px))'
         }}
