@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -7,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery } = useAuth();
+  const { isAuthenticated, loading, isPasswordRecovery } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
   const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -19,7 +18,7 @@ const Index = () => {
 
     setIsInitializing(false);
     
-    console.log('Auth loaded:', { isAuthenticated, hasCompletedOnboarding, isPasswordRecovery });
+    console.log('Auth loaded:', { isAuthenticated, isPasswordRecovery });
     
     const url = new URL(window.location.href);
     const hash = url.hash;
@@ -46,13 +45,9 @@ const Index = () => {
     
     const timer = setTimeout(() => {
       if (isAuthenticated) {
-        if (hasCompletedOnboarding) {
-          console.log('Redirecting to dashboard');
-          navigate('/dashboard');
-        } else {
-          console.log('Redirecting to onboarding');
-          navigate('/onboarding');
-        }
+        // Always redirect to dashboard first
+        console.log('Redirecting to dashboard');
+        navigate('/dashboard');
       } else {
         console.log('Redirecting to signin');
         navigate('/signin');
@@ -61,7 +56,7 @@ const Index = () => {
 
     setRedirectTimeout(timer);
     return () => clearTimeout(timer);
-  }, [navigate, isAuthenticated, hasCompletedOnboarding, loading, isPasswordRecovery, location.pathname]);
+  }, [navigate, isAuthenticated, loading, isPasswordRecovery, location.pathname]);
 
   if (loading || isInitializing) {
     return (

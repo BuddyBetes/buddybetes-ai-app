@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
@@ -6,23 +7,33 @@ import { motion } from 'framer-motion';
 import { Activity, Calendar, Clock, ArrowUpRight, AlertCircle, RefreshCw, Utensils } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useNavigate } from 'react-router-dom';
 import { useGlucoseInsights } from '@/hooks/useGlucoseInsights';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { convertGlucoseValue, formatGlucoseValue } from '@/utils/glucoseUtils';
+import { useAuth } from '@/context/AuthContext';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
   const { getGlucoseLogsOnly, getLogsForToday, getAverageGlucose, logs } = useLogContext();
   const { glucoseUnit } = useGlucoseUnit();
+  const { hasCompletedOnboarding } = useAuth();
   const glucoseLogs = getGlucoseLogsOnly(30); // Only get logs with glucose values
   const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
   
   const navigate = useNavigate();
   
-  // Use only logs with glucose readings for the last reading
+  useEffect(() => {
+    if (!hasCompletedOnboarding) {
+      navigate('/onboarding');
+    }
+  }, [hasCompletedOnboarding, navigate]);
+
+  const navigateToLogs = () => {
+    navigate('/logs');
+  };
+
   const lastReading = glucoseLogs[0]?.glucoseLevel || 0;
   const displayLastReading = lastReading > 0 ? 
     (glucoseUnit === 'mg/dL' ? 
@@ -32,16 +43,13 @@ const Dashboard = () => {
   
   const isInRange = lastReading >= 70 && lastReading <= 180;
   
-  // Get count of logs today for the "Time in Range" card
   const logsToday = getLogsForToday().length;
   
-  // Get the average glucose in the user's preferred unit
   const averageGlucose = stats?.average || getAverageGlucose();
   const displayAverage = glucoseUnit === 'mg/dL' ? 
     averageGlucose : 
     convertGlucoseValue(averageGlucose, 'mg/dL', 'mmol/L');
   
-  // Get the most recent food entry
   const lastFoodEntry = [...logs].sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   ).find(log => log.food && log.food.trim().length > 0);
@@ -56,10 +64,6 @@ const Dashboard = () => {
         duration: 0.5,
       },
     }),
-  };
-
-  const navigateToLogs = () => {
-    navigate('/logs');
   };
 
   return (
@@ -104,7 +108,6 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
-              {/* Only show the "in range" indicator for glucose readings, not food entries */}
               {!lastFoodEntry && lastReading > 0 && (
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                   isInRange ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'

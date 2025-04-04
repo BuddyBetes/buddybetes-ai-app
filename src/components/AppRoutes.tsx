@@ -30,9 +30,9 @@ const AppRoutes: React.FC = () => {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Wrap all authenticated routes with GlucoseUnitProvider, including onboarding
-  const renderProtectedRoute = (component: React.ReactNode, requireOnboarding: boolean = true) => (
-    <ProtectedRoute requireOnboarding={requireOnboarding}>
+  // Wrap all authenticated routes with GlucoseUnitProvider
+  const renderProtectedRoute = (component: React.ReactNode) => (
+    <ProtectedRoute>
       <GlucoseUnitProvider>
         <PageTransition>
           {component}
@@ -72,7 +72,15 @@ const AppRoutes: React.FC = () => {
       />
       <Route
         path="/onboarding"
-        element={renderProtectedRoute(<Onboarding />, false)}
+        element={
+          <ProtectedRoute skipOnboardingCheck>
+            <GlucoseUnitProvider>
+              <PageTransition>
+                <Onboarding />
+              </PageTransition>
+            </GlucoseUnitProvider>
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/profile"

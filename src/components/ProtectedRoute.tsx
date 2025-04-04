@@ -5,14 +5,14 @@ import { useAuth } from '@/context/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireOnboarding?: boolean;
+  skipOnboardingCheck?: boolean;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children,
-  requireOnboarding = true,
+  skipOnboardingCheck = false,
 }) => {
-  const { isAuthenticated, loading, hasCompletedOnboarding } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   // Show loading or redirect while checking authentication
   if (loading) {
@@ -22,11 +22,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Redirect to sign in if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
-  }
-
-  // If onboarding check is required and user hasn't completed it
-  if (requireOnboarding && !hasCompletedOnboarding) {
-    return <Navigate to="/onboarding" replace />;
   }
 
   // If all checks pass, render the children

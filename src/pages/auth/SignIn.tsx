@@ -9,14 +9,11 @@ import SignInForm from '@/components/auth/SignInForm';
 import SignInLogo from '@/components/auth/SignInLogo';
 
 const SignIn = () => {
-  const { isAuthenticated, hasCompletedOnboarding } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  // Redirect authenticated users
+  // Redirect authenticated users directly to dashboard
   if (isAuthenticated) {
-    if (!hasCompletedOnboarding) {
-      return <Navigate to="/onboarding" replace />;
-    }
     return <Navigate to="/dashboard" replace />;
   }
 
