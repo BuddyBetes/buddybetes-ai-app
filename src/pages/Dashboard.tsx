@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const { glucoseUnit } = useGlucoseUnit();
   const glucoseLogs = getGlucoseLogsOnly(30); // Only get logs with glucose values
   const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
+  const navigate = useNavigate();
   
   const navigateToLogs = () => {
     navigate('/logs');
