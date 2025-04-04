@@ -23,13 +23,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onSuggestionSelect,
   onVoiceMode,
 }) => {
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+               (window.navigator as any).standalone === true;
+               
   return (
     <div className="w-full">
       <div className="mb-2">
         <SuggestionChips onSelectSuggestion={onSuggestionSelect} />
       </div>
       
-      <div className="flex items-center gap-2 bg-gray-50 rounded-full p-2 border border-gray-200">
+      <div className="flex items-center gap-2 bg-gray-50 rounded-full p-2 border border-gray-200 shadow-sm">
         <Button
           type="button"
           variant="ghost" 

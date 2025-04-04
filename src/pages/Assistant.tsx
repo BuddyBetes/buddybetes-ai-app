@@ -48,10 +48,14 @@ const Assistant = () => {
   
   useMessageTracking(messages, mode);
 
+  // Detect if running as PWA
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+               (window.navigator as any).standalone === true;
+
   return (
     <Layout>
       <AppHeader />
-      <div className="mx-auto h-full flex flex-col w-full max-w-3xl">
+      <div className={`mx-auto h-full flex flex-col w-full max-w-3xl ${isPWA ? 'pb-safe-bottom' : ''}`}>
         {/* Back Button (when coming from Add Log) */}
         <BackToLogButton visible={fromAddLog} />
 
