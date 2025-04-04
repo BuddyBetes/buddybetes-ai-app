@@ -12,9 +12,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   skipOnboardingCheck = false,
 }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, hasCompletedOnboarding } = useAuth();
 
-  // Show loading or redirect while checking authentication
+  // Show loading while checking authentication
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -22,6 +22,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Redirect to sign in if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
+  }
+
+  // If this is the onboarding route, we don't need to check completion status
+  if (skipOnboardingCheck) {
+    return <>{children}</>;
+  }
+
+  // If we need to check onboarding and the user hasn't completed it, redirect to onboarding
+  if (!hasCompletedOnboarding) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   // If all checks pass, render the children

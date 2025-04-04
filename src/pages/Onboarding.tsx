@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +24,13 @@ const Onboarding = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // If already completed onboarding, redirect to dashboard immediately
+  useEffect(() => {
+    if (hasCompletedOnboarding) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [hasCompletedOnboarding, navigate]);
+
   // Form data state
   const [personalInfo, setPersonalInfo] = useState({
     firstName: '',
@@ -47,9 +53,9 @@ const Onboarding = () => {
     return <Navigate to="/signin" replace />;
   }
 
-  // If already completed onboarding, redirect to dashboard
+  // If already completed onboarding, show loading until the useEffect redirects
   if (hasCompletedOnboarding) {
-    return <Navigate to="/dashboard" replace />;
+    return <div className="flex items-center justify-center min-h-screen">Redirecting to dashboard...</div>;
   }
 
   const handleNext = () => {

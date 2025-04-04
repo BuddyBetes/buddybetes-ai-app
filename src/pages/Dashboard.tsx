@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import GlucoseChart from '../components/GlucoseChart';
 import { useLogContext } from '../context/LogContext';
@@ -12,24 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { convertGlucoseValue, formatGlucoseValue } from '@/utils/glucoseUtils';
-import { useAuth } from '@/context/AuthContext';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
   const { getGlucoseLogsOnly, getLogsForToday, getAverageGlucose, logs } = useLogContext();
   const { glucoseUnit } = useGlucoseUnit();
-  const { hasCompletedOnboarding } = useAuth();
   const glucoseLogs = getGlucoseLogsOnly(30); // Only get logs with glucose values
   const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
   
-  const navigate = useNavigate();
-  
-  useEffect(() => {
-    if (!hasCompletedOnboarding) {
-      navigate('/onboarding');
-    }
-  }, [hasCompletedOnboarding, navigate]);
-
   const navigateToLogs = () => {
     navigate('/logs');
   };
