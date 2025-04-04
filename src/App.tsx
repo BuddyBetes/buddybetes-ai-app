@@ -6,17 +6,19 @@ import { AuthProvider } from "./context/AuthContext";
 import { LogProvider } from "./context/LogContext";
 import { Toaster } from "@/components/ui/toaster";
 import { usePwaInstall } from "./hooks/usePwaInstall";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 function App() {
   // Initialize the PWA installation hook with proper effect
-  const pwaInstall = usePwaInstall();
+  const { canInstall, installPwa } = usePwaInstall();
   
   // Log PWA installation availability
   useEffect(() => {
-    if (pwaInstall.canInstall) {
+    if (canInstall) {
       console.log("PWA can be installed on this device");
     }
-  }, [pwaInstall.canInstall]);
+  }, [canInstall]);
   
   return (
     <BrowserRouter>
@@ -24,6 +26,20 @@ function App() {
         <LogProvider>
           <AppRoutes />
           <Toaster />
+          
+          {/* PWA Install Button */}
+          {canInstall && (
+            <div className="fixed bottom-20 right-4 z-50">
+              <Button 
+                onClick={installPwa}
+                className="rounded-full shadow-lg bg-[#35cab4] hover:bg-[#29A493] text-white"
+                size="sm"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Install App
+              </Button>
+            </div>
+          )}
         </LogProvider>
       </AuthProvider>
     </BrowserRouter>

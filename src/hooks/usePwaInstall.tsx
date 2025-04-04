@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
@@ -9,7 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [hasShownInstallPrompt, setHasShownInstallPrompt] = useState(true);
+  const [hasShownInstallPrompt, setHasShownInstallPrompt] = useState(false);
 
   useEffect(() => {
     // Check if the app is already installed
@@ -28,15 +29,12 @@ export function usePwaInstall() {
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
       
-      // Toast disabled - set to true above to prevent showing
+      // Show installation toast if not already shown and not already installed
       if (!hasShownInstallPrompt && !isAppInstalled) {
         setHasShownInstallPrompt(true);
         
-        console.log("PWA detection: Toast notification disabled");
+        console.log("PWA detection: Showing toast notification");
         
-        // Toast is now disabled by default
-        // Uncomment below to re-enable
-        /*
         setTimeout(() => {
           toast({
             title: "✨ Install BuddyBetes on your device!",
@@ -45,7 +43,6 @@ export function usePwaInstall() {
             duration: 10000,
           });
         }, 2000);
-        */
       }
     };
 
@@ -56,11 +53,8 @@ export function usePwaInstall() {
     
     if (isIOS && !isAppInstalled && !hasShownInstallPrompt) {
       setHasShownInstallPrompt(true);
-      console.log("PWA detection: iOS device detected, toast disabled");
+      console.log("PWA detection: iOS device detected, showing iOS instructions");
       
-      // iOS-specific installation toast also disabled
-      // Uncomment below to re-enable
-      /*
       setTimeout(() => {
         toast({
           title: "📱 Install BuddyBetes on iOS",
@@ -68,7 +62,6 @@ export function usePwaInstall() {
           duration: 10000,
         });
       }, 3000);
-      */
     }
 
     return () => {
@@ -76,17 +69,31 @@ export function usePwaInstall() {
     };
   }, [hasShownInstallPrompt]);
 
-  // Keep the installation function available for potential manual triggering
-  const installPwa = async (promptEvent: BeforeInstallPromptEvent) => {
-    if (!promptEvent) return;
+  // Installation function
+  const installPwa = async (promptEvent?: BeforeInstallPromptEvent | null) => {
+    const eventToUse = promptEvent || deferredPrompt;
+    if (!eventToUse) {
+      console.log("PWA detection: No installation prompt available");
+      
+      // Fallback for Safari/iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        toast({
+          title: "📱 Install on iOS",
+          description: "Tap the share button then 'Add to Home Screen'",
+          duration: 6000,
+        });
+      }
+      return;
+    }
     
     console.log("PWA detection: Triggering install prompt");
     
     // Show the install prompt
-    promptEvent.prompt();
+    await eventToUse.prompt();
     
     // Wait for the user to respond to the prompt
-    const choiceResult = await promptEvent.userChoice;
+    const choiceResult = await eventToUse.userChoice;
     
     // Reset the deferred prompt variable
     setDeferredPrompt(null);
@@ -104,7 +111,7 @@ export function usePwaInstall() {
 
   return {
     deferredPrompt,
-    installPwa: () => deferredPrompt && installPwa(deferredPrompt),
+    installPwa: () => installPwa(deferredPrompt),
     canInstall: !!deferredPrompt
   };
 }
