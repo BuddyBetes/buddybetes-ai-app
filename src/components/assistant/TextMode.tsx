@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import MessageList from './MessageList';
@@ -41,6 +41,15 @@ const TextMode: React.FC<TextModeProps> = ({
   onVoiceMode
 }) => {
   const isMobile = useIsMobile();
+  const [isPwa, setIsPwa] = useState(false);
+  
+  // Detect if running as PWA
+  useEffect(() => {
+    // Check if the app is running in standalone mode (PWA)
+    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
+                             (window.navigator as any).standalone === true;
+    setIsPwa(isInStandaloneMode);
+  }, []);
   
   return (
     <motion.div
@@ -62,7 +71,7 @@ const TextMode: React.FC<TextModeProps> = ({
         />
       </ScrollArea>
       
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white pb-20 pt-2 border-t border-gray-100">
+      <div className={`fixed bottom-0 left-0 right-0 z-20 bg-white pt-2 border-t border-gray-100 ${isPwa ? 'pb-24' : 'pb-20'}`}>
         <div className={isMobile ? "w-full px-2" : "max-w-3xl mx-auto px-2"}>
           <MessageInput 
             input={input}
