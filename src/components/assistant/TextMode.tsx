@@ -6,6 +6,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { Message } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsPwa } from '@/hooks/use-pwa';
 
 interface TextModeProps {
   messages: Message[];
@@ -41,15 +42,7 @@ const TextMode: React.FC<TextModeProps> = ({
   onVoiceMode
 }) => {
   const isMobile = useIsMobile();
-  const [isPwa, setIsPwa] = useState(false);
-  
-  // Detect if running as PWA
-  useEffect(() => {
-    // Check if the app is running in standalone mode (PWA)
-    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
-                             (window.navigator as any).standalone === true;
-    setIsPwa(isInStandaloneMode);
-  }, []);
+  const isPwa = useIsPwa();
   
   return (
     <motion.div
@@ -71,7 +64,7 @@ const TextMode: React.FC<TextModeProps> = ({
         />
       </ScrollArea>
       
-      <div className={`fixed bottom-0 left-0 right-0 z-20 bg-white pt-2 border-t border-gray-100 ${isPwa ? 'pb-28' : 'pb-20'}`}>
+      <div className={`fixed bottom-0 left-0 right-0 z-30 bg-white pt-2 border-t border-gray-100 ${isPwa ? 'pb-28' : 'pb-20'}`}>
         <div className={isMobile ? "w-full px-2" : "max-w-3xl mx-auto px-2"}>
           <MessageInput 
             input={input}
