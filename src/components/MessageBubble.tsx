@@ -153,7 +153,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       {stats && type === 'assistant' && (
         <div className="ml-10 p-3 bg-gray-50 rounded-lg text-sm">
           <div className="font-medium mb-2 text-gray-700 flex items-center">
-            <Activity size={14} className="mr-1 text-buddy-500" />
+            <Activity size={14} className="mr-1 text-[#208687]" />
             Glucose Statistics
           </div>
           <div className="grid grid-cols-2 gap-2">

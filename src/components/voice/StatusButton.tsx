@@ -40,7 +40,7 @@ const StatusButton = ({ status, onClick, disabled = false }: StatusButtonProps) 
       case 'listening': return 'bg-red-500';
       case 'processing': return 'bg-yellow-500';
       case 'speaking': return 'bg-green-500';
-      default: return 'bg-buddy-500';
+      default: return 'bg-[#208687]';
     }
   };
 
