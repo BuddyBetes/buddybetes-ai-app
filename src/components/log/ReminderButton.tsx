@@ -87,7 +87,7 @@ const ReminderButton = () => {
           <DialogClose asChild>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
-          <Button onClick={handleCreateReminder}>Set Reminder</Button>
+          <Button onClick={handleCreateReminder} className="bg-[#35cab4] hover:bg-[#29A493]">Set Reminder</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

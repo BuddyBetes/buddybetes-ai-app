@@ -8,10 +8,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { usePwaInstall } from "./hooks/usePwaInstall";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { useIsMobile } from "./hooks/use-mobile";
 
 function App() {
   // Initialize the PWA installation hook with proper effect
   const { canInstall, installPwa } = usePwaInstall();
+  const isMobile = useIsMobile();
   
   // Log PWA installation availability
   useEffect(() => {
@@ -27,8 +29,8 @@ function App() {
           <AppRoutes />
           <Toaster />
           
-          {/* PWA Install Button */}
-          {canInstall && (
+          {/* PWA Install Button - only show on mobile */}
+          {canInstall && isMobile && (
             <div className="fixed bottom-20 right-4 z-50">
               <Button 
                 onClick={installPwa}
