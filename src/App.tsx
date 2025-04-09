@@ -32,7 +32,7 @@ function App() {
             <div className="fixed bottom-20 right-4 z-50">
               <Button 
                 onClick={installPwa}
-                className="rounded-full shadow-lg bg-[#208687] hover:bg-[#165e5e] text-white"
+                className="rounded-full shadow-lg bg-[#35cab4] hover:bg-[#29A493] text-white"
                 size="sm"
               >
                 <Download className="mr-2 h-4 w-4" />
