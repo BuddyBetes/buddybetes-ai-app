@@ -15,11 +15,8 @@
     --input: 214.3 31.8% 91.4%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
-    
-    /* Updated primary color */
-    --primary: 181 61% 33%;
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --accent: 210 40% 96.1%;
@@ -29,10 +26,10 @@
     --ring: 215 20.2% 65.1%;
     --radius: 0.5rem;
     
-    /* Updated BuddyBetes Colors */
+    /* BuddyBetes Colors - Updated with new primary color */
     --buddy-500: #208687;
-    --buddy-600: #165e5e;
-    --buddy-700: #0f4444;
+    --buddy-600: #1a6e6f;
+    --buddy-700: #165e5e;
     
     /* Safe area variables */
     --safe-area-top: env(safe-area-inset-top, 0px);
