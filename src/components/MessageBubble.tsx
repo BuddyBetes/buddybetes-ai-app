@@ -113,7 +113,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         transition={{ duration: 0.3 }}
       >
         {type === 'assistant' && (
-          <div className="w-8 h-8 rounded-full bg-[#35cab4] mr-2 flex-shrink-0 self-end flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[#208687] mr-2 flex-shrink-0 self-end flex items-center justify-center">
             <span className="text-xs font-bold text-white">BB</span>
           </div>
         )}
@@ -122,7 +122,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           className={`max-w-[80%] rounded-3xl py-2.5 px-3.5 ${
             type === 'user'
               ? 'bg-gray-100 text-gray-800'
-              : 'bg-[#35cab4] text-white'
+              : 'bg-[#208687] text-white'
           }`}
         >
           <div className="flex flex-col">
@@ -136,7 +136,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         {type === 'user' && (
           <Avatar className="w-8 h-8 ml-2 flex-shrink-0 self-end">
             <AvatarImage src="" alt="User" />
-            <AvatarFallback className="bg-buddy-100 text-buddy-800 text-sm">
+            <AvatarFallback className="bg-green-50 text-green-700 text-sm">
               {loading ? 'U' : getInitials()}
             </AvatarFallback>
           </Avatar>
@@ -153,7 +153,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       {stats && type === 'assistant' && (
         <div className="ml-10 p-3 bg-gray-50 rounded-lg text-sm">
           <div className="font-medium mb-2 text-gray-700 flex items-center">
-            <Activity size={14} className="mr-1 text-buddy-500" />
+            <Activity size={14} className="mr-1 text-[#208687]" />
             Glucose Statistics
           </div>
           <div className="grid grid-cols-2 gap-2">
