@@ -50,8 +50,8 @@ const VoiceCircle: React.FC<VoiceCircleProps> = ({ status, onStopButtonClick, on
   return (
     <div className="relative mb-8">
       <motion.div 
-        className={`w-48 h-48 rounded-full bg-[#208687] flex items-center justify-center relative 
-          ${isInteractive ? 'shadow-lg hover:shadow-xl hover:bg-[#1b7273] cursor-pointer transition-all duration-200' : ''}`}
+        className={`w-48 h-48 rounded-full bg-[#35cab4] flex items-center justify-center relative 
+          ${isInteractive ? 'shadow-lg hover:shadow-xl hover:bg-[#2ba999] cursor-pointer transition-all duration-200' : ''}`}
         animate={{
           scale: status === 'speaking' ? [1, 1.05, 1] : 1
         }}

@@ -37,7 +37,7 @@ const VoiceControlButton: React.FC<VoiceControlButtonProps> = ({
     <Button 
       onClick={onClick}
       disabled={disabled}
-      className={`bg-[#208687] hover:bg-[#1b7273] text-white rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' || status === 'speaking' ? 'opacity-80' : ''}`}
+      className={`bg-[#35cab4] hover:bg-[#2ba999] text-white rounded-full px-12 py-6 text-lg font-medium w-64 flex items-center justify-center transition-all ${status === 'processing' || status === 'speaking' ? 'opacity-80' : ''}`}
     >
       {renderButtonContent()}
     </Button>

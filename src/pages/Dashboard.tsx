@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -87,7 +86,7 @@ const Dashboard = () => {
                 <div className="flex items-baseline">
                   {lastFoodEntry ? (
                     <span className="text-xl font-bold text-gray-800 flex items-center">
-                      <Utensils className="h-5 w-5 mr-2 text-[#208687]" />
+                      <Utensils className="h-5 w-5 mr-2 text-buddy-600" />
                       {lastFoodEntry.food}
                     </span>
                   ) : (
@@ -124,7 +123,7 @@ const Dashboard = () => {
             className="p-4 rounded-xl bg-white shadow-sm flex flex-col items-start"
           >
             <div className="p-2 rounded-lg bg-gray-100 mb-2">
-              <Activity size={18} className="text-[#208687]" />
+              <Activity size={18} className="text-buddy-600" />
             </div>
             <h3 className="text-sm font-medium text-gray-600">Average</h3>
             <div className="flex items-baseline">
@@ -161,7 +160,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-800">Glucose Trend</h3>
             <button 
-              className="text-[#208687] text-sm font-medium flex items-center"
+              className="text-buddy-600 text-sm font-medium flex items-center"
               onClick={navigateToLogs}
             >
               View All <ArrowUpRight size={14} className="ml-1" />
@@ -224,13 +223,13 @@ const Dashboard = () => {
           <div className="space-y-4">
             {isLoading ? (
               <div className="flex justify-center p-4">
-                <div className="w-6 h-6 border-2 border-[#208687] border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-6 h-6 border-2 border-buddy-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : (
               insights.map((insight, index) => (
                 <div key={index} className="flex space-x-3 bg-gray-50 p-3 rounded-lg">
                   <div className="pt-1">
-                    <Activity className={`h-5 w-5 ${index % 2 === 0 ? 'text-[#208687]' : 'text-blue-600'}`} />
+                    <Activity className={`h-5 w-5 ${index % 2 === 0 ? 'text-buddy-600' : 'text-blue-600'}`} />
                   </div>
                   <div>
                     <p className="text-sm text-gray-700">
