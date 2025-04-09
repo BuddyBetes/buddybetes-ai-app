@@ -15,8 +15,11 @@
     --input: 214.3 31.8% 91.4%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
-    --primary: 222.2 47.4% 11.2%;
+    
+    /* Updated primary color */
+    --primary: 181 61% 33%;
     --primary-foreground: 210 40% 98%;
+    
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --accent: 210 40% 96.1%;
@@ -26,10 +29,10 @@
     --ring: 215 20.2% 65.1%;
     --radius: 0.5rem;
     
-    /* BuddyBetes Colors */
-    --buddy-500: #35cab4;
-    --buddy-600: #3da59d;
-    --buddy-700: #318f88;
+    /* Updated BuddyBetes Colors */
+    --buddy-500: #208687;
+    --buddy-600: #165e5e;
+    --buddy-700: #0f4444;
     
     /* Safe area variables */
     --safe-area-top: env(safe-area-inset-top, 0px);
@@ -94,10 +97,10 @@
   }
   
   .nav-item.active {
-    @apply text-buddy-500;
+    @apply text-[#208687];
   }
   
   .logo-text {
-    @apply font-bold text-buddy-500;
+    @apply font-bold text-[#208687];
   }
 }
