@@ -71,7 +71,7 @@ const ProfileHeader = () => {
     >
       <Avatar className="w-24 h-24 mb-4">
         <AvatarImage src="" alt="Profile" />
-        <AvatarFallback className="bg-green-50 text-green-700 text-2xl">
+        <AvatarFallback className="bg-buddy-100 text-buddy-800 text-2xl">
           {loading ? <User size={40} /> : getInitials()}
         </AvatarFallback>
       </Avatar>

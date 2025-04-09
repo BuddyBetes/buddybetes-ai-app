@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -64,17 +65,17 @@ export default {
 				},
 				buddy: {
 					DEFAULT: '#208687',
-					50: '#E9F5F5',
-					100: '#D3EBEB',
-					200: '#A8D7D7',
-					300: '#7CC3C4',
-					400: '#51AFB0',
+					50: '#CEFFFF',
+					100: '#9EFFFF',
+					200: '#70FFFF',
+					300: '#42FFFF',
+					400: '#14FFFF',
 					500: '#208687',
-					600: '#1b7273',
-					700: '#165f60',
-					800: '#104c4c',
-					900: '#0A3939',
-					950: '#052c2c'
+					600: '#165e5e',
+					700: '#0f4444',
+					800: '#092e2e',
+					900: '#041717',
+					950: '#020a0a'
 				}
 			},
 			borderRadius: {
