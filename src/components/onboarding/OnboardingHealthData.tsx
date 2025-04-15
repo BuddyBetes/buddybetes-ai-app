@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CalendarIcon } from 'lucide-react';
@@ -95,6 +94,38 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
     }));
   };
 
+  const handleDateChange = (date: Date | undefined) => {
+    setHealthData(prev => ({
+      ...prev,
+      birthdate: date
+    }));
+  };
+  
+  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    
+    if (dateValue) {
+      // Create Date object from input string
+      const newDate = new Date(dateValue);
+      
+      // Check if date is valid
+      if (!isNaN(newDate.getTime())) {
+        handleDateChange(newDate);
+      }
+    } else {
+      // Handle case when input is cleared
+      handleDateChange(undefined);
+    }
+  };
+  
+  // Get formatted date value for input
+  const getFormattedDateValue = (): string => {
+    if (!healthData.birthdate) return '';
+    
+    // Format date as YYYY-MM-DD for input field
+    return format(healthData.birthdate, 'yyyy-MM-dd');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -121,29 +152,36 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
 
         <div className="space-y-2">
           <Label htmlFor="birthdate">Birthdate</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                id="birthdate"
-                className={cn(
-                  "w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                  !healthData.birthdate && "text-muted-foreground"
-                )}
-              >
-                {healthData.birthdate ? format(healthData.birthdate, "PPP") : "Pick a date"}
-                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={healthData.birthdate}
-                onSelect={(date) => setHealthData(prev => ({ ...prev, birthdate: date }))}
-                disabled={(date) => date > new Date()}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex gap-2">
+            <Input
+              id="birthdate"
+              type="date"
+              value={getFormattedDateValue()}
+              onChange={handleDateInputChange}
+              className="flex-1"
+            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    "w-10 flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  )}
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={healthData.birthdate}
+                  onSelect={handleDateChange}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
