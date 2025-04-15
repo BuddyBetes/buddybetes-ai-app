@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GlucoseUnit } from '@/types/global';
 
 interface OnboardingHealthDataProps {
