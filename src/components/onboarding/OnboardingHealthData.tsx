@@ -1,12 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { GlucoseUnit } from '@/types/global';
 
@@ -94,14 +89,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
     }));
   };
 
-  const handleDateChange = (date: Date | undefined) => {
-    setHealthData(prev => ({
-      ...prev,
-      birthdate: date
-    }));
-  };
-  
-  const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dateValue = e.target.value;
     
     if (dateValue) {
@@ -110,20 +98,18 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
       
       // Check if date is valid
       if (!isNaN(newDate.getTime())) {
-        handleDateChange(newDate);
+        setHealthData(prev => ({
+          ...prev,
+          birthdate: newDate
+        }));
       }
     } else {
       // Handle case when input is cleared
-      handleDateChange(undefined);
+      setHealthData(prev => ({
+        ...prev,
+        birthdate: undefined
+      }));
     }
-  };
-  
-  // Get formatted date value for input
-  const getFormattedDateValue = (): string => {
-    if (!healthData.birthdate) return '';
-    
-    // Format date as YYYY-MM-DD for input field
-    return format(healthData.birthdate, 'yyyy-MM-dd');
   };
 
   return (
@@ -152,36 +138,13 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
 
         <div className="space-y-2">
           <Label htmlFor="birthdate">Birthdate</Label>
-          <div className="flex gap-2">
-            <Input
-              id="birthdate"
-              type="date"
-              value={getFormattedDateValue()}
-              onChange={handleDateInputChange}
-              className="flex-1"
-            />
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    "w-10 flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  )}
-                >
-                  <CalendarIcon className="h-4 w-4" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={healthData.birthdate}
-                  onSelect={handleDateChange}
-                  disabled={(date) => date > new Date()}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          <Input
+            id="birthdate"
+            type="date"
+            value={healthData.birthdate ? format(healthData.birthdate, 'yyyy-MM-dd') : ''}
+            onChange={handleDateChange}
+            max={format(new Date(), 'yyyy-MM-dd')}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
