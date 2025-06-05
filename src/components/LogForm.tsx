@@ -104,15 +104,16 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       </div>
       
       <div className="space-y-1.5">
-        <Label htmlFor="food" className="text-sm font-medium">
-          Food (optional)
+        <Label htmlFor="glucoseLevel" className="text-sm">
+          Glucose Level ({glucoseUnit}) (optional)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
           <Input
-            id="food"
-            value={food}
-            onChange={(e) => setFood(e.target.value)}
-            placeholder="What did you eat?"
+            id="glucoseLevel"
+            type="number"
+            value={glucoseLevel}
+            onChange={(e) => setGlucoseLevel(e.target.value)}
+            placeholder={`Enter your glucose reading (${glucoseUnit})`}
             className="h-11 text-base"
             disabled={isLoading}
           />
@@ -121,7 +122,7 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       
       <div className="space-y-1.5">
         <Label htmlFor="mealContext" className="text-sm">
-          When was this meal?
+          When was this glucose level taken?
         </Label>
         <RadioGroup 
           value={mealContext} 
@@ -145,16 +146,15 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       </div>
       
       <div className="space-y-1.5">
-        <Label htmlFor="glucoseLevel" className="text-sm">
-          Glucose Level ({glucoseUnit}) (optional)
+        <Label htmlFor="food" className="text-sm font-medium">
+          Food (optional)
         </Label>
         <motion.div whileFocus="focus" variants={inputVariants}>
           <Input
-            id="glucoseLevel"
-            type="number"
-            value={glucoseLevel}
-            onChange={(e) => setGlucoseLevel(e.target.value)}
-            placeholder={`Enter your glucose reading (${glucoseUnit})`}
+            id="food"
+            value={food}
+            onChange={(e) => setFood(e.target.value)}
+            placeholder="What did you eat?"
             className="h-11 text-base"
             disabled={isLoading}
           />
