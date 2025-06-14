@@ -22,21 +22,24 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       description: 'Credit/Debit Card (Instant)',
       icon: CreditCard,
       color: 'text-blue-600',
-      badge: 'Instant'
+      badge: 'Instant',
+      badgeColor: 'bg-green-100 text-green-700 border-green-200'
     },
     gcash: {
       name: 'GCash',
       description: 'Pay via GCash (Manual verification)',
       icon: Smartphone,
       color: 'text-blue-600',
-      badge: '24h verification'
+      badge: '24h verification',
+      badgeColor: 'bg-yellow-100 text-yellow-700 border-yellow-200'
     },
     bpi: {
       name: 'BPI',
       description: 'Pay via BPI (Manual verification)',
       icon: CreditCard,
       color: 'text-red-600',
-      badge: '24h verification'
+      badge: '24h verification',
+      badgeColor: 'bg-yellow-100 text-yellow-700 border-yellow-200'
     }
   };
 
@@ -67,7 +70,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                       <p className="text-sm text-gray-600">{details.description}</p>
                     </div>
                   </div>
-                  <div className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600">
+                  <div className={`text-xs px-3 py-2 rounded-full border font-medium ${details.badgeColor}`}>
                     {details.badge}
                   </div>
                 </div>
