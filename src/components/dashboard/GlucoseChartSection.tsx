@@ -46,9 +46,9 @@ const GlucoseChartSection: React.FC<GlucoseChartSectionProps> = ({ glucoseLogs }
         </button>
       </div>
       
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-center sm:justify-end mb-4">
         <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-          <SelectTrigger className="w-40 h-8 text-sm">
+          <SelectTrigger className="w-full sm:w-40 h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-white border shadow-lg">
