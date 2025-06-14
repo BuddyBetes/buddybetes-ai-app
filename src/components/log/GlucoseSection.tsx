@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Droplet, Zap } from 'lucide-react';
 import { GlucoseLog } from '@/types/logs';
@@ -71,7 +70,6 @@ const GlucoseSection: React.FC<GlucoseSectionProps> = ({ log }) => {
           <span className="text-gray-700 font-medium text-lg">{displayGlucoseValue()}</span>
           {measurementMethod && (
             <div className="ml-2 flex items-center text-sm text-gray-500">
-              <measurementMethod.icon className="h-3 w-3 mr-1" />
               <span>({measurementMethod.text})</span>
             </div>
           )}
