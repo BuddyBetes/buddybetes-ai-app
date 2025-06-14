@@ -11,6 +11,7 @@ import NutritionSection from './NutritionSection';
 import FoodSection from './FoodSection';
 import GlucoseSection from './GlucoseSection';
 import NotesSection from './NotesSection';
+import { formatDistanceToNow } from 'date-fns';
 
 interface LogItemProps {
   log: GlucoseLog;
@@ -33,21 +34,33 @@ const LogItem: React.FC<LogItemProps> = ({ log, onClick }) => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatTimestamp = (timestamp: Date) => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch (e) {
+      console.error('Error formatting timestamp:', e);
+      return 'Invalid date';
+    }
+  };
+
   return (
     <>
       <div 
         className="p-4 rounded-lg bg-white shadow-sm mb-3 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={handleOpenDetail}
       >
-        {/* Main content with chevron and time */}
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <LogDisplay log={log} showNutrition={false} showFood={false} showGlucose={false} />
+        {/* Two-row header */}
+        <div className="space-y-2 mb-4">
+          {/* Row 1: Badges + Chevron */}
+          <div className="flex items-center justify-between">
+            <LogDisplay log={log} />
+            <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
           </div>
           
-          <div className="flex flex-col items-end ml-2 flex-shrink-0">
-            <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
-            <span className="text-xs text-gray-500 mt-2 whitespace-nowrap">{formatTime(log.timestamp)}</span>
+          {/* Row 2: Timestamp + Time */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">{formatTimestamp(log.timestamp)}</span>
+            <span className="text-xs text-gray-500">{formatTime(log.timestamp)}</span>
           </div>
         </div>
 
