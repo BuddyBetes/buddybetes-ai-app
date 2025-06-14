@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
@@ -58,85 +59,91 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
   const measurementMethod = getMeasurementMethodDisplay();
 
   return (
-    <div className="log-display">
-      <div className="flex items-center gap-2 mb-2">
-        {hasGlucose && (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 py-1">
-            <Droplet className="h-3 w-3" />
-            <span>Glucose</span>
-          </Badge>
-        )}
-        {hasFood && (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1 py-1">
-            <Utensils className="h-3 w-3" />
-            <span>Food</span>
-          </Badge>
-        )}
-        {hasNutritionData && (
-          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1 py-1">
-            <Target className="h-3 w-3" />
-            <span>Nutrition</span>
-          </Badge>
-        )}
-      </div>
-      
-      <div className="timestamp text-sm text-gray-500 mb-1">
-        {formatTimestamp(log.timestamp)}
-      </div>
-      
-      {hasGlucose && (
-        <div className="glucose-value font-medium flex items-center">
-          <Droplet className="h-4 w-4 mr-1 text-blue-500" />
-          <span>{displayGlucoseValue()}</span>
-          {measurementMethod && (
-            <div className="ml-2 flex items-center text-xs text-gray-500">
-              <measurementMethod.icon className="h-3 w-3 mr-1" />
-              <span>({measurementMethod.text})</span>
-            </div>
+    <div className="log-display-container">
+      {/* Main content section */}
+      <div className="log-main-content">
+        <div className="flex items-center gap-2 mb-2">
+          {hasGlucose && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 py-1">
+              <Droplet className="h-3 w-3" />
+              <span>Glucose</span>
+            </Badge>
+          )}
+          {hasFood && (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1 py-1">
+              <Utensils className="h-3 w-3" />
+              <span>Food</span>
+            </Badge>
+          )}
+          {hasNutritionData && (
+            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1 py-1">
+              <Target className="h-3 w-3" />
+              <span>Nutrition</span>
+            </Badge>
           )}
         </div>
-      )}
-      
-      {hasFood && (
-        <div className="food-info mt-1 flex items-center">
-          <Utensils className="h-4 w-4 mr-1 text-green-500" />
-          <span className="text-gray-600 flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{log.food}</span>
+        
+        <div className="timestamp text-sm text-gray-500 mb-1">
+          {formatTimestamp(log.timestamp)}
         </div>
-      )}
-      
+        
+        {hasGlucose && (
+          <div className="glucose-value font-medium flex items-center">
+            <Droplet className="h-4 w-4 mr-1 text-blue-500" />
+            <span>{displayGlucoseValue()}</span>
+            {measurementMethod && (
+              <div className="ml-2 flex items-center text-xs text-gray-500">
+                <measurementMethod.icon className="h-3 w-3 mr-1" />
+                <span>({measurementMethod.text})</span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {hasFood && (
+          <div className="food-info mt-1 flex items-center">
+            <Utensils className="h-4 w-4 mr-1 text-green-500" />
+            <span className="text-gray-600 flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{log.food}</span>
+          </div>
+        )}
+        
+        {log.mealContext && (
+          <div className="meal-context text-xs text-gray-500 mt-1">
+            {log.mealContext === 'before' ? 'Before meal' : 
+             log.mealContext === 'after' ? 'After meal' : 'Fasting'}
+          </div>
+        )}
+        
+        {log.notes && (
+          <div className="notes text-sm mt-1 text-gray-700">
+            {log.notes}
+          </div>
+        )}
+      </div>
+
+      {/* Nutrition section - full width and separate */}
       {hasNutritionData && (
-        <div className="nutrition-info mt-2 p-2 bg-orange-50 rounded-md">
-          <div className="flex items-center mb-1">
-            <Target className="h-3 w-3 mr-1 text-orange-500" />
-            <span className="text-xs font-medium text-orange-700">Nutrition</span>
+        <div className="log-nutrition-section w-full mt-3">
+          <div className="nutrition-info p-2 bg-orange-50 rounded-md">
+            <div className="flex items-center mb-1">
+              <Target className="h-3 w-3 mr-1 text-orange-500" />
+              <span className="text-xs font-medium text-orange-700">Nutrition</span>
+            </div>
+            <div className="flex gap-3 text-xs text-orange-600">
+              {log.calories !== undefined && (
+                <span>{Math.round(log.calories)} kcal</span>
+              )}
+              {log.protein !== undefined && (
+                <span>{Math.round(log.protein)}g protein</span>
+              )}
+              {log.carbs !== undefined && (
+                <span>{Math.round(log.carbs)}g carbs</span>
+              )}
+              {log.fat !== undefined && (
+                <span>{Math.round(log.fat)}g fat</span>
+              )}
+            </div>
           </div>
-          <div className="flex gap-3 text-xs text-orange-600">
-            {log.calories !== undefined && (
-              <span>{Math.round(log.calories)} kcal</span>
-            )}
-            {log.protein !== undefined && (
-              <span>{Math.round(log.protein)}g protein</span>
-            )}
-            {log.carbs !== undefined && (
-              <span>{Math.round(log.carbs)}g carbs</span>
-            )}
-            {log.fat !== undefined && (
-              <span>{Math.round(log.fat)}g fat</span>
-            )}
-          </div>
-        </div>
-      )}
-      
-      {log.mealContext && (
-        <div className="meal-context text-xs text-gray-500 mt-1">
-          {log.mealContext === 'before' ? 'Before meal' : 
-           log.mealContext === 'after' ? 'After meal' : 'Fasting'}
-        </div>
-      )}
-      
-      {log.notes && (
-        <div className="notes text-sm mt-1 text-gray-700">
-          {log.notes}
         </div>
       )}
     </div>
