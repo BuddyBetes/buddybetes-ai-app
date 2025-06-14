@@ -7,6 +7,7 @@ import { useLogContext } from '@/context/LogContext';
 import LogDetailView from './LogDetailView';
 import { useToast } from '@/hooks/use-toast';
 import LogDisplay from './LogDisplay';
+import NutritionSection from './NutritionSection';
 
 interface LogItemProps {
   log: GlucoseLog;
@@ -35,9 +36,10 @@ const LogItem: React.FC<LogItemProps> = ({ log, onClick }) => {
         className="p-4 rounded-lg bg-white shadow-sm mb-3 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={handleOpenDetail}
       >
+        {/* Main content with chevron and time */}
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <LogDisplay log={log} />
+            <LogDisplay log={log} showNutrition={false} />
           </div>
           
           <div className="flex flex-col items-end ml-2 flex-shrink-0">
@@ -45,6 +47,9 @@ const LogItem: React.FC<LogItemProps> = ({ log, onClick }) => {
             <span className="text-xs text-gray-500 mt-2 whitespace-nowrap">{formatTime(log.timestamp)}</span>
           </div>
         </div>
+
+        {/* Nutrition section at full width */}
+        <NutritionSection log={log} />
       </div>
 
       <LogDetailView 
