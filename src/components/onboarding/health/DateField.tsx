@@ -55,6 +55,7 @@ const DateField: React.FC<DateFieldProps> = ({ value, onChange }) => {
               initialFocus
               fromYear={1900}
               toYear={new Date().getFullYear()}
+              captionLayout="dropdown"
               className="pointer-events-auto"
             />
           </PopoverContent>
