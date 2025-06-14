@@ -20,6 +20,7 @@ interface LogFormProps {
     calories?: number;
     protein?: number;
     carbs?: number;
+    fat?: number;
   };
 }
 
@@ -38,6 +39,7 @@ const LogForm: React.FC<LogFormProps> = ({
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
+  const [fat, setFat] = useState('');
   const [notes, setNotes] = useState('');
 
   // Set initial glucose level if provided
@@ -58,6 +60,9 @@ const LogForm: React.FC<LogFormProps> = ({
       }
       if (initialNutritionData.carbs) {
         setCarbs(initialNutritionData.carbs.toString());
+      }
+      if (initialNutritionData.fat) {
+        setFat(initialNutritionData.fat.toString());
       }
     }
   }, [initialNutritionData]);
@@ -109,6 +114,7 @@ const LogForm: React.FC<LogFormProps> = ({
       calories: calories ? Number(calories) : undefined,
       protein: protein ? Number(protein) : undefined,
       carbs: carbs ? Number(carbs) : undefined,
+      fat: fat ? Number(fat) : undefined,
       notes: notes.trim() || undefined,
     };
     
@@ -122,6 +128,7 @@ const LogForm: React.FC<LogFormProps> = ({
     setCalories('');
     setProtein('');
     setCarbs('');
+    setFat('');
     setNotes('');
     
     // Navigate to logs page via callback if provided
@@ -191,9 +198,11 @@ const LogForm: React.FC<LogFormProps> = ({
                 calories={calories}
                 protein={protein}
                 carbs={carbs}
+                fat={fat}
                 onCaloriesChange={setCalories}
                 onProteinChange={setProtein}
                 onCarbsChange={setCarbs}
+                onFatChange={setFat}
                 disabled={isLoading}
               />
             </div>

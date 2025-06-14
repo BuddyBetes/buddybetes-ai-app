@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
@@ -51,7 +50,7 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
   };
 
   // Check if nutritional data exists
-  const hasNutritionData = log.calories !== undefined || log.protein !== undefined || log.carbs !== undefined;
+  const hasNutritionData = log.calories !== undefined || log.protein !== undefined || log.carbs !== undefined || log.fat !== undefined;
 
   // Determine if this is a glucose entry, food entry, or both
   const hasGlucose = log.glucoseLevel !== undefined;
@@ -120,6 +119,9 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
             )}
             {log.carbs !== undefined && (
               <span>{Math.round(log.carbs)}g carbs</span>
+            )}
+            {log.fat !== undefined && (
+              <span>{Math.round(log.fat)}g fat</span>
             )}
           </div>
         </div>

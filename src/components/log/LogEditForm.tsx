@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +31,10 @@ const LogEditForm: React.FC<LogEditFormProps> = ({ log, onCancel, onComplete }) 
     glucoseLevel: displayGlucoseValue,
     food: log.food || '',
     mealContext: log.mealContext || 'before',
+    calories: log.calories?.toString() || '',
+    protein: log.protein?.toString() || '',
+    carbs: log.carbs?.toString() || '',
+    fat: log.fat?.toString() || '',
     notes: log.notes || '',
     date: format(log.timestamp, 'yyyy-MM-dd'),
     time: format(log.timestamp, 'HH:mm')
@@ -83,6 +86,10 @@ const LogEditForm: React.FC<LogEditFormProps> = ({ log, onCancel, onComplete }) 
         glucoseLevel: isNaN(numericGlucoseLevel!) ? undefined : numericGlucoseLevel,
         food: formData.food.trim() || undefined,
         mealContext: formData.mealContext as 'before' | 'after' | 'fasting',
+        calories: formData.calories ? Number(formData.calories) : undefined,
+        protein: formData.protein ? Number(formData.protein) : undefined,
+        carbs: formData.carbs ? Number(formData.carbs) : undefined,
+        fat: formData.fat ? Number(formData.fat) : undefined,
         notes: formData.notes.trim() || undefined,
       };
       
@@ -144,6 +151,66 @@ const LogEditForm: React.FC<LogEditFormProps> = ({ log, onCancel, onComplete }) 
               onChange={handleInputChange}
               placeholder="What did you eat?"
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Nutritional Information</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="calories" className="text-sm">Calories</Label>
+                <Input
+                  id="calories"
+                  name="calories"
+                  type="number"
+                  value={formData.calories}
+                  onChange={handleInputChange}
+                  placeholder="kcal"
+                  min="0"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="protein" className="text-sm">Protein (g)</Label>
+                <Input
+                  id="protein"
+                  name="protein"
+                  type="number"
+                  value={formData.protein}
+                  onChange={handleInputChange}
+                  placeholder="g"
+                  min="0"
+                  step="0.1"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="carbs" className="text-sm">Carbs (g)</Label>
+                <Input
+                  id="carbs"
+                  name="carbs"
+                  type="number"
+                  value={formData.carbs}
+                  onChange={handleInputChange}
+                  placeholder="g"
+                  min="0"
+                  step="0.1"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="fat" className="text-sm">Fat (g)</Label>
+                <Input
+                  id="fat"
+                  name="fat"
+                  type="number"
+                  value={formData.fat}
+                  onChange={handleInputChange}
+                  placeholder="g"
+                  min="0"
+                  step="0.1"
+                />
+              </div>
+            </div>
           </div>
           
           <div className="space-y-2">
