@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
@@ -71,7 +70,7 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
       {hasFood && (
         <div className="food-info mt-1 flex items-center">
           <Utensils className="h-4 w-4 mr-1 text-green-500" />
-          <span className="text-gray-600">{log.food}</span>
+          <span className="text-gray-600 flex-1">{log.food}</span>
         </div>
       )}
       
