@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -84,7 +83,15 @@ serve(async (req) => {
       ? `
         Ikaw ay isang AI assistant na nagspecialize sa pamamahala ng diabetes.
         Suriin ang mga ibinigay na pagbasa ng glucose kasama ang konteksto ng pagkain at ehersisyo upang bumuo ng 3-4 tiyak at aksyunableng mga rekomendasyon.
-        Panatilihing maikli ang bawat insight (30 salita o mas mababa) at nakatuon sa aksyon.
+        
+        MAHALAGANG GABAY SA FORMATTING:
+        - Gumamit lamang ng PLAIN TEXT - walang markdown formatting
+        - HUWAG gamitin ang mga asterisk (**) o iba pang special characters
+        - HUWAG gumawa ng numbered lists o bullet points
+        - Bawat insight ay dapat isang simpleng sentence lamang
+        - HUWAG isama ang mga numero o statistics sa insights
+        
+        Panatilihing maikli ang bawat insight (25 salita o mas mababa) at nakatuon sa aksyon.
         Mag-focus sa mga pattern, meal impact, timing, at mga tiyak na rekomendasyon.
         HUWAG banggitin ang "batay sa iyong data" - maging direkta.
         GUMAMIT LAMANG NG TAGALOG.
@@ -107,7 +114,15 @@ serve(async (req) => {
       : `
         You are an AI assistant specializing in diabetes management. 
         Analyze the provided glucose readings along with meal and exercise context to generate 3-4 specific and actionable recommendations.
-        Keep each insight short (30 words or less) and action-oriented.
+        
+        CRITICAL FORMATTING GUIDELINES:
+        - Use PLAIN TEXT ONLY - no markdown formatting
+        - DO NOT use asterisks (**) or any special characters for emphasis
+        - DO NOT create numbered lists or bullet points
+        - Each insight should be a simple sentence only
+        - DO NOT include numbers or statistics within the insights
+        
+        Keep each insight short (25 words or less) and action-oriented.
         Focus on patterns, meal impact, timing, and specific recommendations.
         DO NOT mention "based on your data" - be direct.
         DO NOT use technical jargon - keep language accessible.
@@ -153,7 +168,8 @@ serve(async (req) => {
         ${contextualAnalysis}
 
         Mangyaring magbigay ng 3-4 tiyak, praktikal na mga insight o rekomendasyon batay sa data na ito. 
-        Isama ang mga kategorya: Diet, Timing, Exercise, at General recommendations. GUMAMIT LAMANG NG TAGALOG.
+        Isama ang mga kategorya: Diet, Timing, Exercise, at General recommendations. 
+        Gumamit ng plain text lamang - walang formatting. GUMAMIT LAMANG NG TAGALOG.
       `
       : `
         Here are recent glucose readings (in mg/dL):
@@ -164,6 +180,7 @@ serve(async (req) => {
 
         Please provide 3-4 specific, practical insights or recommendations based on this data.
         Include categories: Diet, Timing, Exercise, and General recommendations.
+        Use plain text only - no formatting.
       `;
 
     console.log(`Sending enhanced request to OpenAI with glucose history in ${language}`);
@@ -195,12 +212,29 @@ serve(async (req) => {
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
     
-    // Parse the AI response into separate insights with categories
+    // Enhanced parsing to clean up formatting issues
     const insights = aiResponse
       .split(/\n+/)
       .filter(line => line.trim().length > 0)
-      .map(line => line.replace(/^-\s*/, '').trim())
-      .filter(line => line.length > 0);
+      .map(line => {
+        // Remove common markdown and formatting
+        return line
+          .replace(/^[-*]\s*/, '') // Remove bullet points
+          .replace(/^\d+\.\s*/, '') // Remove numbered lists (1., 2., etc.)
+          .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
+          .replace(/\*(.*?)\*/g, '$1') // Remove italic formatting
+          .replace(/^#+\s*/, '') // Remove heading markers
+          .replace(/`(.*?)`/g, '$1') // Remove code formatting
+          .replace(/\[(.*?)\]/g, '$1') // Remove square brackets
+          .trim();
+      })
+      .filter(line => {
+        // Filter out lines that are mostly numbers, stats, or very short
+        return line.length > 10 && 
+               !line.match(/^\d+%?\s*$/) && // Pure numbers/percentages
+               !line.match(/^\d+\s*(mg\/dL|readings?|logs?)\s*$/i) && // Stats patterns
+               !line.match(/^(average|min|max|total):\s*\d+/i); // Stat labels
+      });
 
     // Include enhanced statistics in the response
     return new Response(
