@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Check, CreditCard, Smartphone } from 'lucide-react';
@@ -88,14 +87,14 @@ const Subscription = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border-2 border-gradient-to-r from-purple-500 to-pink-500 relative overflow-hidden">
-            <div className="absolute top-4 right-4">
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+          <Card className="border-2 border-gradient-to-r from-purple-500 to-pink-500 relative overflow-visible">
+            <div className="absolute -top-5 right-6 z-10">
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
                 Limited Time
               </Badge>
             </div>
             
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 pt-7">
               <CardTitle className="text-2xl flex items-center gap-2">
                 <Crown className="h-6 w-6 text-purple-500" />
                 Founders Access
