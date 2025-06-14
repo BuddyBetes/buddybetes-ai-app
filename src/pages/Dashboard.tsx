@@ -20,7 +20,7 @@ const Dashboard = () => {
   const dataCount = timeRange === '6m' ? 180 : timeRange === '3m' ? 90 : 30;
   const glucoseLogs = getGlucoseLogsOnly(dataCount);
   
-  const { insights, stats, analysis, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
+  const { insights, stats, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
   const navigate = useNavigate();
 
   const lastReading = glucoseLogs[0]?.glucoseLevel || 0;
@@ -43,24 +43,6 @@ const Dashboard = () => {
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   ).find(log => log.food && log.food.trim().length > 0);
 
-  // Convert analysis data into insight cards
-  const allInsights = React.useMemo(() => {
-    const analysisInsights: string[] = [];
-    
-    if (analysis?.mealImpact) {
-      analysisInsights.push(`Meal Impact Analysis: ${analysis.mealImpact}`);
-    }
-    if (analysis?.exerciseImpact) {
-      analysisInsights.push(`Exercise Impact: ${analysis.exerciseImpact}`);
-    }
-    if (analysis?.timePatterns) {
-      analysisInsights.push(`Time Pattern Analysis: ${analysis.timePatterns}`);
-    }
-    
-    // Combine analysis insights with regular insights
-    return [...analysisInsights, ...insights];
-  }, [analysis, insights]);
-
   return (
     <Layout>
       <AppHeader />
@@ -78,7 +60,7 @@ const Dashboard = () => {
         <GlucoseChartSection glucoseLogs={glucoseLogs} />
 
         <InsightsSection
-          allInsights={allInsights}
+          allInsights={insights}
           isLoading={isLoading}
           refreshInsights={refreshInsights}
         />
