@@ -67,7 +67,7 @@ const GlucoseSection: React.FC<GlucoseSectionProps> = ({ log }) => {
       <div className="glucose-info p-2 bg-blue-50 rounded-md">
         <div className="flex items-center">
           <Droplet className="h-4 w-4 mr-2 text-blue-500" />
-          <span className="text-gray-700 font-medium text-lg">{displayGlucoseValue()}</span>
+          <span className="text-gray-700 font-medium text-base">{displayGlucoseValue()}</span>
           {measurementMethod && (
             <div className="ml-2 flex items-center text-sm text-gray-500">
               <span>({measurementMethod.text})</span>
