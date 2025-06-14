@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Check, CreditCard, Smartphone } from 'lucide-react';
@@ -151,6 +152,10 @@ const Subscription = () => {
           <h3 className="text-lg font-semibold text-gray-900">Accepted Payment Methods</h3>
           <div className="flex justify-center items-center gap-8">
             <div className="flex items-center gap-2 text-blue-600">
+              <CreditCard className="h-5 w-5" />
+              <span className="font-medium">Stripe</span>
+            </div>
+            <div className="flex items-center gap-2 text-blue-600">
               <Smartphone className="h-5 w-5" />
               <span className="font-medium">GCash</span>
             </div>
@@ -159,7 +164,9 @@ const Subscription = () => {
               <span className="font-medium">BPI</span>
             </div>
           </div>
-          <p className="text-sm text-gray-500">Manual verification within 24 hours</p>
+          <p className="text-sm text-gray-500">
+            Stripe: Instant activation • GCash/BPI: Manual verification within 24 hours
+          </p>
         </motion.div>
       </div>
     </Layout>
