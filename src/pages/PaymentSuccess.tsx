@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { useIsPwa } from '@/hooks/use-pwa';
 
 type PaymentStatus = 'verifying' | 'success' | 'failed' | 'error';
 
@@ -21,6 +22,7 @@ const PaymentSuccess = () => {
   const [status, setStatus] = useState<PaymentStatus>('verifying');
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const isPwa = useIsPwa();
 
   const sessionId = searchParams.get('session_id');
 
@@ -47,10 +49,11 @@ const PaymentSuccess = () => {
           description: "Your Founders Access has been activated.",
         });
         
-        // Redirect to subscription page after 3 seconds
+        // Shorter redirect for PWA
+        const redirectDelay = isPwa ? 2000 : 3000;
         setTimeout(() => {
           navigate('/subscription', { replace: true });
-        }, 3000);
+        }, redirectDelay);
       } else {
         setStatus('failed');
         toast({
@@ -78,6 +81,10 @@ const PaymentSuccess = () => {
       setStatus('verifying');
       await verifyPayment(true);
     }
+  };
+
+  const handleGoToSubscription = () => {
+    navigate('/subscription', { replace: true });
   };
 
   useEffect(() => {
@@ -130,7 +137,18 @@ const PaymentSuccess = () => {
                 Redirecting you back to your subscription page...
               </p>
             </div>
-            <Button onClick={() => navigate('/subscription')} variant="outline">
+
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-green-800 font-medium mb-2">🎉 Welcome to Founders Access!</p>
+              <div className="text-sm text-green-700 space-y-1">
+                <p>✓ AI-powered glucose insights activated</p>
+                <p>✓ Advanced analytics & trends unlocked</p>
+                <p>✓ Food image analysis enabled</p>
+                <p>✓ Priority support access granted</p>
+              </div>
+            </div>
+
+            <Button onClick={handleGoToSubscription} variant="outline">
               Go to Subscription Page
             </Button>
           </motion.div>
@@ -184,7 +202,7 @@ const PaymentSuccess = () => {
                 </Button>
               )}
               <Button 
-                onClick={() => navigate('/subscription')} 
+                onClick={handleGoToSubscription} 
                 variant="outline"
                 className="w-full"
               >
