@@ -91,14 +91,14 @@ const Subscription = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border-2 border-gradient-to-r from-purple-500 to-pink-500 relative overflow-visible">
-            <div className="absolute -top-5 right-6 z-10">
+          <Card className="border-2 border-gradient-to-r from-purple-500 to-pink-500 relative">
+            <div className="absolute top-3 right-3 z-10">
               <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
                 Limited Time
               </Badge>
             </div>
             
-            <CardHeader className="pb-4 pt-7">
+            <CardHeader className="pb-4 pt-7 pr-24">
               <CardTitle className="text-2xl flex items-center gap-2">
                 <Crown className="h-6 w-6 text-purple-500" />
                 Founders Access
