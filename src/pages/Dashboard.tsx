@@ -10,6 +10,7 @@ import { convertGlucoseValue } from '@/utils/glucoseUtils';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import GlucoseChartSection from '@/components/dashboard/GlucoseChartSection';
 import InsightsSection from '@/components/dashboard/InsightsSection';
+import PaywallWrapper from '@/components/paywall/PaywallWrapper';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '3m' | '6m'>('7d');
@@ -59,11 +60,17 @@ const Dashboard = () => {
 
         <GlucoseChartSection glucoseLogs={glucoseLogs} />
 
-        <InsightsSection
-          allInsights={insights}
-          isLoading={isLoading}
-          refreshInsights={refreshInsights}
-        />
+        <PaywallWrapper
+          feature="ai_insights"
+          title="AI-Powered Insights"
+          description="Get personalized diabetes insights powered by AI"
+        >
+          <InsightsSection
+            allInsights={insights}
+            isLoading={isLoading}
+            refreshInsights={refreshInsights}
+          />
+        </PaywallWrapper>
       </div>
     </Layout>
   );

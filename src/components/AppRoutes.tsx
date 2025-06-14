@@ -3,6 +3,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { GlucoseUnitProvider } from '@/context/GlucoseUnitContext';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
 
 // Page components
 import Dashboard from '@/pages/Dashboard';
@@ -17,6 +18,7 @@ import Profile from '@/pages/Profile';
 import Assistant from '@/pages/Assistant';
 import Settings from '@/pages/settings/Settings';
 import Terms from '@/pages/Terms';
+import Subscription from '@/pages/Subscription';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -30,13 +32,15 @@ const AppRoutes: React.FC = () => {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  // Wrap all authenticated routes with GlucoseUnitProvider
+  // Wrap all authenticated routes with providers
   const renderProtectedRoute = (component: React.ReactNode) => (
     <ProtectedRoute>
       <GlucoseUnitProvider>
-        <PageTransition>
-          {component}
-        </PageTransition>
+        <SubscriptionProvider>
+          <PageTransition>
+            {component}
+          </PageTransition>
+        </SubscriptionProvider>
       </GlucoseUnitProvider>
     </ProtectedRoute>
   );
@@ -71,13 +75,19 @@ const AppRoutes: React.FC = () => {
         element={renderProtectedRoute(<Assistant />)}
       />
       <Route
+        path="/subscription"
+        element={renderProtectedRoute(<Subscription />)}
+      />
+      <Route
         path="/onboarding"
         element={
           <ProtectedRoute skipOnboardingCheck>
             <GlucoseUnitProvider>
-              <PageTransition>
-                <Onboarding />
-              </PageTransition>
+              <SubscriptionProvider>
+                <PageTransition>
+                  <Onboarding />
+                </PageTransition>
+              </SubscriptionProvider>
             </GlucoseUnitProvider>
           </ProtectedRoute>
         }
@@ -111,7 +121,6 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route path="/confirm" element={<EmailConfirmed />} />
-      {/* Important: Don't use PublicRoute for reset-password since we want to handle all scenarios */}
       <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
   );
