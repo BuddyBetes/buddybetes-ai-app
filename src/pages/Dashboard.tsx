@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -57,6 +58,24 @@ const Dashboard = () => {
       },
     }),
   };
+
+  // Convert analysis data into insight cards
+  const allInsights = React.useMemo(() => {
+    const analysisInsights: string[] = [];
+    
+    if (analysis?.mealImpact) {
+      analysisInsights.push(`Meal Impact Analysis: ${analysis.mealImpact}`);
+    }
+    if (analysis?.exerciseImpact) {
+      analysisInsights.push(`Exercise Impact: ${analysis.exerciseImpact}`);
+    }
+    if (analysis?.timePatterns) {
+      analysisInsights.push(`Time Pattern Analysis: ${analysis.timePatterns}`);
+    }
+    
+    // Combine analysis insights with regular insights
+    return [...analysisInsights, ...insights];
+  }, [analysis, insights]);
 
   return (
     <Layout>
@@ -220,17 +239,6 @@ const Dashboard = () => {
               These insights are AI-generated based on your glucose, meal, and exercise data. Always consult healthcare professionals for medical decisions.
             </AlertDescription>
           </Alert>
-
-          {analysis && (
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">Analysis Summary</h4>
-              <div className="text-xs text-blue-700 space-y-1">
-                {analysis.mealImpact && <p><strong>Meals:</strong> {analysis.mealImpact}</p>}
-                {analysis.exerciseImpact && <p><strong>Exercise:</strong> {analysis.exerciseImpact}</p>}
-                {analysis.timePatterns && <p><strong>Timing:</strong> {analysis.timePatterns}</p>}
-              </div>
-            </div>
-          )}
           
           <div className="space-y-3">
             {isLoading ? (
@@ -238,7 +246,7 @@ const Dashboard = () => {
                 <div className="w-6 h-6 border-2 border-buddy-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : (
-              insights.map((insight, index) => (
+              allInsights.map((insight, index) => (
                 <InsightCard 
                   key={index} 
                   insight={insight} 
