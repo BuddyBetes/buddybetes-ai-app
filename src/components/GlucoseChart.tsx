@@ -179,16 +179,16 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({
           
           <div className="flex flex-wrap justify-center items-center gap-2 mt-4">
             <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
-              <span className="text-xs sm:text-sm text-gray-500">Avg: </span>
-              <span className="text-xs sm:text-sm font-medium">{stats.avg} {glucoseUnit}</span>
-            </div>
-            <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
               <span className="text-xs sm:text-sm text-gray-500">Min: </span>
               <span className="text-xs sm:text-sm font-medium">{stats.min} {glucoseUnit}</span>
             </div>
             <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
               <span className="text-xs sm:text-sm text-gray-500">Max: </span>
               <span className="text-xs sm:text-sm font-medium">{stats.max} {glucoseUnit}</span>
+            </div>
+            <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
+              <span className="text-xs sm:text-sm text-gray-500">Avg: </span>
+              <span className="text-xs sm:text-sm font-medium">{stats.avg} {glucoseUnit}</span>
             </div>
           </div>
         </>
