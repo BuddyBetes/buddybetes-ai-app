@@ -13,7 +13,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { convertGlucoseValue, formatGlucoseValue } from '@/utils/glucoseUtils';
 import InsightCard from '@/components/insights/InsightCard';
-import EnhancedStats from '@/components/insights/EnhancedStats';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
@@ -221,10 +220,6 @@ const Dashboard = () => {
               These insights are AI-generated based on your glucose, meal, and exercise data. Always consult healthcare professionals for medical decisions.
             </AlertDescription>
           </Alert>
-
-          {stats && (
-            <EnhancedStats stats={stats} glucoseUnit={glucoseUnit} />
-          )}
 
           {analysis && (
             <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
