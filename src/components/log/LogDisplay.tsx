@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { GlucoseLog } from '@/types/logs';
 import { convertGlucoseValue, formatGlucoseValue } from '@/utils/glucoseUtils';
-import { Droplet, Utensils } from 'lucide-react';
+import { Droplet, Utensils, Activity, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface LogDisplayProps {
@@ -35,9 +36,24 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
     return formatGlucoseValue(valueInPreferredUnit, glucoseUnit);
   };
 
+  // Get measurement method display text and icon
+  const getMeasurementMethodDisplay = () => {
+    if (!log.glucoseMeasurementMethod) return null;
+    
+    switch (log.glucoseMeasurementMethod) {
+      case 'finger_prick':
+        return { text: 'Finger prick', icon: Droplet };
+      case 'cgm':
+        return { text: 'CGM', icon: Zap };
+      default:
+        return null;
+    }
+  };
+
   // Determine if this is a glucose entry, food entry, or both
   const hasGlucose = log.glucoseLevel !== undefined;
   const hasFood = !!log.food;
+  const measurementMethod = getMeasurementMethodDisplay();
 
   return (
     <div className="log-display">
@@ -63,7 +79,13 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
       {hasGlucose && (
         <div className="glucose-value font-medium flex items-center">
           <Droplet className="h-4 w-4 mr-1 text-blue-500" />
-          {displayGlucoseValue()}
+          <span>{displayGlucoseValue()}</span>
+          {measurementMethod && (
+            <div className="ml-2 flex items-center text-xs text-gray-500">
+              <measurementMethod.icon className="h-3 w-3 mr-1" />
+              <span>({measurementMethod.text})</span>
+            </div>
+          )}
         </div>
       )}
       

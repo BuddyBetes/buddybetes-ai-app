@@ -5,6 +5,7 @@ export interface GlucoseLog {
   glucoseLevel: number | undefined;
   food?: string;
   mealContext?: 'before' | 'after' | 'fasting';
+  glucoseMeasurementMethod?: 'finger_prick' | 'cgm';
   medication?: string;
   weight?: number;
   notes?: string;

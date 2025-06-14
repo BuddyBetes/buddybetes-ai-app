@@ -4,8 +4,10 @@ import { useLogContext } from '../context/LogContext';
 import { useToast } from '@/hooks/use-toast';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { convertGlucoseValue } from '@/utils/glucoseUtils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GlucoseLevelField from './form/GlucoseLevelField';
 import MealContextField from './form/MealContextField';
+import GlucoseMeasurementMethodField from './form/GlucoseMeasurementMethodField';
 import FoodField from './form/FoodField';
 import NotesField from './form/NotesField';
 import SubmitButton from './form/SubmitButton';
@@ -20,8 +22,9 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
   const { toast } = useToast();
   const { glucoseUnit } = useGlucoseUnit();
   const [glucoseLevel, setGlucoseLevel] = useState('');
-  const [food, setFood] = useState('');
   const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
+  const [glucoseMeasurementMethod, setGlucoseMeasurementMethod] = useState<'finger_prick' | 'cgm' | ''>('');
+  const [food, setFood] = useState('');
   const [notes, setNotes] = useState('');
 
   // Set initial glucose level if provided
@@ -72,8 +75,9 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
     const newLog = {
       timestamp: new Date(),
       glucoseLevel: numericGlucoseLevel,
-      food: food.trim() || undefined,
       mealContext,
+      glucoseMeasurementMethod: glucoseMeasurementMethod || undefined,
+      food: food.trim() || undefined,
       notes: notes.trim() || undefined,
     };
     
@@ -81,8 +85,9 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
     
     // Reset form
     setGlucoseLevel('');
-    setFood('');
     setMealContext('before');
+    setGlucoseMeasurementMethod('');
+    setFood('');
     setNotes('');
     
     // Navigate to logs page via callback if provided
@@ -92,34 +97,77 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
       <div className="mb-4">
         <h3 className="text-base font-medium text-gray-700 mb-2">Add Log Details</h3>
       </div>
       
-      <GlucoseLevelField
-        value={glucoseLevel}
-        onChange={setGlucoseLevel}
-        disabled={isLoading}
-      />
+      {/* Glucose Information Card */}
+      <Card className="bg-blue-50/30 border-blue-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-blue-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            Glucose Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <GlucoseLevelField
+            value={glucoseLevel}
+            onChange={setGlucoseLevel}
+            disabled={isLoading}
+          />
+          
+          {glucoseLevel && (
+            <>
+              <MealContextField
+                value={mealContext}
+                onChange={setMealContext}
+                disabled={isLoading}
+              />
+              
+              <GlucoseMeasurementMethodField
+                value={glucoseMeasurementMethod}
+                onChange={setGlucoseMeasurementMethod}
+                disabled={isLoading}
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
       
-      <MealContextField
-        value={mealContext}
-        onChange={setMealContext}
-        disabled={isLoading}
-      />
+      {/* Food Information Card */}
+      <Card className="bg-green-50/30 border-green-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-green-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            Food Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FoodField
+            value={food}
+            onChange={setFood}
+            disabled={isLoading}
+          />
+        </CardContent>
+      </Card>
       
-      <FoodField
-        value={food}
-        onChange={setFood}
-        disabled={isLoading}
-      />
-      
-      <NotesField
-        value={notes}
-        onChange={setNotes}
-        disabled={isLoading}
-      />
+      {/* Notes Card */}
+      <Card className="bg-gray-50/30 border-gray-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-gray-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+            Additional Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <NotesField
+            value={notes}
+            onChange={setNotes}
+            disabled={isLoading}
+          />
+        </CardContent>
+      </Card>
       
       <SubmitButton loading={isLoading} />
     </form>

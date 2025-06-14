@@ -19,6 +19,13 @@ export const useLogAPI = () => {
     return undefined;
   };
 
+  const validateGlucoseMeasurementMethod = (method: string | null): 'finger_prick' | 'cgm' | undefined => {
+    if (method === 'finger_prick' || method === 'cgm') {
+      return method;
+    }
+    return undefined;
+  };
+
   // Helper function to round numbers in notes
   const roundNumbersInText = (text: string | undefined): string | undefined => {
     if (!text) return text;
@@ -62,6 +69,7 @@ export const useLogAPI = () => {
           glucoseLevel: row.glucose_level !== null ? row.glucose_level : undefined,
           food: row.food,
           mealContext: validateMealContextFn(row.meal_context),
+          glucoseMeasurementMethod: validateGlucoseMeasurementMethod(row.glucose_measurement_method),
           notes: roundNumbersInText(row.notes)
         }));
         setLogs(glucoseLogs);
@@ -94,6 +102,7 @@ export const useLogAPI = () => {
         timestamp: log.timestamp.toISOString(),
         glucose_level: log.glucoseLevel,
         meal_context: log.mealContext,
+        glucose_measurement_method: log.glucoseMeasurementMethod,
         food: log.food,
         notes: processedNotes
       };
@@ -119,6 +128,7 @@ export const useLogAPI = () => {
           glucoseLevel: data.glucose_level !== null ? data.glucose_level : undefined,
           food: data.food,
           mealContext: validateMealContextFn(data.meal_context),
+          glucoseMeasurementMethod: validateGlucoseMeasurementMethod(data.glucose_measurement_method),
           notes: data.notes
         };
         
@@ -162,6 +172,7 @@ export const useLogAPI = () => {
         timestamp: log.timestamp.toISOString(),
         glucose_level: log.glucoseLevel,
         meal_context: log.mealContext,
+        glucose_measurement_method: log.glucoseMeasurementMethod,
         food: log.food,
         notes: processedNotes
       };
@@ -188,6 +199,7 @@ export const useLogAPI = () => {
           glucoseLevel: data.glucose_level !== null ? data.glucose_level : undefined,
           food: data.food,
           mealContext: validateMealContextFn(data.meal_context),
+          glucoseMeasurementMethod: validateGlucoseMeasurementMethod(data.glucose_measurement_method),
           notes: data.notes
         };
         

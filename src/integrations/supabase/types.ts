@@ -73,6 +73,7 @@ export type Database = {
           created_at: string
           food: string | null
           glucose_level: number | null
+          glucose_measurement_method: string | null
           id: string
           meal_context: string | null
           notes: string | null
@@ -83,6 +84,7 @@ export type Database = {
           created_at?: string
           food?: string | null
           glucose_level?: number | null
+          glucose_measurement_method?: string | null
           id?: string
           meal_context?: string | null
           notes?: string | null
@@ -93,6 +95,7 @@ export type Database = {
           created_at?: string
           food?: string | null
           glucose_level?: number | null
+          glucose_measurement_method?: string | null
           id?: string
           meal_context?: string | null
           notes?: string | null
