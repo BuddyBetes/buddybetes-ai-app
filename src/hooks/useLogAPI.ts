@@ -27,17 +27,6 @@ export const useLogAPI = () => {
     return undefined;
   };
 
-  // Helper function to round numbers in notes
-  const roundNumbersInText = (text: string | undefined): string | undefined => {
-    if (!text) return text;
-    
-    // Regex to find numbers with decimal points (e.g., 50.4, 12.7)
-    return text.replace(/(\d+)\.(\d+)/g, (match, p1, p2) => {
-      // Convert to number and round
-      return Math.round(parseFloat(`${p1}.${p2}`)).toString();
-    });
-  };
-
   const fetchLogs = useCallback(async () => {
     if (!user) {
       console.log('No authenticated user found, clearing logs');
@@ -75,7 +64,7 @@ export const useLogAPI = () => {
           protein: row.protein !== null ? Number(row.protein) : undefined,
           carbs: row.carbs !== null ? Number(row.carbs) : undefined,
           fat: row.fat !== null ? Number(row.fat) : undefined,
-          notes: roundNumbersInText(row.notes)
+          notes: row.notes
         }));
         setLogs(glucoseLogs);
       }
@@ -99,9 +88,6 @@ export const useLogAPI = () => {
     try {
       setIsLoading(true);
       
-      // Process notes to round numbers
-      const processedNotes = roundNumbersInText(log.notes);
-      
       const logData = {
         user_id: user.id,
         timestamp: log.timestamp.toISOString(),
@@ -113,7 +99,7 @@ export const useLogAPI = () => {
         protein: log.protein,
         carbs: log.carbs,
         fat: log.fat,
-        notes: processedNotes
+        notes: log.notes
       };
 
       console.log('Adding new log to Supabase:', logData);
@@ -178,9 +164,6 @@ export const useLogAPI = () => {
     try {
       setIsLoading(true);
       
-      // Process notes to round numbers
-      const processedNotes = roundNumbersInText(log.notes);
-      
       const logData = {
         timestamp: log.timestamp.toISOString(),
         glucose_level: log.glucoseLevel,
@@ -191,7 +174,7 @@ export const useLogAPI = () => {
         protein: log.protein,
         carbs: log.carbs,
         fat: log.fat,
-        notes: processedNotes
+        notes: log.notes
       };
 
       const { data, error } = await supabase
