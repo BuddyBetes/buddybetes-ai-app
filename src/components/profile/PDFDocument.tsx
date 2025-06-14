@@ -162,7 +162,7 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ data, dateRange }) => {
             <Text style={styles.value}>{stats.averageGlucose} {healthData.glucose_unit}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>High Readings (>180):</Text>
+            <Text style={styles.label}>High Readings (above 180):</Text>
             <Text style={styles.value}>{stats.highReadings} ({stats.totalReadings > 0 ? Math.round((stats.highReadings / stats.totalReadings) * 100) : 0}%)</Text>
           </View>
           <View style={styles.row}>
@@ -170,7 +170,7 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ data, dateRange }) => {
             <Text style={styles.value}>{stats.normalReadings} ({stats.totalReadings > 0 ? Math.round((stats.normalReadings / stats.totalReadings) * 100) : 0}%)</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Low Readings (<70):</Text>
+            <Text style={styles.label}>Low Readings (below 70):</Text>
             <Text style={styles.value}>{stats.lowReadings} ({stats.totalReadings > 0 ? Math.round((stats.lowReadings / stats.totalReadings) * 100) : 0}%)</Text>
           </View>
         </View>
