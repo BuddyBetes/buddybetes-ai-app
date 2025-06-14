@@ -68,27 +68,25 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
           onChange={(date) => setHealthData(prev => ({ ...prev, birthdate: date }))}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <MeasurementField
-            id="height"
-            label="Height"
-            value={healthData.height}
-            onChange={handleInputChange}
-            unit={healthData.heightUnit}
-            unitOptions={heightUnitOptions}
-            onUnitChange={(value) => setHealthData(prev => ({ ...prev, heightUnit: value }))}
-          />
-          
-          <MeasurementField
-            id="weight"
-            label="Weight"
-            value={healthData.weight}
-            onChange={handleInputChange}
-            unit={healthData.weightUnit}
-            unitOptions={weightUnitOptions}
-            onUnitChange={(value) => setHealthData(prev => ({ ...prev, weightUnit: value }))}
-          />
-        </div>
+        <MeasurementField
+          id="height"
+          label="Height"
+          value={healthData.height}
+          onChange={handleInputChange}
+          unit={healthData.heightUnit}
+          unitOptions={heightUnitOptions}
+          onUnitChange={(value) => setHealthData(prev => ({ ...prev, heightUnit: value }))}
+        />
+        
+        <MeasurementField
+          id="weight"
+          label="Weight"
+          value={healthData.weight}
+          onChange={handleInputChange}
+          unit={healthData.weightUnit}
+          unitOptions={weightUnitOptions}
+          onUnitChange={(value) => setHealthData(prev => ({ ...prev, weightUnit: value }))}
+        />
 
         <SelectField
           id="diabetesType"

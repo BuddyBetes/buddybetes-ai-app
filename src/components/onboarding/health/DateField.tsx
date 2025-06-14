@@ -15,23 +15,6 @@ interface DateFieldProps {
 }
 
 const DateField: React.FC<DateFieldProps> = ({ value, onChange }) => {
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const dateValue = e.target.value;
-    
-    if (dateValue) {
-      // Create Date object from input string
-      const newDate = new Date(dateValue);
-      
-      // Check if date is valid
-      if (!isNaN(newDate.getTime())) {
-        onChange(newDate);
-      }
-    } else {
-      // Handle case when input is cleared
-      onChange(undefined);
-    }
-  };
-
   // Handle calendar date selection
   const handleCalendarSelect = (date: Date | undefined) => {
     onChange(date);
@@ -43,11 +26,11 @@ const DateField: React.FC<DateFieldProps> = ({ value, onChange }) => {
       <div className="flex gap-2">
         <Input
           id="birthdate"
-          type="date"
-          value={value ? format(value, 'yyyy-MM-dd') : ''}
-          onChange={handleDateChange}
-          max={format(new Date(), 'yyyy-MM-dd')}
-          className="flex-1"
+          type="text"
+          value={value ? format(value, 'MMM dd, yyyy') : ''}
+          placeholder="Select your birthdate"
+          readOnly
+          className="flex-1 cursor-pointer"
         />
         
         <Popover>
