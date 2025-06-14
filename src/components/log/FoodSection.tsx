@@ -21,6 +21,12 @@ const FoodSection: React.FC<FoodSectionProps> = ({ log }) => {
           <Utensils className="h-4 w-4 mr-2 text-green-500" />
           <span className="text-gray-700 font-medium">{log.food}</span>
         </div>
+        {log.mealContext && (
+          <div className="meal-context text-xs text-gray-500 mt-1 ml-6">
+            {log.mealContext === 'before' ? 'Before meal' : 
+             log.mealContext === 'after' ? 'After meal' : 'Fasting'}
+          </div>
+        )}
       </div>
     </div>
   );

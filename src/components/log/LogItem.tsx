@@ -10,6 +10,7 @@ import LogDisplay from './LogDisplay';
 import NutritionSection from './NutritionSection';
 import FoodSection from './FoodSection';
 import GlucoseSection from './GlucoseSection';
+import NotesSection from './NotesSection';
 
 interface LogItemProps {
   log: GlucoseLog;
@@ -58,6 +59,9 @@ const LogItem: React.FC<LogItemProps> = ({ log, onClick }) => {
 
         {/* Nutrition section at full width */}
         <NutritionSection log={log} />
+
+        {/* Notes section at full width */}
+        <NotesSection log={log} />
       </div>
 
       <LogDetailView 
