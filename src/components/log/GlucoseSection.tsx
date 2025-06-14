@@ -44,7 +44,24 @@ const GlucoseSection: React.FC<GlucoseSectionProps> = ({ log }) => {
     }
   };
 
+  // Get meal context display text
+  const getMealContextDisplay = () => {
+    if (!log.mealContext) return null;
+    
+    switch (log.mealContext) {
+      case 'before':
+        return 'Before meal';
+      case 'after':
+        return 'After meal';
+      case 'fasting':
+        return 'Fasting';
+      default:
+        return null;
+    }
+  };
+
   const measurementMethod = getMeasurementMethodDisplay();
+  const mealContext = getMealContextDisplay();
 
   return (
     <div className="w-full mt-3">
@@ -56,6 +73,11 @@ const GlucoseSection: React.FC<GlucoseSectionProps> = ({ log }) => {
             <div className="ml-2 flex items-center text-sm text-gray-500">
               <measurementMethod.icon className="h-3 w-3 mr-1" />
               <span>({measurementMethod.text})</span>
+            </div>
+          )}
+          {mealContext && (
+            <div className="ml-2 text-sm text-gray-500">
+              <span>({mealContext})</span>
             </div>
           )}
         </div>
