@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Check, CreditCard, Smartphone } from 'lucide-react';
@@ -90,22 +89,23 @@ const Subscription = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="w-full"
         >
-          <Card className="border-2 border-gradient-to-r from-purple-500 to-pink-500 relative">
+          <Card className="border-2 border-gradient-to-r from-purple-500 to-pink-500 relative w-full">
             <div className="absolute top-3 right-3 z-10">
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg whitespace-nowrap">
                 Limited Time
               </Badge>
             </div>
             
-            <CardHeader className="pb-4 pt-7 pr-24">
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <Crown className="h-6 w-6 text-purple-500" />
-                Founders Access
+            <CardHeader className="pb-4 pt-7 pr-28 w-full">
+              <CardTitle className="text-xl sm:text-2xl flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <Crown className="h-6 w-6 text-purple-500 flex-shrink-0" />
+                <span className="whitespace-nowrap">Founders Access</span>
               </CardTitle>
-              <div className="space-y-2">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-gray-900">₱999</span>
+              <div className="space-y-2 w-full">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="text-3xl sm:text-4xl font-bold text-gray-900">₱999</span>
                   <span className="text-lg text-gray-500 line-through">₱1,999</span>
                 </div>
                 <p className="text-sm text-gray-600">
@@ -114,7 +114,7 @@ const Subscription = () => {
               </div>
             </CardHeader>
             
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 w-full">
               <div className="grid gap-3">
                 {foundersFeatures.map((feature, index) => (
                   <div key={index} className="flex items-center gap-3">
