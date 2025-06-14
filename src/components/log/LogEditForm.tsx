@@ -32,10 +32,6 @@ const LogEditForm: React.FC<LogEditFormProps> = ({ log, onCancel, onComplete }) 
     glucoseLevel: displayGlucoseValue,
     food: log.food || '',
     mealContext: log.mealContext || 'before',
-    calories: log.calories?.toString() || '',
-    protein: log.protein?.toString() || '',
-    carbs: log.carbs?.toString() || '',
-    fat: log.fat?.toString() || '',
     notes: log.notes || '',
     date: format(log.timestamp, 'yyyy-MM-dd'),
     time: format(log.timestamp, 'HH:mm')
@@ -81,22 +77,12 @@ const LogEditForm: React.FC<LogEditFormProps> = ({ log, onCancel, onComplete }) 
         }
       }
       
-      // Parse nutrition values
-      const calories = formData.calories ? parseFloat(formData.calories) : undefined;
-      const protein = formData.protein ? parseFloat(formData.protein) : undefined;
-      const carbs = formData.carbs ? parseFloat(formData.carbs) : undefined;
-      const fat = formData.fat ? parseFloat(formData.fat) : undefined;
-      
       const updatedLog: GlucoseLog = {
         ...log,
         timestamp,
         glucoseLevel: isNaN(numericGlucoseLevel!) ? undefined : numericGlucoseLevel,
         food: formData.food.trim() || undefined,
         mealContext: formData.mealContext as 'before' | 'after' | 'fasting',
-        calories: isNaN(calories!) ? undefined : calories,
-        protein: isNaN(protein!) ? undefined : protein,
-        carbs: isNaN(carbs!) ? undefined : carbs,
-        fat: isNaN(fat!) ? undefined : fat,
         notes: formData.notes.trim() || undefined,
       };
       
@@ -180,71 +166,6 @@ const LogEditForm: React.FC<LogEditFormProps> = ({ log, onCancel, onComplete }) 
                 <Label htmlFor="fasting" className="text-sm">Fasting</Label>
               </div>
             </RadioGroup>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Nutrition Information</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="calories" className="text-xs">Calories</Label>
-                <Input
-                  id="calories"
-                  name="calories"
-                  type="number"
-                  value={formData.calories}
-                  onChange={handleInputChange}
-                  placeholder="kcal"
-                  className="h-9 text-sm"
-                  min="0"
-                  step="1"
-                />
-              </div>
-              
-              <div className="space-y-1">
-                <Label htmlFor="protein" className="text-xs">Protein (g)</Label>
-                <Input
-                  id="protein"
-                  name="protein"
-                  type="number"
-                  value={formData.protein}
-                  onChange={handleInputChange}
-                  placeholder="g"
-                  className="h-9 text-sm"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              
-              <div className="space-y-1">
-                <Label htmlFor="carbs" className="text-xs">Carbs (g)</Label>
-                <Input
-                  id="carbs"
-                  name="carbs"
-                  type="number"
-                  value={formData.carbs}
-                  onChange={handleInputChange}
-                  placeholder="g"
-                  className="h-9 text-sm"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              
-              <div className="space-y-1">
-                <Label htmlFor="fat" className="text-xs">Fat (g)</Label>
-                <Input
-                  id="fat"
-                  name="fat"
-                  type="number"
-                  value={formData.fat}
-                  onChange={handleInputChange}
-                  placeholder="g"
-                  className="h-9 text-sm"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-            </div>
           </div>
           
           <div className="space-y-2">

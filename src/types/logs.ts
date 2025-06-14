@@ -1,3 +1,4 @@
+
 export interface GlucoseLog {
   id: string;
   timestamp: Date;
@@ -10,7 +11,6 @@ export interface GlucoseLog {
   calories?: number;
   protein?: number;
   carbs?: number;
-  fat?: number;
   notes?: string;
 }
 

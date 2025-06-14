@@ -73,7 +73,6 @@ export type Database = {
           calories: number | null
           carbs: number | null
           created_at: string
-          fat: number | null
           food: string | null
           glucose_level: number | null
           glucose_measurement_method: string | null
@@ -88,7 +87,6 @@ export type Database = {
           calories?: number | null
           carbs?: number | null
           created_at?: string
-          fat?: number | null
           food?: string | null
           glucose_level?: number | null
           glucose_measurement_method?: string | null
@@ -103,7 +101,6 @@ export type Database = {
           calories?: number | null
           carbs?: number | null
           created_at?: string
-          fat?: number | null
           food?: string | null
           glucose_level?: number | null
           glucose_measurement_method?: string | null

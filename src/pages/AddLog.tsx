@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -86,7 +85,6 @@ const AddLog: React.FC = () => {
       const totalCalories = processedFoodItems.reduce((sum, item) => sum + item.calories, 0);
       const totalProtein = processedFoodItems.reduce((sum, item) => sum + item.protein, 0);
       const totalCarbs = processedFoodItems.reduce((sum, item) => sum + item.carbs, 0);
-      const totalFat = processedFoodItems.reduce((sum, item) => sum + item.fat, 0);
       
       // Create a food log with the analyzed items
       await addLog({
@@ -96,8 +94,7 @@ const AddLog: React.FC = () => {
         calories: totalCalories,
         protein: totalProtein,
         carbs: totalCarbs,
-        fat: totalFat,
-        notes: undefined
+        notes: `Fat: ${processedFoodItems.reduce((sum, item) => sum + item.fat, 0)}g`
       });
 
       toast({
