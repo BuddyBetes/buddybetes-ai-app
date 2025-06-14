@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-type PaymentMethod = 'gcash' | 'bpi';
+type PaymentMethod = 'gcash' | 'bpi' | 'stripe';
 
 interface PaymentMethodSelectorProps {
   onBack: () => void;
@@ -17,15 +17,26 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   onSelectMethod,
 }) => {
   const paymentDetails = {
+    stripe: {
+      name: 'Stripe',
+      description: 'Credit/Debit Card (Instant)',
+      icon: CreditCard,
+      color: 'text-blue-600',
+      badge: 'Instant'
+    },
     gcash: {
       name: 'GCash',
+      description: 'Pay via GCash (Manual verification)',
       icon: Smartphone,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
+      badge: '24h verification'
     },
     bpi: {
       name: 'BPI',
+      description: 'Pay via BPI (Manual verification)',
       icon: CreditCard,
-      color: 'text-red-600'
+      color: 'text-red-600',
+      badge: '24h verification'
     }
   };
 
@@ -48,11 +59,16 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
               onClick={() => onSelectMethod(method as PaymentMethod)}
             >
               <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <Icon className={`h-8 w-8 ${details.color}`} />
-                  <div>
-                    <h3 className="text-lg font-semibold">{details.name}</h3>
-                    <p className="text-sm text-gray-600">Pay via {details.name}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Icon className={`h-8 w-8 ${details.color}`} />
+                    <div>
+                      <h3 className="text-lg font-semibold">{details.name}</h3>
+                      <p className="text-sm text-gray-600">{details.description}</p>
+                    </div>
+                  </div>
+                  <div className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600">
+                    {details.badge}
                   </div>
                 </div>
               </CardContent>

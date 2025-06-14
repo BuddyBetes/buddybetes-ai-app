@@ -4,6 +4,7 @@ import PaymentMethodSelector from './PaymentMethodSelector';
 import PaymentDetails from './PaymentDetails';
 import ReceiptUpload from './ReceiptUpload';
 import PaymentSuccess from './PaymentSuccess';
+import StripePayment from './StripePayment';
 import { useSubscription } from '@/context/SubscriptionContext';
 
 interface PaymentFlowProps {
@@ -11,8 +12,8 @@ interface PaymentFlowProps {
   onBack: () => void;
 }
 
-type PaymentMethod = 'gcash' | 'bpi';
-type FlowStep = 'method-selection' | 'payment-details' | 'receipt-upload' | 'success';
+type PaymentMethod = 'gcash' | 'bpi' | 'stripe';
+type FlowStep = 'method-selection' | 'payment-details' | 'receipt-upload' | 'stripe-payment' | 'success';
 
 const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
   const [currentStep, setCurrentStep] = useState<FlowStep>('method-selection');
@@ -23,7 +24,11 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
 
   const handleSelectMethod = (method: PaymentMethod) => {
     setPaymentMethod(method);
-    setCurrentStep('payment-details');
+    if (method === 'stripe') {
+      setCurrentStep('stripe-payment');
+    } else {
+      setCurrentStep('payment-details');
+    }
   };
 
   const handleBackToMethodSelection = () => {
@@ -52,10 +57,19 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
         />
       );
 
+    case 'stripe-payment':
+      return (
+        <StripePayment
+          tierId={tierId}
+          onBack={handleBackToMethodSelection}
+          onSuccess={handlePaymentSuccess}
+        />
+      );
+
     case 'payment-details':
       return (
         <PaymentDetails
-          paymentMethod={paymentMethod!}
+          paymentMethod={paymentMethod! as 'gcash' | 'bpi'}
           tierPrice={tier?.price}
           onBack={handleBackToMethodSelection}
           onContinue={handleContinueToUpload}
@@ -66,7 +80,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
       return (
         <ReceiptUpload
           tierId={tierId}
-          paymentMethod={paymentMethod!}
+          paymentMethod={paymentMethod! as 'gcash' | 'bpi'}
           onBack={handleBackToDetails}
           onSuccess={handlePaymentSuccess}
         />
