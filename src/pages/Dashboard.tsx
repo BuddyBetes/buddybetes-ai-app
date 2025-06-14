@@ -46,7 +46,7 @@ const Dashboard = () => {
   return (
     <Layout>
       <AppHeader />
-      <div className="space-y-5 pb-20">
+      <div className="space-y-5 pb-20 pt-6">
         <DashboardStats
           lastFoodEntry={lastFoodEntry}
           lastReading={lastReading}
