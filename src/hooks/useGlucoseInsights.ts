@@ -9,38 +9,81 @@ interface GlucoseStats {
   min: number;
   max: number;
   inRangePercent: number;
+  totalReadings?: number;
+  mealsLogged?: number;
+  exerciseEntries?: number;
+}
+
+interface InsightAnalysis {
+  mealImpact?: string;
+  exerciseImpact?: string;
+  timePatterns?: string;
+}
+
+interface EnhancedInsight {
+  text: string;
+  category?: 'diet' | 'timing' | 'exercise' | 'general';
+  priority?: 'high' | 'medium' | 'low';
 }
 
 export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
   const [insights, setInsights] = useState<string[]>([]);
   const [stats, setStats] = useState<GlucoseStats | null>(null);
+  const [analysis, setAnalysis] = useState<InsightAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { getGlucoseLogsOnly } = useLogContext();
+  const { getGlucoseLogsOnly, logs } = useLogContext();
   const { toast } = useToast();
 
   const fetchInsights = useCallback(async () => {
     try {
       setIsLoading(true);
       
-      // Get recent glucose logs - only include logs with glucose readings
+      // Get recent glucose logs - include all logs for better context analysis
       const recentLogs = getGlucoseLogsOnly(30);
       
       if (recentLogs.length === 0) {
         setInsights([
           "Start logging your glucose readings to receive personalized insights.",
-          "Regular tracking helps identify patterns in your glucose levels."
+          "Regular tracking helps identify patterns in your glucose levels.",
+          "Try logging meals and exercise to get more specific recommendations."
         ]);
         setStats(null);
+        setAnalysis(null);
         return;
       }
 
       // Check if Tagalog is enabled from localStorage
       const preferTagalog = localStorage.getItem('preferTagalog') === 'true';
 
-      // Call the Supabase Edge Function with language preference
+      // Enhance logs with additional context from all logs
+      const enhancedLogs = recentLogs.map(glucoseLog => {
+        // Find related logs (same timestamp or close by) that might have meal/exercise info
+        const relatedLogs = logs.filter(log => 
+          Math.abs(new Date(log.timestamp).getTime() - new Date(glucoseLog.timestamp).getTime()) < 30 * 60 * 1000 // within 30 minutes
+        );
+        
+        const mealInfo = relatedLogs.find(log => log.food && log.food.trim().length > 0);
+        const exerciseInfo = relatedLogs.find(log => 
+          log.notes && (
+            log.notes.toLowerCase().includes('exercise') ||
+            log.notes.toLowerCase().includes('walk') ||
+            log.notes.toLowerCase().includes('gym') ||
+            log.notes.toLowerCase().includes('run')
+          )
+        );
+
+        return {
+          ...glucoseLog,
+          food: mealInfo?.food || glucoseLog.food,
+          mealContext: mealInfo?.mealContext || glucoseLog.mealContext,
+          notes: exerciseInfo?.notes || glucoseLog.notes
+        };
+      });
+
+      // Call the Supabase Edge Function with enhanced data
       const { data, error } = await supabase.functions.invoke('glucose-insights', {
         body: { 
-          glucoseHistory: recentLogs,
+          glucoseHistory: enhancedLogs,
           language: preferTagalog ? 'tagalog' : 'english',
           timeRange: timeRange
         }
@@ -58,6 +101,7 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
           "Please check your connection and try again."
         ]);
         setStats(null);
+        setAnalysis(null);
         return;
       }
 
@@ -67,12 +111,18 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
         if (data.stats) {
           setStats(data.stats);
         }
+
+        if (data.analysis) {
+          setAnalysis(data.analysis);
+        }
       } else {
         setInsights([
           "Keep logging your glucose to receive more personalized insights.",
-          "The more data you provide, the better the insights will be."
+          "The more data you provide, the better the insights will be.",
+          "Try adding meal and exercise information for enhanced recommendations."
         ]);
         setStats(null);
+        setAnalysis(null);
       }
     } catch (err) {
       console.error('Error in useGlucoseInsights:', err);
@@ -81,10 +131,11 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
         "Please try refreshing the page."
       ]);
       setStats(null);
+      setAnalysis(null);
     } finally {
       setIsLoading(false);
     }
-  }, [getGlucoseLogsOnly, toast, timeRange]);
+  }, [getGlucoseLogsOnly, logs, toast, timeRange]);
 
   useEffect(() => {
     fetchInsights();
@@ -93,6 +144,7 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
   return { 
     insights, 
     stats,
+    analysis,
     isLoading,
     refreshInsights: fetchInsights 
   };
