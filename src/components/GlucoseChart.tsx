@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   LineChart, 
@@ -117,37 +116,19 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({
     <div className="w-full p-4 rounded-xl bg-white shadow-sm">
       <div className="flex justify-between items-center mb-2">
         {title && <div className="text-lg font-semibold">{title}</div>}
+        {showControls && (
+          <Tabs defaultValue="24h" value={localTimeRange} onValueChange={(value) => setLocalTimeRange(value as '24h' | '7d' | '30d' | '3m' | '6m')}>
+            <TabsList className="bg-gray-100 h-6">
+              {Object.entries(timeRanges).map(([key, label]) => (
+                <TabsTrigger key={key} value={key} className="text-xs px-2 py-0.5 h-5">{label}</TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
       </div>
       
       {chartData.length > 0 ? (
         <>
-          <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
-            <div className="flex flex-wrap gap-2">
-              <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
-                <span className="text-xs text-gray-500">Avg: </span>
-                <span className="text-xs font-medium">{stats.avg} {glucoseUnit}</span>
-              </div>
-              <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
-                <span className="text-xs text-gray-500">Min: </span>
-                <span className="text-xs font-medium">{stats.min} {glucoseUnit}</span>
-              </div>
-              <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
-                <span className="text-xs text-gray-500">Max: </span>
-                <span className="text-xs font-medium">{stats.max} {glucoseUnit}</span>
-              </div>
-            </div>
-            
-            {showControls && (
-              <Tabs defaultValue="24h" value={localTimeRange} onValueChange={(value) => setLocalTimeRange(value as '24h' | '7d' | '30d' | '3m' | '6m')}>
-                <TabsList className="bg-gray-100 h-6">
-                  {Object.entries(timeRanges).map(([key, label]) => (
-                    <TabsTrigger key={key} value={key} className="text-xs px-2 py-0.5 h-5">{label}</TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            )}
-          </div>
-          
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
               data={chartData}
@@ -195,6 +176,21 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({
               />
             </LineChart>
           </ResponsiveContainer>
+          
+          <div className="flex flex-wrap justify-center items-center gap-2 mt-4">
+            <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
+              <span className="text-xs sm:text-sm text-gray-500">Avg: </span>
+              <span className="text-xs sm:text-sm font-medium">{stats.avg} {glucoseUnit}</span>
+            </div>
+            <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
+              <span className="text-xs sm:text-sm text-gray-500">Min: </span>
+              <span className="text-xs sm:text-sm font-medium">{stats.min} {glucoseUnit}</span>
+            </div>
+            <div className="px-2 py-0.5 bg-gray-100 rounded-lg">
+              <span className="text-xs sm:text-sm text-gray-500">Max: </span>
+              <span className="text-xs sm:text-sm font-medium">{stats.max} {glucoseUnit}</span>
+            </div>
+          </div>
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-gray-500">
