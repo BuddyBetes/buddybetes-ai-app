@@ -1,5 +1,12 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
+import { InsightRequest, InsightResponse, GlucoseLog } from './types.ts';
+import { analyzeMealImpact, analyzeExerciseImpact, analyzeTimePatterns } from './analyzers.ts';
+import { calculateGlucoseStats, filterGlucoseHistory } from './stats.ts';
+import { createSystemPrompt, createUserPrompt } from './prompts.ts';
+import { parseInsightsResponse } from './parser.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { glucoseHistory, language = 'english', timeRange = 'all' } = await req.json();
+    const { glucoseHistory, language = 'english', timeRange = 'all' }: InsightRequest = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
     if (!OPENAI_API_KEY) {
@@ -21,17 +28,7 @@ serve(async (req) => {
     }
 
     // Filter glucose data based on time range if specified
-    let filteredHistory = [...glucoseHistory];
-    if (timeRange !== 'all' && glucoseHistory.length > 0) {
-      const now = new Date();
-      let cutoffHours = 24;
-      
-      if (timeRange === '7d') cutoffHours = 168; // 7 days
-      else if (timeRange === '30d') cutoffHours = 720; // 30 days
-      
-      const cutoffTime = new Date(now.getTime() - cutoffHours * 60 * 60 * 1000);
-      filteredHistory = glucoseHistory.filter(log => new Date(log.timestamp) > cutoffTime);
-    }
+    const filteredHistory = filterGlucoseHistory(glucoseHistory, timeRange);
 
     if (!filteredHistory || !Array.isArray(filteredHistory) || filteredHistory.length === 0) {
       return new Response(
@@ -56,92 +53,19 @@ serve(async (req) => {
     }
 
     // Calculate basic stats
-    const glucoseValues = filteredHistory
-      .map(log => log.glucoseLevel)
-      .filter(value => value !== undefined && value !== null) as number[];
-    
-    const stats = {
-      count: glucoseValues.length,
-      average: Math.round(glucoseValues.reduce((sum, val) => sum + val, 0) / glucoseValues.length),
-      min: Math.min(...glucoseValues),
-      max: Math.max(...glucoseValues),
-      inRange: glucoseValues.filter(val => val >= 70 && val <= 140).length,
-      inRangePercent: Math.round((glucoseValues.filter(val => val >= 70 && val <= 140).length / glucoseValues.length) * 100)
-    };
+    const stats = calculateGlucoseStats(filteredHistory);
 
     // Analyze meal patterns
     const mealsWithGlucose = filteredHistory.filter(log => log.food && log.food.trim().length > 0);
     const exerciseEntries = filteredHistory.filter(log => log.notes && log.notes.toLowerCase().includes('exercise'));
     
-    // Calculate meal impact analysis
+    // Calculate impact analyses
     const mealAnalysis = analyzeMealImpact(mealsWithGlucose);
     const exerciseAnalysis = analyzeExerciseImpact(filteredHistory);
     const timePatterns = analyzeTimePatterns(filteredHistory);
 
-    // Prepare enhanced system prompt for OpenAI based on language preference
-    const systemPrompt = language === 'tagalog'
-      ? `
-        Ikaw ay isang AI assistant na nagspecialize sa pamamahala ng diabetes.
-        Suriin ang mga ibinigay na pagbasa ng glucose kasama ang konteksto ng pagkain at ehersisyo upang bumuo ng 3-4 tiyak at aksyunableng mga rekomendasyon.
-        
-        MAHALAGANG GABAY SA FORMATTING:
-        - Gumamit lamang ng PLAIN TEXT - walang markdown formatting
-        - HUWAG gamitin ang mga asterisk (**) o iba pang special characters
-        - HUWAG gumawa ng numbered lists o bullet points
-        - Bawat insight ay dapat isang simpleng sentence lamang
-        - HUWAG isama ang mga numero o statistics sa insights
-        
-        Panatilihing maikli ang bawat insight (25 salita o mas mababa) at nakatuon sa aksyon.
-        Mag-focus sa mga pattern, meal impact, timing, at mga tiyak na rekomendasyon.
-        HUWAG banggitin ang "batay sa iyong data" - maging direkta.
-        GUMAMIT LAMANG NG TAGALOG.
-
-        Mga kategorya ng insights na dapat isama:
-        - Diet/Pagkain: Tukuyin ang mga pagkaing nagiging dahilan ng mataas na glucose
-        - Timing: Mga pattern ayon sa oras ng araw
-        - Exercise: Epekto ng pisikal na aktibidad
-        - General: Pangkalahatang mga payo
-
-        Mga Estadistika:
-        - Bilang ng mga pagbasa: ${stats.count}
-        - Karaniwang antas ng glucose: ${stats.average} mg/dL
-        - Pinakamababang pagbasa: ${stats.min} mg/dL
-        - Pinakamataas na pagbasa: ${stats.max} mg/dL
-        - Porsyento sa loob ng target range (70-140 mg/dL): ${stats.inRangePercent}%
-        - Mga log na may pagkain: ${mealsWithGlucose.length}
-        - Mga log na may ehersisyo: ${exerciseEntries.length}
-      `
-      : `
-        You are an AI assistant specializing in diabetes management. 
-        Analyze the provided glucose readings along with meal and exercise context to generate 3-4 specific and actionable recommendations.
-        
-        CRITICAL FORMATTING GUIDELINES:
-        - Use PLAIN TEXT ONLY - no markdown formatting
-        - DO NOT use asterisks (**) or any special characters for emphasis
-        - DO NOT create numbered lists or bullet points
-        - Each insight should be a simple sentence only
-        - DO NOT include numbers or statistics within the insights
-        
-        Keep each insight short (25 words or less) and action-oriented.
-        Focus on patterns, meal impact, timing, and specific recommendations.
-        DO NOT mention "based on your data" - be direct.
-        DO NOT use technical jargon - keep language accessible.
-
-        Categories of insights to include:
-        - Diet: Identify foods that cause glucose spikes
-        - Timing: Patterns by time of day
-        - Exercise: Impact of physical activity
-        - General: Overall recommendations
-
-        Statistics:
-        - Number of readings: ${stats.count}
-        - Average glucose level: ${stats.average} mg/dL
-        - Lowest reading: ${stats.min} mg/dL
-        - Highest reading: ${stats.max} mg/dL
-        - Percentage in target range (70-140 mg/dL): ${stats.inRangePercent}%
-        - Logs with meals: ${mealsWithGlucose.length}
-        - Logs with exercise: ${exerciseEntries.length}
-      `;
+    // Prepare system and user prompts
+    const systemPrompt = createSystemPrompt(language, stats, mealsWithGlucose.length, exerciseEntries.length);
 
     // Format glucose history with enhanced context for the AI
     const formattedData = filteredHistory.map(log => {
@@ -159,29 +83,7 @@ serve(async (req) => {
     Time Patterns: ${timePatterns}
     `;
 
-    const userPrompt = language === 'tagalog'
-      ? `
-        Narito ang mga kamakailang pagbasa ng glucose (sa mg/dL):
-        ${formattedData}
-
-        Kontekstual na pagsusuri:
-        ${contextualAnalysis}
-
-        Mangyaring magbigay ng 3-4 tiyak, praktikal na mga insight o rekomendasyon batay sa data na ito. 
-        Isama ang mga kategorya: Diet, Timing, Exercise, at General recommendations. 
-        Gumamit ng plain text lamang - walang formatting. GUMAMIT LAMANG NG TAGALOG.
-      `
-      : `
-        Here are recent glucose readings (in mg/dL):
-        ${formattedData}
-
-        Contextual Analysis:
-        ${contextualAnalysis}
-
-        Please provide 3-4 specific, practical insights or recommendations based on this data.
-        Include categories: Diet, Timing, Exercise, and General recommendations.
-        Use plain text only - no formatting.
-      `;
+    const userPrompt = createUserPrompt(language, formattedData, contextualAnalysis);
 
     console.log(`Sending enhanced request to OpenAI with glucose history in ${language}`);
 
@@ -212,49 +114,30 @@ serve(async (req) => {
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
     
-    // Enhanced parsing to clean up formatting issues
-    const insights = aiResponse
-      .split(/\n+/)
-      .filter(line => line.trim().length > 0)
-      .map(line => {
-        // Remove common markdown and formatting
-        return line
-          .replace(/^[-*]\s*/, '') // Remove bullet points
-          .replace(/^\d+\.\s*/, '') // Remove numbered lists (1., 2., etc.)
-          .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
-          .replace(/\*(.*?)\*/g, '$1') // Remove italic formatting
-          .replace(/^#+\s*/, '') // Remove heading markers
-          .replace(/`(.*?)`/g, '$1') // Remove code formatting
-          .replace(/\[(.*?)\]/g, '$1') // Remove square brackets
-          .trim();
-      })
-      .filter(line => {
-        // Filter out lines that are mostly numbers, stats, or very short
-        return line.length > 10 && 
-               !line.match(/^\d+%?\s*$/) && // Pure numbers/percentages
-               !line.match(/^\d+\s*(mg\/dL|readings?|logs?)\s*$/i) && // Stats patterns
-               !line.match(/^(average|min|max|total):\s*\d+/i); // Stat labels
-      });
+    // Parse the AI response into clean insights
+    const insights = parseInsightsResponse(aiResponse);
 
     // Include enhanced statistics in the response
+    const responseData: InsightResponse = {
+      insights,
+      stats: {
+        average: stats.average,
+        min: stats.min,
+        max: stats.max,
+        inRangePercent: stats.inRangePercent,
+        totalReadings: stats.count,
+        mealsLogged: mealsWithGlucose.length,
+        exerciseEntries: exerciseEntries.length
+      },
+      analysis: {
+        mealImpact: mealAnalysis,
+        exerciseImpact: exerciseAnalysis,
+        timePatterns: timePatterns
+      }
+    };
+
     return new Response(
-      JSON.stringify({ 
-        insights,
-        stats: {
-          average: stats.average,
-          min: stats.min,
-          max: stats.max,
-          inRangePercent: stats.inRangePercent,
-          totalReadings: stats.count,
-          mealsLogged: mealsWithGlucose.length,
-          exerciseEntries: exerciseEntries.length
-        },
-        analysis: {
-          mealImpact: mealAnalysis,
-          exerciseImpact: exerciseAnalysis,
-          timePatterns: timePatterns
-        }
-      }),
+      JSON.stringify(responseData),
       { 
         headers: { 
           ...corsHeaders, 
@@ -282,63 +165,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Helper function to analyze meal impact
-function analyzeMealImpact(mealsWithGlucose: any[]) {
-  if (mealsWithGlucose.length === 0) return "No meal data available for analysis";
-  
-  const highGlucoseMeals = mealsWithGlucose.filter(log => log.glucoseLevel > 140);
-  const mealTypes = mealsWithGlucose.reduce((acc, log) => {
-    const food = log.food.toLowerCase();
-    if (food.includes('rice') || food.includes('bread') || food.includes('pasta')) {
-      acc.carbs++;
-    }
-    if (food.includes('sweet') || food.includes('dessert') || food.includes('cake')) {
-      acc.sweets++;
-    }
-    return acc;
-  }, { carbs: 0, sweets: 0 });
-
-  return `${highGlucoseMeals.length}/${mealsWithGlucose.length} meals caused glucose >140mg/dL. Carb-heavy meals: ${mealTypes.carbs}, Sweet foods: ${mealTypes.sweets}`;
-}
-
-// Helper function to analyze exercise impact
-function analyzeExerciseImpact(logs: any[]) {
-  const exerciseLogs = logs.filter(log => 
-    log.notes && (
-      log.notes.toLowerCase().includes('exercise') ||
-      log.notes.toLowerCase().includes('walk') ||
-      log.notes.toLowerCase().includes('gym') ||
-      log.notes.toLowerCase().includes('run')
-    )
-  );
-  
-  if (exerciseLogs.length === 0) return "No exercise data logged";
-  
-  const avgGlucoseAfterExercise = exerciseLogs.reduce((sum, log) => sum + log.glucoseLevel, 0) / exerciseLogs.length;
-  return `${exerciseLogs.length} exercise entries logged. Average glucose after exercise: ${Math.round(avgGlucoseAfterExercise)}mg/dL`;
-}
-
-// Helper function to analyze time patterns
-function analyzeTimePatterns(logs: any[]) {
-  const morningLogs = logs.filter(log => {
-    const hour = new Date(log.timestamp).getHours();
-    return hour >= 6 && hour < 12;
-  });
-  
-  const afternoonLogs = logs.filter(log => {
-    const hour = new Date(log.timestamp).getHours();
-    return hour >= 12 && hour < 18;
-  });
-  
-  const eveningLogs = logs.filter(log => {
-    const hour = new Date(log.timestamp).getHours();
-    return hour >= 18 || hour < 6;
-  });
-
-  const morningAvg = morningLogs.length > 0 ? Math.round(morningLogs.reduce((sum, log) => sum + log.glucoseLevel, 0) / morningLogs.length) : 0;
-  const afternoonAvg = afternoonLogs.length > 0 ? Math.round(afternoonLogs.reduce((sum, log) => sum + log.glucoseLevel, 0) / afternoonLogs.length) : 0;
-  const eveningAvg = eveningLogs.length > 0 ? Math.round(eveningLogs.reduce((sum, log) => sum + log.glucoseLevel, 0) / eveningLogs.length) : 0;
-
-  return `Morning avg: ${morningAvg}mg/dL (${morningLogs.length} readings), Afternoon avg: ${afternoonAvg}mg/dL (${afternoonLogs.length} readings), Evening avg: ${eveningAvg}mg/dL (${eveningLogs.length} readings)`;
-}
