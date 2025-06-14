@@ -58,6 +58,10 @@ serve(async (req) => {
       logStep("No existing customer found");
     }
 
+    // Get the origin for the success URL
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+    logStep("Origin detected", { origin });
+
     // Create a one-time payment session using your Stripe price
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -69,8 +73,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment", // One-time payment
-      success_url: `${req.headers.get("origin")}/subscription?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/subscription?payment=cancelled`,
+      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/subscription?payment=cancelled`,
       metadata: {
         user_id: user.id,
         tier_id: tierId,

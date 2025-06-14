@@ -3,7 +3,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { GlucoseUnitProvider } from '@/context/GlucoseUnitContext';
-import { SubscriptionProvider } from '@/context/SubscriptionContext';
+import { SubscriptionProvider } from '@/context/SubscriptionProvider';
 
 // Page components
 import Dashboard from '@/pages/Dashboard';
@@ -19,6 +19,7 @@ import Assistant from '@/pages/Assistant';
 import Settings from '@/pages/settings/Settings';
 import Terms from '@/pages/Terms';
 import Subscription from '@/pages/Subscription';
+import PaymentSuccess from '@/pages/PaymentSuccess';
 import AdminDashboard from '@/pages/AdminDashboard';
 
 // Route guards
@@ -78,6 +79,10 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/subscription"
         element={renderProtectedRoute(<Subscription />)}
+      />
+      <Route
+        path="/payment-success"
+        element={renderProtectedRoute(<PaymentSuccess />)}
       />
       <Route
         path="/admin"

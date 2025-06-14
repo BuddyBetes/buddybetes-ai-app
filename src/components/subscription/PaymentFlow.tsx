@@ -87,7 +87,12 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
       );
 
     case 'success':
-      return <PaymentSuccess onBack={onBack} />;
+      return (
+        <PaymentSuccess 
+          onBack={onBack} 
+          paymentMethod={paymentMethod || 'gcash'}
+        />
+      );
 
     default:
       return null;
