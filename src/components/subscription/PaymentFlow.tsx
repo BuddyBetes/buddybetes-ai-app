@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Smartphone, CreditCard, Copy, Upload, CheckCircle } from 'lucide-react';
@@ -33,14 +34,14 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
     gcash: {
       name: 'GCash',
       number: '09283563257',
-      qr: '/gcash-qr.jpg',
+      qr: '/gcash-qr.png',
       icon: Smartphone,
       color: 'text-blue-600'
     },
     bpi: {
       name: 'BPI',
       number: '1129396004',
-      qr: '/bpi-qr.jpg',
+      qr: '/bpi-qr.png',
       icon: CreditCard,
       color: 'text-red-600'
     }
