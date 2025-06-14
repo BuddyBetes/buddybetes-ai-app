@@ -38,9 +38,45 @@ const LogFilters: React.FC<LogFiltersProps> = ({
   return (
     <div className="mb-4">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <div className="space-y-3 sm:space-y-0">
-          {/* Mobile: Stack elements vertically, Desktop: Side by side */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="space-y-3">
+          {/* Mobile Layout */}
+          <div className="sm:hidden space-y-2">
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-2 h-10">
+                <Filter className="h-4 w-4" />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {activeFiltersCount}
+                  </Badge>
+                )}
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            
+            {activeFiltersCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearAll}
+                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 h-10"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear All Filters
+              </Button>
+            )}
+            
+            <div className="text-sm text-gray-600 text-center">
+              Showing {filteredCount} of {totalLogs} logs
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden sm:flex sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
               <CollapsibleTrigger asChild>
                 <Button variant="outline" size="sm" className="flex items-center gap-2 h-9">
@@ -67,14 +103,12 @@ const LogFilters: React.FC<LogFiltersProps> = ({
                   className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9"
                 >
                   <X className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Clear All</span>
-                  <span className="sm:hidden">Clear</span>
+                  Clear All
                 </Button>
               )}
             </div>
             
-            {/* Results count - moves below buttons on mobile */}
-            <div className="text-sm text-gray-600 text-center sm:text-right">
+            <div className="text-sm text-gray-600">
               Showing {filteredCount} of {totalLogs} logs
             </div>
           </div>
