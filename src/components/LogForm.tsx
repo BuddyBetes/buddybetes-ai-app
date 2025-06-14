@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLogContext } from '../context/LogContext';
 import { useToast } from '@/hooks/use-toast';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
@@ -33,18 +33,7 @@ const LogForm: React.FC<LogFormProps> = ({
   const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
   const { glucoseUnit } = useGlucoseUnit();
-  const [glucoseLevel, setGlucoseLevel] = useState('');
-  const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
-  const [glucoseMeasurementMethod, setGlucoseMeasurementMethod] = useState<'finger_prick' | 'cgm' | ''>('');
-  const [food, setFood] = useState('');
-  const [calories, setCalories] = useState('');
-  const [protein, setProtein] = useState('');
-  const [carbs, setCarbs] = useState('');
-  const [fat, setFat] = useState('');
-  const [exercise, setExercise] = useState('');
-  const [medication, setMedication] = useState('');
-  const [notes, setNotes] = useState('');
-
+  
   // Set initial glucose level if provided
   useEffect(() => {
     if (initialGlucoseLevel) {
@@ -70,8 +59,39 @@ const LogForm: React.FC<LogFormProps> = ({
     }
   }, [initialNutritionData]);
 
+  // Form validation logic
+  const isFormValid = useMemo(() => {
+    // Check if glucose level has a valid value
+    const hasValidGlucose = glucoseLevel.trim() !== '' && !isNaN(Number(glucoseLevel));
+    
+    // Check if food field has content
+    const hasFood = food.trim() !== '';
+    
+    // Check if exercise field has content
+    const hasExercise = exercise.trim() !== '';
+    
+    // Check if medication field has content
+    const hasMedication = medication.trim() !== '';
+    
+    // Check if notes field has content
+    const hasNotes = notes.trim() !== '';
+    
+    // At least one meaningful field must be filled
+    return hasValidGlucose || hasFood || hasExercise || hasMedication || hasNotes;
+  }, [glucoseLevel, food, exercise, medication, notes]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!isFormValid) {
+      toast({
+        title: "Form incomplete",
+        description: "Please fill in at least one field (glucose level, food, exercise, medication, or notes)",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (glucoseLevel && isNaN(Number(glucoseLevel))) {
       toast({
@@ -87,8 +107,6 @@ const LogForm: React.FC<LogFormProps> = ({
     if (glucoseLevel) {
       numericGlucoseLevel = Number(glucoseLevel);
       
-      // Convert from mmol/L to mg/dL if necessary for storage
-      // (We always store as mg/dL in the database for consistency)
       if (glucoseUnit === 'mmol/L') {
         numericGlucoseLevel = convertGlucoseValue(
           numericGlucoseLevel,
@@ -258,7 +276,7 @@ const LogForm: React.FC<LogFormProps> = ({
         </CardContent>
       </Card>
       
-      <SubmitButton loading={isLoading} />
+      <SubmitButton loading={isLoading} disabled={!isFormValid} />
     </form>
   );
 };
