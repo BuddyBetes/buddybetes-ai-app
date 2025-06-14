@@ -19,6 +19,7 @@ import Assistant from '@/pages/Assistant';
 import Settings from '@/pages/settings/Settings';
 import Terms from '@/pages/Terms';
 import Subscription from '@/pages/Subscription';
+import AdminDashboard from '@/pages/AdminDashboard';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -77,6 +78,10 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/subscription"
         element={renderProtectedRoute(<Subscription />)}
+      />
+      <Route
+        path="/admin"
+        element={renderProtectedRoute(<AdminDashboard />)}
       />
       <Route
         path="/onboarding"

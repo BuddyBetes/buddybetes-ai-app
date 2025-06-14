@@ -69,6 +69,21 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
     }
   };
 
+  const uploadReceiptToStorage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user!.id}/${Date.now()}.${fileExt}`;
+    
+    const { data, error } = await supabase.storage
+      .from('payment-receipts')
+      .upload(fileName, file);
+
+    if (error) {
+      throw new Error(`Upload failed: ${error.message}`);
+    }
+
+    return data.path;
+  };
+
   const handleSubmitPayment = async () => {
     if (!receiptFile || !paymentMethod || !user || !tier) {
       toast({
@@ -82,10 +97,8 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
     setIsUploading(true);
 
     try {
-      // Upload receipt file to storage (placeholder for now)
-      const fileExt = receiptFile.name.split('.').pop();
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-      const receiptUrl = `receipts/${fileName}`; // This would be actual file upload
+      // Upload receipt file to storage
+      const receiptPath = await uploadReceiptToStorage(receiptFile);
 
       // Create subscription record - set expires_at to null for lifetime subscriptions
       const subscriptionData = {
@@ -106,13 +119,13 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
 
       if (subscriptionError) throw subscriptionError;
 
-      // Create payment receipt record
+      // Create payment receipt record with actual storage path
       const { error: receiptError } = await supabase
         .from('payment_receipts')
         .insert({
           user_id: user.id,
           subscription_id: subscriptionResult.id,
-          receipt_url: receiptUrl,
+          receipt_url: receiptPath,
           payment_method: paymentMethod,
           reference_number: referenceNumber || null,
           amount: tier.price,
@@ -133,7 +146,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
       console.error('Error submitting payment:', error);
       toast({
         title: "Submission failed",
-        description: "There was an error submitting your payment. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error submitting your payment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -280,6 +293,18 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
                 ✓ {receiptFile.name} selected
               </p>
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="reference">Reference Number (Optional)</Label>
+            <Input
+              id="reference"
+              type="text"
+              value={referenceNumber}
+              onChange={(e) => setReferenceNumber(e.target.value)}
+              placeholder="Enter transaction reference number"
+              className="mt-1"
+            />
           </div>
 
           <Button
