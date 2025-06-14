@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { GlucoseUnitProvider } from '@/context/GlucoseUnitContext';
-import { SubscriptionProvider } from '@/context/SubscriptionProvider';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
 
 // Page components
 import Dashboard from '@/pages/Dashboard';
