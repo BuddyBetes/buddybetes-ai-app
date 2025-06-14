@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Smartphone, CreditCard, Copy, Upload, CheckCircle } from 'lucide-react';
@@ -74,7 +73,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
     if (!receiptFile || !paymentMethod || !user || !tier) {
       toast({
         title: "Missing information",
-        description: "Please upload receipt and provide reference number",
+        description: "Please upload receipt",
         variant: "destructive",
       });
       return;
@@ -263,7 +262,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Upload Payment Receipt
+            Upload Receipt
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -281,16 +280,6 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
                 ✓ {receiptFile.name} selected
               </p>
             )}
-          </div>
-
-          <div>
-            <Label htmlFor="reference">Reference Number (Optional)</Label>
-            <Input
-              id="reference"
-              placeholder="Enter transaction reference number"
-              value={referenceNumber}
-              onChange={(e) => setReferenceNumber(e.target.value)}
-            />
           </div>
 
           <Button
