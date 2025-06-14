@@ -18,7 +18,7 @@ const MealContextField: React.FC<MealContextFieldProps> = ({ value, onChange, di
       <RadioGroup 
         value={value} 
         onValueChange={(value) => onChange(value as 'before' | 'after' | 'fasting')}
-        className="flex space-x-3"
+        className="flex flex-col space-y-2"
         disabled={disabled}
       >
         <div className="flex items-center space-x-1.5">
