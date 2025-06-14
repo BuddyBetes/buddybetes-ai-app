@@ -36,11 +36,11 @@ const LogItem: React.FC<LogItemProps> = ({ log, onClick }) => {
         onClick={handleOpenDetail}
       >
         <div className="flex items-start justify-between">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <LogDisplay log={log} />
           </div>
           
-          <div className="flex flex-col items-end ml-4">
+          <div className="flex flex-col items-end ml-2 flex-shrink-0">
             <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
             <span className="text-xs text-gray-500 mt-2 whitespace-nowrap">{formatTime(log.timestamp)}</span>
           </div>
