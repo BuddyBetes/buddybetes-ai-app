@@ -10,9 +10,10 @@ import { Badge } from '@/components/ui/badge';
 interface LogDisplayProps {
   log: GlucoseLog;
   showNutrition?: boolean;
+  showFood?: boolean;
 }
 
-const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true }) => {
+const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true, showFood = true }) => {
   const { glucoseUnit } = useGlucoseUnit();
   
   const formatTimestamp = (timestamp: Date) => {
@@ -70,7 +71,7 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true }) =>
               <span>Glucose</span>
             </Badge>
           )}
-          {hasFood && (
+          {hasFood && showFood && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1 py-1">
               <Utensils className="h-3 w-3" />
               <span>Food</span>
@@ -101,7 +102,7 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true }) =>
           </div>
         )}
         
-        {hasFood && (
+        {hasFood && showFood && (
           <div className="food-info mt-1 flex items-center">
             <Utensils className="h-4 w-4 mr-1 text-green-500" />
             <span className="text-gray-600 flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{log.food}</span>
