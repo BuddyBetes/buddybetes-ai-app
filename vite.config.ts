@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'logo.png'],
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB limit
+      },
       manifest: {
         name: 'BuddyBetes',
         short_name: 'BuddyBetes',
@@ -57,6 +60,7 @@ export default defineConfig(({ mode }) => ({
           ui: ['@radix-ui/react-toast', '@radix-ui/react-label', '@radix-ui/react-slot'],
           utils: ['class-variance-authority', 'clsx', 'tailwind-merge'],
           motion: ['framer-motion'],
+          pdf: ['@react-pdf/renderer'],
         }
       }
     },
