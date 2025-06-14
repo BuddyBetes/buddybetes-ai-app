@@ -12,10 +12,14 @@ import GlucoseChartSection from '@/components/dashboard/GlucoseChartSection';
 import InsightsSection from '@/components/dashboard/InsightsSection';
 
 const Dashboard = () => {
-  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d');
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '3m' | '6m'>('7d');
   const { getGlucoseLogsOnly, getLogsForToday, getAverageGlucose, logs } = useLogContext();
   const { glucoseUnit } = useGlucoseUnit();
-  const glucoseLogs = getGlucoseLogsOnly(30); // Only get logs with glucose values
+  
+  // Get more data for longer time ranges
+  const dataCount = timeRange === '6m' ? 180 : timeRange === '3m' ? 90 : 30;
+  const glucoseLogs = getGlucoseLogsOnly(dataCount);
+  
   const { insights, stats, analysis, isLoading, refreshInsights } = useGlucoseInsights(timeRange);
   const navigate = useNavigate();
 

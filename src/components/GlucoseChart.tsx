@@ -22,30 +22,55 @@ interface GlucoseChartProps {
   data: GlucoseLog[];
   title?: string;
   showControls?: boolean;
+  timeRange?: '24h' | '7d' | '30d' | '3m' | '6m';
 }
 
 const timeRanges = {
   '24h': 'Last 24 Hours',
   '7d': 'Last 7 Days',
-  '30d': 'Last 30 Days'
+  '30d': 'Last 30 Days',
+  '3m': 'Last 3 Months',
+  '6m': 'Last 6 Months'
 };
 
-const formatDate = (timestamp: Date) => {
-  return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const formatDate = (timestamp: Date, timeRange: string) => {
+  if (timeRange === '24h') {
+    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (timeRange === '7d' || timeRange === '30d') {
+    return timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  } else {
+    // For 3m and 6m, show month/year format
+    return timestamp.toLocaleDateString([], { month: 'short', year: '2-digit' });
+  }
 };
 
-const formatDay = (timestamp: Date) => {
-  return timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' });
+const getTimeRangeHours = (timeRange: string) => {
+  switch (timeRange) {
+    case '24h': return 24;
+    case '7d': return 168; // 7 days
+    case '30d': return 720; // 30 days
+    case '3m': return 2160; // 90 days
+    case '6m': return 4320; // 180 days
+    default: return 24;
+  }
 };
 
-const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls = false }) => {
-  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+const GlucoseChart: React.FC<GlucoseChartProps> = ({ 
+  data, 
+  title, 
+  showControls = false, 
+  timeRange: propTimeRange 
+}) => {
+  const [localTimeRange, setLocalTimeRange] = useState<'24h' | '7d' | '30d' | '3m' | '6m'>('24h');
   const { glucoseUnit } = useGlucoseUnit();
+  
+  // Use prop timeRange if provided, otherwise use local state
+  const activeTimeRange = propTimeRange || localTimeRange;
   
   // Filter data based on selected time range
   const getFilteredData = () => {
     const now = new Date();
-    const timeRangeHours = timeRange === '24h' ? 24 : timeRange === '7d' ? 168 : 720;
+    const timeRangeHours = getTimeRangeHours(activeTimeRange);
     const cutoff = new Date(now.getTime() - timeRangeHours * 60 * 60 * 1000);
     
     return data
@@ -57,7 +82,7 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
           : convertGlucoseValue(log.glucoseLevel as number, 'mg/dL', 'mmol/L');
           
         return {
-          time: timeRange === '24h' ? formatDate(log.timestamp) : formatDay(log.timestamp),
+          time: formatDate(log.timestamp, activeTimeRange),
           value: convertedValue,
           originalValue: log.glucoseLevel,
           timestamp: log.timestamp.getTime(),
@@ -113,7 +138,7 @@ const GlucoseChart: React.FC<GlucoseChartProps> = ({ data, title, showControls =
             </div>
             
             {showControls && (
-              <Tabs defaultValue="24h" value={timeRange} onValueChange={(value) => setTimeRange(value as '24h' | '7d' | '30d')}>
+              <Tabs defaultValue="24h" value={localTimeRange} onValueChange={(value) => setLocalTimeRange(value as '24h' | '7d' | '30d' | '3m' | '6m')}>
                 <TabsList className="bg-gray-100 h-6">
                   {Object.entries(timeRanges).map(([key, label]) => (
                     <TabsTrigger key={key} value={key} className="text-xs px-2 py-0.5 h-5">{label}</TabsTrigger>

@@ -26,7 +26,7 @@ interface EnhancedInsight {
   priority?: 'high' | 'medium' | 'low';
 }
 
-export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
+export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' | '3m' | '6m' = '7d') => {
   const [insights, setInsights] = useState<string[]>([]);
   const [stats, setStats] = useState<GlucoseStats | null>(null);
   const [analysis, setAnalysis] = useState<InsightAnalysis | null>(null);
@@ -38,8 +38,9 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' = '7d') => {
     try {
       setIsLoading(true);
       
-      // Get recent glucose logs - include all logs for better context analysis
-      const recentLogs = getGlucoseLogsOnly(30);
+      // Get data count based on time range - for longer periods, get more data for context
+      const dataCount = timeRange === '6m' ? 180 : timeRange === '3m' ? 90 : 30;
+      const recentLogs = getGlucoseLogsOnly(dataCount);
       
       if (recentLogs.length === 0) {
         setInsights([
