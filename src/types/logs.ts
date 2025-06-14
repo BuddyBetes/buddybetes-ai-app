@@ -12,6 +12,7 @@ export interface GlucoseLog {
   protein?: number;
   carbs?: number;
   fat?: number;
+  exercise?: string;
   notes?: string;
 }
 

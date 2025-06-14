@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLogContext } from '../context/LogContext';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +9,7 @@ import MealContextField from './form/MealContextField';
 import GlucoseMeasurementMethodField from './form/GlucoseMeasurementMethodField';
 import FoodField from './form/FoodField';
 import NutritionFields from './form/NutritionFields';
+import ExerciseField from './form/ExerciseField';
 import NotesField from './form/NotesField';
 import SubmitButton from './form/SubmitButton';
 
@@ -40,6 +40,7 @@ const LogForm: React.FC<LogFormProps> = ({
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
+  const [exercise, setExercise] = useState('');
   const [notes, setNotes] = useState('');
 
   // Set initial glucose level if provided
@@ -115,6 +116,7 @@ const LogForm: React.FC<LogFormProps> = ({
       protein: protein ? Number(protein) : undefined,
       carbs: carbs ? Number(carbs) : undefined,
       fat: fat ? Number(fat) : undefined,
+      exercise: exercise.trim() || undefined,
       notes: notes.trim() || undefined,
     };
     
@@ -129,6 +131,7 @@ const LogForm: React.FC<LogFormProps> = ({
     setProtein('');
     setCarbs('');
     setFat('');
+    setExercise('');
     setNotes('');
     
     // Navigate to logs page via callback if provided
@@ -210,7 +213,7 @@ const LogForm: React.FC<LogFormProps> = ({
         </CardContent>
       </Card>
       
-      {/* Notes Card */}
+      {/* Additional Notes Card */}
       <Card className="bg-gray-50/30 border-gray-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-gray-800 flex items-center gap-2">
@@ -218,7 +221,13 @@ const LogForm: React.FC<LogFormProps> = ({
             Additional Notes
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <ExerciseField
+            value={exercise}
+            onChange={setExercise}
+            disabled={isLoading}
+          />
+          
           <NotesField
             value={notes}
             onChange={setNotes}

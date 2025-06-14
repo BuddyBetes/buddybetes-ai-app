@@ -64,6 +64,7 @@ export const useLogAPI = () => {
           protein: row.protein !== null ? Number(row.protein) : undefined,
           carbs: row.carbs !== null ? Number(row.carbs) : undefined,
           fat: row.fat !== null ? Number(row.fat) : undefined,
+          exercise: row.exercise,
           notes: row.notes
         }));
         setLogs(glucoseLogs);
@@ -99,6 +100,7 @@ export const useLogAPI = () => {
         protein: log.protein,
         carbs: log.carbs,
         fat: log.fat,
+        exercise: log.exercise,
         notes: log.notes
       };
 
@@ -128,6 +130,7 @@ export const useLogAPI = () => {
           protein: data.protein !== null ? Number(data.protein) : undefined,
           carbs: data.carbs !== null ? Number(data.carbs) : undefined,
           fat: data.fat !== null ? Number(data.fat) : undefined,
+          exercise: data.exercise,
           notes: data.notes
         };
         
@@ -174,6 +177,7 @@ export const useLogAPI = () => {
         protein: log.protein,
         carbs: log.carbs,
         fat: log.fat,
+        exercise: log.exercise,
         notes: log.notes
       };
 
@@ -204,6 +208,7 @@ export const useLogAPI = () => {
           protein: data.protein !== null ? Number(data.protein) : undefined,
           carbs: data.carbs !== null ? Number(data.carbs) : undefined,
           fat: data.fat !== null ? Number(data.fat) : undefined,
+          exercise: data.exercise,
           notes: data.notes
         };
         
