@@ -53,7 +53,6 @@ const DateField: React.FC<DateFieldProps> = ({ value, onChange }) => {
               onSelect={handleCalendarSelect}
               disabled={(date) => date > new Date()}
               initialFocus
-              captionLayout="dropdown-buttons"
               fromYear={1900}
               toYear={new Date().getFullYear()}
               className="pointer-events-auto"
