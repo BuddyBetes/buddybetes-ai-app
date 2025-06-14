@@ -19,7 +19,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   const paymentDetails = {
     stripe: {
       name: 'Stripe',
-      description: 'Credit/Debit Card (Instant)',
+      description: 'Credit/Debit Card',
+      subDescription: '(Instant)',
       icon: CreditCard,
       color: 'text-blue-600',
       badge: 'Instant',
@@ -27,7 +28,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     },
     gcash: {
       name: 'GCash',
-      description: 'Pay via GCash (Manual verification)',
+      description: 'Pay via GCash',
+      subDescription: '(Manual verification)',
       icon: Smartphone,
       color: 'text-blue-600',
       badge: '24h verification',
@@ -35,7 +37,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     },
     bpi: {
       name: 'BPI',
-      description: 'Pay via BPI (Manual verification)',
+      description: 'Pay via BPI',
+      subDescription: '(Manual verification)',
       icon: CreditCard,
       color: 'text-red-600',
       badge: '24h verification',
@@ -68,9 +71,10 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                     <div>
                       <h3 className="text-lg font-semibold">{details.name}</h3>
                       <p className="text-sm text-gray-600">{details.description}</p>
+                      <p className="text-xs text-gray-500">{details.subDescription}</p>
                     </div>
                   </div>
-                  <div className={`text-xs px-3 py-2 rounded-full border font-medium ${details.badgeColor}`}>
+                  <div className={`text-xs px-3 py-2 rounded-full border font-medium text-center ${details.badgeColor}`}>
                     {details.badge}
                   </div>
                 </div>
