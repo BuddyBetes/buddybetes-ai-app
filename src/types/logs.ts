@@ -8,6 +8,9 @@ export interface GlucoseLog {
   glucoseMeasurementMethod?: 'finger_prick' | 'cgm';
   medication?: string;
   weight?: number;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
   notes?: string;
 }
 

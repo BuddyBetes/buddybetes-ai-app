@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { GlucoseLog } from '@/types/logs';
 import { convertGlucoseValue, formatGlucoseValue } from '@/utils/glucoseUtils';
-import { Droplet, Utensils, Activity, Zap } from 'lucide-react';
+import { Droplet, Utensils, Activity, Zap, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface LogDisplayProps {
@@ -50,6 +50,9 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
     }
   };
 
+  // Check if nutritional data exists
+  const hasNutritionData = log.calories !== undefined || log.protein !== undefined || log.carbs !== undefined;
+
   // Determine if this is a glucose entry, food entry, or both
   const hasGlucose = log.glucoseLevel !== undefined;
   const hasFood = !!log.food;
@@ -68,6 +71,12 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1 py-1">
             <Utensils className="h-3 w-3" />
             <span>Food</span>
+          </Badge>
+        )}
+        {hasNutritionData && (
+          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1 py-1">
+            <Target className="h-3 w-3" />
+            <span>Nutrition</span>
           </Badge>
         )}
       </div>
@@ -93,6 +102,26 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log }) => {
         <div className="food-info mt-1 flex items-center">
           <Utensils className="h-4 w-4 mr-1 text-green-500" />
           <span className="text-gray-600 flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{log.food}</span>
+        </div>
+      )}
+      
+      {hasNutritionData && (
+        <div className="nutrition-info mt-2 p-2 bg-orange-50 rounded-md">
+          <div className="flex items-center mb-1">
+            <Target className="h-3 w-3 mr-1 text-orange-500" />
+            <span className="text-xs font-medium text-orange-700">Nutrition</span>
+          </div>
+          <div className="flex gap-3 text-xs text-orange-600">
+            {log.calories !== undefined && (
+              <span>{Math.round(log.calories)} kcal</span>
+            )}
+            {log.protein !== undefined && (
+              <span>{Math.round(log.protein)}g protein</span>
+            )}
+            {log.carbs !== undefined && (
+              <span>{Math.round(log.carbs)}g carbs</span>
+            )}
+          </div>
         </div>
       )}
       

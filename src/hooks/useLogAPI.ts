@@ -70,6 +70,9 @@ export const useLogAPI = () => {
           food: row.food,
           mealContext: validateMealContextFn(row.meal_context),
           glucoseMeasurementMethod: validateGlucoseMeasurementMethod(row.glucose_measurement_method),
+          calories: row.calories !== null ? Number(row.calories) : undefined,
+          protein: row.protein !== null ? Number(row.protein) : undefined,
+          carbs: row.carbs !== null ? Number(row.carbs) : undefined,
           notes: roundNumbersInText(row.notes)
         }));
         setLogs(glucoseLogs);
@@ -104,6 +107,9 @@ export const useLogAPI = () => {
         meal_context: log.mealContext,
         glucose_measurement_method: log.glucoseMeasurementMethod,
         food: log.food,
+        calories: log.calories,
+        protein: log.protein,
+        carbs: log.carbs,
         notes: processedNotes
       };
 
@@ -129,6 +135,9 @@ export const useLogAPI = () => {
           food: data.food,
           mealContext: validateMealContextFn(data.meal_context),
           glucoseMeasurementMethod: validateGlucoseMeasurementMethod(data.glucose_measurement_method),
+          calories: data.calories !== null ? Number(data.calories) : undefined,
+          protein: data.protein !== null ? Number(data.protein) : undefined,
+          carbs: data.carbs !== null ? Number(data.carbs) : undefined,
           notes: data.notes
         };
         
@@ -174,6 +183,9 @@ export const useLogAPI = () => {
         meal_context: log.mealContext,
         glucose_measurement_method: log.glucoseMeasurementMethod,
         food: log.food,
+        calories: log.calories,
+        protein: log.protein,
+        carbs: log.carbs,
         notes: processedNotes
       };
 
@@ -200,6 +212,9 @@ export const useLogAPI = () => {
           food: data.food,
           mealContext: validateMealContextFn(data.meal_context),
           glucoseMeasurementMethod: validateGlucoseMeasurementMethod(data.glucose_measurement_method),
+          calories: data.calories !== null ? Number(data.calories) : undefined,
+          protein: data.protein !== null ? Number(data.protein) : undefined,
+          carbs: data.carbs !== null ? Number(data.carbs) : undefined,
           notes: data.notes
         };
         

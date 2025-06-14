@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -82,15 +81,20 @@ const AddLog: React.FC = () => {
         calories: Math.round(item.calories)
       }));
       
+      // Calculate total nutritional values
+      const totalCalories = processedFoodItems.reduce((sum, item) => sum + item.calories, 0);
+      const totalProtein = processedFoodItems.reduce((sum, item) => sum + item.protein, 0);
+      const totalCarbs = processedFoodItems.reduce((sum, item) => sum + item.carbs, 0);
+      
       // Create a food log with the analyzed items
       await addLog({
         timestamp: new Date(),
-        glucoseLevel: undefined, // Updated: use undefined instead of 0
+        glucoseLevel: undefined,
         food: processedFoodItems.map(item => item.name).join(', '),
-        notes: `Carbs: ${processedFoodItems.reduce((sum, item) => sum + item.carbs, 0)}g, ` +
-               `Protein: ${processedFoodItems.reduce((sum, item) => sum + item.protein, 0)}g, ` +
-               `Fat: ${processedFoodItems.reduce((sum, item) => sum + item.fat, 0)}g, ` +
-               `Calories: ${processedFoodItems.reduce((sum, item) => sum + item.calories, 0)}`
+        calories: totalCalories,
+        protein: totalProtein,
+        carbs: totalCarbs,
+        notes: `Fat: ${processedFoodItems.reduce((sum, item) => sum + item.fat, 0)}g`
       });
 
       toast({

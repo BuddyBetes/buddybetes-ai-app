@@ -70,6 +70,8 @@ export type Database = {
       }
       glucose_logs: {
         Row: {
+          calories: number | null
+          carbs: number | null
           created_at: string
           food: string | null
           glucose_level: number | null
@@ -77,10 +79,13 @@ export type Database = {
           id: string
           meal_context: string | null
           notes: string | null
+          protein: number | null
           timestamp: string
           user_id: string
         }
         Insert: {
+          calories?: number | null
+          carbs?: number | null
           created_at?: string
           food?: string | null
           glucose_level?: number | null
@@ -88,10 +93,13 @@ export type Database = {
           id?: string
           meal_context?: string | null
           notes?: string | null
+          protein?: number | null
           timestamp?: string
           user_id: string
         }
         Update: {
+          calories?: number | null
+          carbs?: number | null
           created_at?: string
           food?: string | null
           glucose_level?: number | null
@@ -99,6 +107,7 @@ export type Database = {
           id?: string
           meal_context?: string | null
           notes?: string | null
+          protein?: number | null
           timestamp?: string
           user_id?: string
         }

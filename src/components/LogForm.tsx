@@ -9,15 +9,25 @@ import GlucoseLevelField from './form/GlucoseLevelField';
 import MealContextField from './form/MealContextField';
 import GlucoseMeasurementMethodField from './form/GlucoseMeasurementMethodField';
 import FoodField from './form/FoodField';
+import NutritionFields from './form/NutritionFields';
 import NotesField from './form/NotesField';
 import SubmitButton from './form/SubmitButton';
 
 interface LogFormProps {
   onLogAdded?: () => void;
   initialGlucoseLevel?: number | null;
+  initialNutritionData?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+  };
 }
 
-const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) => {
+const LogForm: React.FC<LogFormProps> = ({ 
+  onLogAdded, 
+  initialGlucoseLevel,
+  initialNutritionData 
+}) => {
   const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
   const { glucoseUnit } = useGlucoseUnit();
@@ -25,6 +35,9 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
   const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
   const [glucoseMeasurementMethod, setGlucoseMeasurementMethod] = useState<'finger_prick' | 'cgm' | ''>('');
   const [food, setFood] = useState('');
+  const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
   const [notes, setNotes] = useState('');
 
   // Set initial glucose level if provided
@@ -33,6 +46,21 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       setGlucoseLevel(initialGlucoseLevel.toString());
     }
   }, [initialGlucoseLevel]);
+
+  // Set initial nutrition data if provided
+  useEffect(() => {
+    if (initialNutritionData) {
+      if (initialNutritionData.calories) {
+        setCalories(initialNutritionData.calories.toString());
+      }
+      if (initialNutritionData.protein) {
+        setProtein(initialNutritionData.protein.toString());
+      }
+      if (initialNutritionData.carbs) {
+        setCarbs(initialNutritionData.carbs.toString());
+      }
+    }
+  }, [initialNutritionData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +106,9 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
       mealContext,
       glucoseMeasurementMethod: glucoseMeasurementMethod || undefined,
       food: food.trim() || undefined,
+      calories: calories ? Number(calories) : undefined,
+      protein: protein ? Number(protein) : undefined,
+      carbs: carbs ? Number(carbs) : undefined,
       notes: notes.trim() || undefined,
     };
     
@@ -88,6 +119,9 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
     setMealContext('before');
     setGlucoseMeasurementMethod('');
     setFood('');
+    setCalories('');
+    setProtein('');
+    setCarbs('');
     setNotes('');
     
     // Navigate to logs page via callback if provided
@@ -143,12 +177,27 @@ const LogForm: React.FC<LogFormProps> = ({ onLogAdded, initialGlucoseLevel }) =>
             Food Information
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <FoodField
             value={food}
             onChange={setFood}
             disabled={isLoading}
           />
+          
+          {food.trim() && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-green-700">Nutritional Information (optional)</h4>
+              <NutritionFields
+                calories={calories}
+                protein={protein}
+                carbs={carbs}
+                onCaloriesChange={setCalories}
+                onProteinChange={setProtein}
+                onCarbsChange={setCarbs}
+                disabled={isLoading}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
       
