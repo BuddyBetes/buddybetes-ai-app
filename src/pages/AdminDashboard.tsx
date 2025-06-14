@@ -77,23 +77,31 @@ const AdminDashboard = () => {
     try {
       setIsLoading(true);
       
-      // Fetch receipts with user email from profiles
-      const { data, error } = await supabase
+      // First, fetch all payment receipts
+      const { data: receiptsData, error: receiptsError } = await supabase
         .from('payment_receipts')
-        .select(`
-          *,
-          profiles:user_id (email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (receiptsError) throw receiptsError;
 
-      const receiptsWithEmail = data.map(receipt => ({
-        ...receipt,
-        user_email: receipt.profiles?.email || 'Unknown'
-      }));
+      // Then, fetch user emails for each receipt
+      const receiptsWithEmails = await Promise.all(
+        receiptsData.map(async (receipt) => {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', receipt.user_id)
+            .maybeSingle();
 
-      setReceipts(receiptsWithEmail);
+          return {
+            ...receipt,
+            user_email: profile?.email || 'Unknown'
+          };
+        })
+      );
+
+      setReceipts(receiptsWithEmails);
     } catch (error) {
       console.error('Error fetching receipts:', error);
       toast({
