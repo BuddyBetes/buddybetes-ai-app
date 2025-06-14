@@ -42,7 +42,7 @@ const LogItem: React.FC<LogItemProps> = ({ log, onClick }) => {
           
           <div className="flex flex-col items-end ml-4">
             <ChevronRight className="h-4 w-4 text-gray-400 mt-1" />
-            <span className="text-xs text-gray-500 mt-2">{formatTime(log.timestamp)}</span>
+            <span className="text-xs text-gray-500 mt-2 whitespace-nowrap">{formatTime(log.timestamp)}</span>
           </div>
         </div>
       </div>
