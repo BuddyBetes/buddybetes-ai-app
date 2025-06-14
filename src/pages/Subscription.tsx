@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Check, CreditCard, Smartphone, Upload } from 'lucide-react';
+import { Crown, Check, CreditCard, Smartphone } from 'lucide-react';
 import Layout from '@/components/Layout';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -152,10 +152,6 @@ const Subscription = () => {
             <div className="flex items-center gap-2 text-red-600">
               <CreditCard className="h-5 w-5" />
               <span className="font-medium">BPI</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Upload className="h-5 w-5" />
-              <span className="font-medium">Receipt Upload</span>
             </div>
           </div>
           <p className="text-sm text-gray-500">Manual verification within 24 hours</p>
