@@ -62,23 +62,24 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({ filters, onFiltersCha
     <div className="space-y-4">
       <div>
         <label className="text-sm font-medium mb-2 block">Meal Context</label>
-        <div className="space-y-2">
+        <div className="space-y-3 sm:space-y-2">
           {[
             { value: 'before', label: 'Before Meal' },
             { value: 'after', label: 'After Meal' },
             { value: 'fasting', label: 'Fasting' }
           ].map(option => (
-            <div key={option.value} className="flex items-center space-x-2">
+            <div key={option.value} className="flex items-center space-x-3 py-1">
               <Checkbox
                 id={`meal-${option.value}`}
                 checked={filters.mealContext?.includes(option.value as any) || false}
                 onCheckedChange={(checked) => 
                   handleMealContextChange(option.value, checked as boolean)
                 }
+                className="h-4 w-4"
               />
               <label
                 htmlFor={`meal-${option.value}`}
-                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-normal leading-none cursor-pointer flex-1"
               >
                 {option.label}
               </label>
@@ -89,22 +90,23 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({ filters, onFiltersCha
 
       <div>
         <label className="text-sm font-medium mb-2 block">Measurement Method</label>
-        <div className="space-y-2">
+        <div className="space-y-3 sm:space-y-2">
           {[
             { value: 'finger_prick', label: 'Finger Prick' },
             { value: 'cgm', label: 'CGM' }
           ].map(option => (
-            <div key={option.value} className="flex items-center space-x-2">
+            <div key={option.value} className="flex items-center space-x-3 py-1">
               <Checkbox
                 id={`method-${option.value}`}
                 checked={filters.measurementMethod?.includes(option.value as any) || false}
                 onCheckedChange={(checked) => 
                   handleMeasurementMethodChange(option.value, checked as boolean)
                 }
+                className="h-4 w-4"
               />
               <label
                 htmlFor={`method-${option.value}`}
-                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-normal leading-none cursor-pointer flex-1"
               >
                 {option.label}
               </label>
@@ -115,23 +117,24 @@ const CategoryFilters: React.FC<CategoryFiltersProps> = ({ filters, onFiltersCha
 
       <div>
         <label className="text-sm font-medium mb-2 block">Glucose Level</label>
-        <div className="space-y-2">
+        <div className="space-y-3 sm:space-y-2">
           {[
             { value: 'low', label: 'Low (<70 mg/dL)', color: 'text-red-600' },
             { value: 'normal', label: 'Normal (70-180 mg/dL)', color: 'text-green-600' },
             { value: 'high', label: 'High (>180 mg/dL)', color: 'text-orange-600' }
           ].map(option => (
-            <div key={option.value} className="flex items-center space-x-2">
+            <div key={option.value} className="flex items-center space-x-3 py-1">
               <Checkbox
                 id={`glucose-${option.value}`}
                 checked={filters.glucoseCategory?.includes(option.value as any) || false}
                 onCheckedChange={(checked) => 
                   handleGlucoseCategoryChange(option.value, checked as boolean)
                 }
+                className="h-4 w-4"
               />
               <label
                 htmlFor={`glucose-${option.value}`}
-                className={`text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${option.color}`}
+                className={`text-sm font-normal leading-none cursor-pointer flex-1 ${option.color}`}
               >
                 {option.label}
               </label>

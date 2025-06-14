@@ -28,7 +28,7 @@ const GlucoseRangeFilter: React.FC<GlucoseRangeFilterProps> = ({
     <div className="space-y-3">
       <label className="text-sm font-medium block">Glucose Range (mg/dL)</label>
       
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-2">
         <div>
           <label className="text-xs text-gray-600 mb-1 block">Min</label>
           <Input
@@ -36,7 +36,7 @@ const GlucoseRangeFilter: React.FC<GlucoseRangeFilterProps> = ({
             placeholder="Min"
             value={filters.glucoseRange.min || ''}
             onChange={(e) => handleRangeChange('min', e.target.value)}
-            className="text-sm"
+            className="text-sm h-9"
           />
         </div>
         
@@ -47,12 +47,12 @@ const GlucoseRangeFilter: React.FC<GlucoseRangeFilterProps> = ({
             placeholder="Max"
             value={filters.glucoseRange.max || ''}
             onChange={(e) => handleRangeChange('max', e.target.value)}
-            className="text-sm"
+            className="text-sm h-9"
           />
         </div>
       </div>
       
-      <div className="text-xs text-gray-500 space-y-1">
+      <div className="text-xs text-gray-500">
         <div className="flex justify-between">
           <span>Normal range:</span>
           <span>70-180 mg/dL</span>

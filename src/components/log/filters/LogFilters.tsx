@@ -36,48 +36,54 @@ const LogFilters: React.FC<LogFiltersProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="mb-6">
+    <div className="mb-4">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
+        <div className="space-y-3 sm:space-y-0">
+          {/* Mobile: Stack elements vertically, Desktop: Side by side */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2 h-9">
+                  <Filter className="h-4 w-4" />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <Badge variant="secondary" className="ml-1">
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              
+              {activeFiltersCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClearAll}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Clear All</span>
+                  <span className="sm:hidden">Clear</span>
+                </Button>
+              )}
+            </div>
             
-            {activeFiltersCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearAll}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear All
-              </Button>
-            )}
-          </div>
-          
-          <div className="text-sm text-gray-600">
-            Showing {filteredCount} of {totalLogs} logs
+            {/* Results count - moves below buttons on mobile */}
+            <div className="text-sm text-gray-600 text-center sm:text-right">
+              Showing {filteredCount} of {totalLogs} logs
+            </div>
           </div>
         </div>
 
-        <CollapsibleContent className="space-y-6">
-          <div className="bg-gray-50 p-4 rounded-lg space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <CollapsibleContent className="space-y-4 mt-4">
+          <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-4 sm:space-y-6">
+            {/* Mobile: Single column, Desktop: Multi-column grid */}
+            <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 sm:gap-4 lg:gap-6">
               <DateRangeFilter
                 filters={filters}
                 onFiltersChange={onFiltersChange}
@@ -95,7 +101,8 @@ const LogFilters: React.FC<LogFiltersProps> = ({
               />
             </div>
             
-            <div className="border-t pt-4">
+            {/* Content filters in separate section with reduced spacing on mobile */}
+            <div className="border-t pt-3 sm:pt-4">
               <ContentFilters
                 filters={filters}
                 onFiltersChange={onFiltersChange}

@@ -51,6 +51,11 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
     });
   };
 
+  // Use shorter format on mobile
+  const formatDateForDisplay = (date: Date) => {
+    return format(date, window.innerWidth < 640 ? "MM/dd/yy" : "PPP");
+  };
+
   return (
     <div className="space-y-3">
       <div>
@@ -59,7 +64,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
           value={filters.quickDate || 'custom'}
           onValueChange={handleQuickDateChange}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full h-9">
             <SelectValue placeholder="Select date range" />
           </SelectTrigger>
           <SelectContent>
@@ -74,7 +79,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
       </div>
 
       {!filters.quickDate && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-2">
           <div>
             <label className="text-xs text-gray-600 mb-1 block">From</label>
             <Popover>
@@ -83,16 +88,18 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal h-9 text-xs sm:text-sm",
                     !filters.dateRange.from && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.dateRange.from ? (
-                    format(filters.dateRange.from, "PPP")
-                  ) : (
-                    <span>Pick date</span>
-                  )}
+                  <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">
+                    {filters.dateRange.from ? (
+                      formatDateForDisplay(filters.dateRange.from)
+                    ) : (
+                      "Pick date"
+                    )}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -115,16 +122,18 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal h-9 text-xs sm:text-sm",
                     !filters.dateRange.to && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.dateRange.to ? (
-                    format(filters.dateRange.to, "PPP")
-                  ) : (
-                    <span>Pick date</span>
-                  )}
+                  <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="truncate">
+                    {filters.dateRange.to ? (
+                      formatDateForDisplay(filters.dateRange.to)
+                    ) : (
+                      "Pick date"
+                    )}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
