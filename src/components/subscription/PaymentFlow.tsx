@@ -33,15 +33,15 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
   const paymentDetails = {
     gcash: {
       name: 'GCash',
-      number: '09123456789',
-      qr: '/api/placeholder/200/200', // Placeholder for QR code
+      number: '09283563257',
+      qr: '/gcash-qr.jpg',
       icon: Smartphone,
       color: 'text-blue-600'
     },
     bpi: {
       name: 'BPI',
-      number: '1234-5678-9012',
-      qr: '/api/placeholder/200/200', // Placeholder for QR code  
+      number: '1129396004',
+      qr: '/bpi-qr.jpg',
       icon: CreditCard,
       color: 'text-red-600'
     }
