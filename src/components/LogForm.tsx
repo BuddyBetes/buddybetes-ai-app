@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLogContext } from '../context/LogContext';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +34,19 @@ const LogForm: React.FC<LogFormProps> = ({
   const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
   const { glucoseUnit } = useGlucoseUnit();
+  
+  // Form state declarations
+  const [glucoseLevel, setGlucoseLevel] = useState('');
+  const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
+  const [glucoseMeasurementMethod, setGlucoseMeasurementMethod] = useState<'finger_prick' | 'cgm' | ''>('');
+  const [food, setFood] = useState('');
+  const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fat, setFat] = useState('');
+  const [exercise, setExercise] = useState('');
+  const [medication, setMedication] = useState('');
+  const [notes, setNotes] = useState('');
   
   // Set initial glucose level if provided
   useEffect(() => {
