@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -65,6 +64,7 @@ export const useLogAPI = () => {
           carbs: row.carbs !== null ? Number(row.carbs) : undefined,
           fat: row.fat !== null ? Number(row.fat) : undefined,
           exercise: row.exercise,
+          medication: row.medication,
           notes: row.notes
         }));
         setLogs(glucoseLogs);
@@ -101,6 +101,7 @@ export const useLogAPI = () => {
         carbs: log.carbs,
         fat: log.fat,
         exercise: log.exercise,
+        medication: log.medication,
         notes: log.notes
       };
 
@@ -131,6 +132,7 @@ export const useLogAPI = () => {
           carbs: data.carbs !== null ? Number(data.carbs) : undefined,
           fat: data.fat !== null ? Number(data.fat) : undefined,
           exercise: data.exercise,
+          medication: data.medication,
           notes: data.notes
         };
         
@@ -178,6 +180,7 @@ export const useLogAPI = () => {
         carbs: log.carbs,
         fat: log.fat,
         exercise: log.exercise,
+        medication: log.medication,
         notes: log.notes
       };
 
@@ -209,6 +212,7 @@ export const useLogAPI = () => {
           carbs: data.carbs !== null ? Number(data.carbs) : undefined,
           fat: data.fat !== null ? Number(data.fat) : undefined,
           exercise: data.exercise,
+          medication: data.medication,
           notes: data.notes
         };
         
