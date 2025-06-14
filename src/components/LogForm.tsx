@@ -10,6 +10,7 @@ import GlucoseMeasurementMethodField from './form/GlucoseMeasurementMethodField'
 import FoodField from './form/FoodField';
 import NutritionFields from './form/NutritionFields';
 import ExerciseField from './form/ExerciseField';
+import MedicationField from './form/MedicationField';
 import NotesField from './form/NotesField';
 import SubmitButton from './form/SubmitButton';
 
@@ -41,6 +42,7 @@ const LogForm: React.FC<LogFormProps> = ({
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
   const [exercise, setExercise] = useState('');
+  const [medication, setMedication] = useState('');
   const [notes, setNotes] = useState('');
 
   // Set initial glucose level if provided
@@ -70,16 +72,6 @@ const LogForm: React.FC<LogFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // At least one of glucose level or food must be entered
-    if (!glucoseLevel && !food.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please enter either glucose level or food information",
-        variant: "destructive",
-      });
-      return;
-    }
     
     if (glucoseLevel && isNaN(Number(glucoseLevel))) {
       toast({
@@ -117,6 +109,7 @@ const LogForm: React.FC<LogFormProps> = ({
       carbs: carbs ? Number(carbs) : undefined,
       fat: fat ? Number(fat) : undefined,
       exercise: exercise.trim() || undefined,
+      medication: medication.trim() || undefined,
       notes: notes.trim() || undefined,
     };
     
@@ -132,6 +125,7 @@ const LogForm: React.FC<LogFormProps> = ({
     setCarbs('');
     setFat('');
     setExercise('');
+    setMedication('');
     setNotes('');
     
     // Navigate to logs page via callback if provided
@@ -213,12 +207,12 @@ const LogForm: React.FC<LogFormProps> = ({
         </CardContent>
       </Card>
       
-      {/* Additional Notes Card */}
-      <Card className="bg-gray-50/30 border-gray-200">
+      {/* Activity/Exercise Card */}
+      <Card className="bg-purple-50/30 border-purple-200">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-800 flex items-center gap-2">
-            <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-            Additional Notes
+          <CardTitle className="text-sm font-medium text-purple-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            Activity/Exercise
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -227,7 +221,35 @@ const LogForm: React.FC<LogFormProps> = ({
             onChange={setExercise}
             disabled={isLoading}
           />
-          
+        </CardContent>
+      </Card>
+      
+      {/* Medications Card */}
+      <Card className="bg-amber-50/30 border-amber-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-amber-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+            Medications
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <MedicationField
+            value={medication}
+            onChange={setMedication}
+            disabled={isLoading}
+          />
+        </CardContent>
+      </Card>
+      
+      {/* Notes Card */}
+      <Card className="bg-gray-50/30 border-gray-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-gray-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+            Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <NotesField
             value={notes}
             onChange={setNotes}

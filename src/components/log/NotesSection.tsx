@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, Dumbbell } from 'lucide-react';
+import { FileText, Dumbbell, Pill } from 'lucide-react';
 import { GlucoseLog } from '@/types/logs';
 
 interface NotesSectionProps {
@@ -9,9 +9,10 @@ interface NotesSectionProps {
 
 const NotesSection: React.FC<NotesSectionProps> = ({ log }) => {
   const hasExercise = !!log.exercise;
+  const hasMedication = !!log.medication;
   const hasNotes = !!log.notes;
 
-  if (!hasExercise && !hasNotes) {
+  if (!hasExercise && !hasMedication && !hasNotes) {
     return null;
   }
 
@@ -22,6 +23,15 @@ const NotesSection: React.FC<NotesSectionProps> = ({ log }) => {
           <div className="flex items-start">
             <Dumbbell className="h-4 w-4 mr-2 text-purple-500 mt-0.5 flex-shrink-0" />
             <span className="text-gray-700 text-sm">{log.exercise}</span>
+          </div>
+        </div>
+      )}
+      
+      {hasMedication && (
+        <div className="medication-info p-2 bg-amber-50 rounded-md">
+          <div className="flex items-start">
+            <Pill className="h-4 w-4 mr-2 text-amber-500 mt-0.5 flex-shrink-0" />
+            <span className="text-gray-700 text-sm">{log.medication}</span>
           </div>
         </div>
       )}

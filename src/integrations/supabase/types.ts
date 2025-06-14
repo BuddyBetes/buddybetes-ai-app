@@ -80,6 +80,7 @@ export type Database = {
           glucose_measurement_method: string | null
           id: string
           meal_context: string | null
+          medication: string | null
           notes: string | null
           protein: number | null
           timestamp: string
@@ -96,6 +97,7 @@ export type Database = {
           glucose_measurement_method?: string | null
           id?: string
           meal_context?: string | null
+          medication?: string | null
           notes?: string | null
           protein?: number | null
           timestamp?: string
@@ -112,6 +114,7 @@ export type Database = {
           glucose_measurement_method?: string | null
           id?: string
           meal_context?: string | null
+          medication?: string | null
           notes?: string | null
           protein?: number | null
           timestamp?: string

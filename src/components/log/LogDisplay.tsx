@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { GlucoseLog } from '@/types/logs';
-import { Droplet, Utensils, Target } from 'lucide-react';
+import { Droplet, Utensils, Target, Dumbbell, Pill } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface LogDisplayProps {
@@ -24,9 +24,11 @@ const LogDisplay: React.FC<LogDisplayProps> = ({
   // Determine if this is a glucose entry, food entry, or both
   const hasGlucose = log.glucoseLevel !== undefined;
   const hasFood = !!log.food;
+  const hasExercise = !!log.exercise;
+  const hasMedication = !!log.medication;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       {hasGlucose && (
         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 py-1">
           <Droplet className="h-3 w-3" />
@@ -43,6 +45,18 @@ const LogDisplay: React.FC<LogDisplayProps> = ({
         <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1 py-1">
           <Target className="h-3 w-3" />
           <span>Nutrition</span>
+        </Badge>
+      )}
+      {hasExercise && (
+        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 flex items-center gap-1 py-1">
+          <Dumbbell className="h-3 w-3" />
+          <span>Exercise</span>
+        </Badge>
+      )}
+      {hasMedication && (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1 py-1">
+          <Pill className="h-3 w-3" />
+          <span>Medication</span>
         </Badge>
       )}
     </div>
