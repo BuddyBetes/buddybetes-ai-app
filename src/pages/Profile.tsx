@@ -5,6 +5,7 @@ import AppHeader from '@/components/AppHeader';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import AIPreferences from '@/components/profile/AIPreferences';
 import HealthData from '@/components/profile/HealthData';
+import PDFExport from '@/components/profile/PDFExport';
 import { Button } from '@/components/ui/button';
 import { LogOut, Crown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -78,6 +79,9 @@ const Profile = () => {
           <AIPreferences />
           <HealthData />
         </div>
+
+        {/* Export to PDF Button */}
+        <PDFExport />
 
         {/* Logout Button */}
         <Button 
