@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Check, CreditCard, Smartphone } from 'lucide-react';
@@ -42,6 +43,9 @@ const Subscription = () => {
       </Layout>
     );
   }
+
+  // Find Founders Access tier
+  const foundersAccessTier = tiers.find(t => t.name === 'Founders Access');
 
   return (
     <Layout>
@@ -104,7 +108,9 @@ const Subscription = () => {
                   <span className="text-4xl font-bold text-gray-900">₱999</span>
                   <span className="text-lg text-gray-500 line-through">₱1,999</span>
                 </div>
-                <p className="text-sm text-gray-600">One-time payment • Lifetime access</p>
+                <p className="text-sm text-gray-600">
+                  {foundersAccessTier?.duration_days === null ? 'Lifetime access' : 'One-time payment • Lifetime access'}
+                </p>
               </div>
             </CardHeader>
             
@@ -122,7 +128,7 @@ const Subscription = () => {
 
               <div className="pt-4 border-t">
                 <Button 
-                  onClick={() => handleSelectTier(tiers.find(t => t.name === 'Founders Access')?.id || '')}
+                  onClick={() => handleSelectTier(foundersAccessTier?.id || '')}
                   className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-lg"
                   disabled={subscription?.status === 'active' || subscription?.status === 'pending'}
                 >

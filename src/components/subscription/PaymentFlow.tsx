@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Smartphone, CreditCard, Copy, Upload, CheckCircle } from 'lucide-react';
@@ -88,16 +87,20 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
       const fileName = `${user.id}_${Date.now()}.${fileExt}`;
       const receiptUrl = `receipts/${fileName}`; // This would be actual file upload
 
-      // Create subscription record
-      const { data: subscriptionData, error: subscriptionError } = await supabase
+      // Create subscription record - set expires_at to null for lifetime subscriptions
+      const subscriptionData = {
+        user_id: user.id,
+        tier_id: tierId,
+        status: 'pending' as const,
+        payment_method: paymentMethod,
+        amount_paid: tier.price,
+        expires_at: tier.duration_days ? null : null, // null for lifetime (Founders Access)
+        starts_at: null // Will be set when payment is approved
+      };
+
+      const { data: subscriptionResult, error: subscriptionError } = await supabase
         .from('user_subscriptions')
-        .insert({
-          user_id: user.id,
-          tier_id: tierId,
-          status: 'pending',
-          payment_method: paymentMethod,
-          amount_paid: tier.price
-        })
+        .insert(subscriptionData)
         .select()
         .single();
 
@@ -108,7 +111,7 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
         .from('payment_receipts')
         .insert({
           user_id: user.id,
-          subscription_id: subscriptionData.id,
+          subscription_id: subscriptionResult.id,
           receipt_url: receiptUrl,
           payment_method: paymentMethod,
           reference_number: referenceNumber || null,

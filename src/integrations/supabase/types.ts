@@ -256,7 +256,7 @@ export type Database = {
       subscription_tiers: {
         Row: {
           created_at: string
-          duration_days: number
+          duration_days: number | null
           features: Json
           id: string
           is_active: boolean
@@ -265,7 +265,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          duration_days: number
+          duration_days?: number | null
           features?: Json
           id?: string
           is_active?: boolean
@@ -274,7 +274,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          duration_days?: number
+          duration_days?: number | null
           features?: Json
           id?: string
           is_active?: boolean

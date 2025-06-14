@@ -8,7 +8,7 @@ interface SubscriptionTier {
   id: string;
   name: string;
   price: number;
-  duration_days: number;
+  duration_days: number | null; // null means lifetime
   features: string[];
   is_active: boolean;
 }
@@ -64,7 +64,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         id: tier.id,
         name: tier.name,
         price: tier.price,
-        duration_days: tier.duration_days,
+        duration_days: tier.duration_days, // Can now be null for lifetime
         features: Array.isArray(tier.features) ? tier.features as string[] : [],
         is_active: tier.is_active
       }));
@@ -123,6 +123,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     
     if (subscription.status !== 'active') return false;
     
+    // For lifetime subscriptions (expires_at is null), always grant access
     if (subscription.expires_at && new Date(subscription.expires_at) < new Date()) {
       return false;
     }
@@ -131,8 +132,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     return tier?.features.includes(feature) || false;
   };
 
+  // Updated to handle lifetime subscriptions (where expires_at is null)
   const hasActiveSubscription = subscription?.status === 'active' && 
-    (!subscription.expires_at || new Date(subscription.expires_at) > new Date());
+    (subscription.expires_at === null || new Date(subscription.expires_at) > new Date());
 
   useEffect(() => {
     fetchTiers();
