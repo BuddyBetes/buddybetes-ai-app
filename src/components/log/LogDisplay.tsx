@@ -11,9 +11,15 @@ interface LogDisplayProps {
   log: GlucoseLog;
   showNutrition?: boolean;
   showFood?: boolean;
+  showGlucose?: boolean;
 }
 
-const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true, showFood = true }) => {
+const LogDisplay: React.FC<LogDisplayProps> = ({ 
+  log, 
+  showNutrition = true, 
+  showFood = true, 
+  showGlucose = true 
+}) => {
   const { glucoseUnit } = useGlucoseUnit();
   
   const formatTimestamp = (timestamp: Date) => {
@@ -64,6 +70,7 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true, show
     <div className="log-display-container">
       {/* Main content section */}
       <div className="log-main-content">
+        {/* Always show badges when data exists */}
         <div className="flex items-center gap-2 mb-2">
           {hasGlucose && (
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 py-1">
@@ -71,13 +78,13 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true, show
               <span>Glucose</span>
             </Badge>
           )}
-          {hasFood && showFood && (
+          {hasFood && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1 py-1">
               <Utensils className="h-3 w-3" />
               <span>Food</span>
             </Badge>
           )}
-          {hasNutritionData && showNutrition && (
+          {hasNutritionData && (
             <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1 py-1">
               <Target className="h-3 w-3" />
               <span>Nutrition</span>
@@ -89,7 +96,7 @@ const LogDisplay: React.FC<LogDisplayProps> = ({ log, showNutrition = true, show
           {formatTimestamp(log.timestamp)}
         </div>
         
-        {hasGlucose && (
+        {hasGlucose && showGlucose && (
           <div className="glucose-value font-medium flex items-center">
             <Droplet className="h-4 w-4 mr-1 text-blue-500" />
             <span>{displayGlucoseValue()}</span>
