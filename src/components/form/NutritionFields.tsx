@@ -8,9 +8,11 @@ interface NutritionFieldsProps {
   calories: string;
   protein: string;
   carbs: string;
+  fat: string;
   onCaloriesChange: (value: string) => void;
   onProteinChange: (value: string) => void;
   onCarbsChange: (value: string) => void;
+  onFatChange: (value: string) => void;
   disabled?: boolean;
 }
 
@@ -18,9 +20,11 @@ const NutritionFields: React.FC<NutritionFieldsProps> = ({
   calories,
   protein,
   carbs,
+  fat,
   onCaloriesChange,
   onProteinChange,
   onCarbsChange,
+  onFatChange,
   disabled
 }) => {
   const inputVariants = {
@@ -29,7 +33,7 @@ const NutritionFields: React.FC<NutritionFieldsProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="calories" className="text-sm font-medium">
             Calories
@@ -78,6 +82,25 @@ const NutritionFields: React.FC<NutritionFieldsProps> = ({
               type="number"
               value={carbs}
               onChange={(e) => onCarbsChange(e.target.value)}
+              placeholder="g"
+              className="h-10 text-sm"
+              disabled={disabled}
+              min="0"
+              step="0.1"
+            />
+          </motion.div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="fat" className="text-sm font-medium">
+            Fat
+          </Label>
+          <motion.div whileFocus="focus" variants={inputVariants}>
+            <Input
+              id="fat"
+              type="number"
+              value={fat}
+              onChange={(e) => onFatChange(e.target.value)}
               placeholder="g"
               className="h-10 text-sm"
               disabled={disabled}

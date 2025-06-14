@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLogContext } from '../context/LogContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, Scale, Target } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLogContext } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
-import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
-import { convertGlucoseValue } from '@/utils/glucoseUtils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GlucoseLevelField from './form/GlucoseLevelField';
+import FoodField from './form/FoodField';
 import MealContextField from './form/MealContextField';
 import GlucoseMeasurementMethodField from './form/GlucoseMeasurementMethodField';
-import FoodField from './form/FoodField';
 import NutritionFields from './form/NutritionFields';
 import NotesField from './form/NotesField';
 import SubmitButton from './form/SubmitButton';
@@ -16,210 +17,191 @@ import SubmitButton from './form/SubmitButton';
 interface LogFormProps {
   onLogAdded?: () => void;
   initialGlucoseLevel?: number | null;
-  initialNutritionData?: {
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-  };
+  initialFood?: string;
+  initialCalories?: number;
+  initialProtein?: number;
+  initialCarbs?: number;
+  initialFat?: number;
 }
 
-const LogForm: React.FC<LogFormProps> = ({ 
-  onLogAdded, 
-  initialGlucoseLevel,
-  initialNutritionData 
+const LogForm: React.FC<LogFormProps> = ({
+  onLogAdded,
+  initialGlucoseLevel = null,
+  initialFood = '',
+  initialCalories = undefined,
+  initialProtein = undefined,
+  initialCarbs = undefined,
+  initialFat = undefined
 }) => {
   const { addLog, isLoading } = useLogContext();
   const { toast } = useToast();
-  const { glucoseUnit } = useGlucoseUnit();
-  const [glucoseLevel, setGlucoseLevel] = useState('');
+  
+  // Core log fields
+  const [glucoseLevel, setGlucoseLevel] = useState<string>(
+    initialGlucoseLevel ? initialGlucoseLevel.toString() : ''
+  );
+  const [food, setFood] = useState<string>(initialFood);
   const [mealContext, setMealContext] = useState<'before' | 'after' | 'fasting'>('before');
-  const [glucoseMeasurementMethod, setGlucoseMeasurementMethod] = useState<'finger_prick' | 'cgm' | ''>('');
-  const [food, setFood] = useState('');
-  const [calories, setCalories] = useState('');
-  const [protein, setProtein] = useState('');
-  const [carbs, setCarbs] = useState('');
-  const [notes, setNotes] = useState('');
+  const [measurementMethod, setMeasurementMethod] = useState<'finger_prick' | 'cgm'>('finger_prick');
+  const [notes, setNotes] = useState<string>('');
+  
+  // Nutrition fields - always start as strings for controlled inputs
+  const initialNutritionData = {
+    calories: initialCalories?.toString() || '',
+    protein: initialProtein?.toString() || '',
+    carbs: initialCarbs?.toString() || '',
+    fat: initialFat?.toString() || ''
+  };
+  
+  const [nutritionData, setNutritionData] = useState(initialNutritionData);
+  const [showNutrition, setShowNutrition] = useState(false);
 
-  // Set initial glucose level if provided
+  // Auto-show nutrition fields if we have initial nutrition data
   useEffect(() => {
-    if (initialGlucoseLevel) {
-      setGlucoseLevel(initialGlucoseLevel.toString());
+    if (initialCalories || initialProtein || initialCarbs || initialFat) {
+      setShowNutrition(true);
     }
-  }, [initialGlucoseLevel]);
+  }, [initialCalories, initialProtein, initialCarbs, initialFat]);
 
-  // Set initial nutrition data if provided
-  useEffect(() => {
-    if (initialNutritionData) {
-      if (initialNutritionData.calories) {
-        setCalories(initialNutritionData.calories.toString());
-      }
-      if (initialNutritionData.protein) {
-        setProtein(initialNutritionData.protein.toString());
-      }
-      if (initialNutritionData.carbs) {
-        setCarbs(initialNutritionData.carbs.toString());
-      }
-    }
-  }, [initialNutritionData]);
+  const updateNutritionField = (field: keyof typeof nutritionData, value: string) => {
+    setNutritionData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const hasValidData = glucoseLevel.trim() !== '' || food.trim() !== '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // At least one of glucose level or food must be entered
-    if (!glucoseLevel && !food.trim()) {
+    if (!hasValidData) {
       toast({
-        title: "Missing information",
-        description: "Please enter either glucose level or food information",
+        title: "Missing data",
+        description: "Please enter either a glucose level or food information",
         variant: "destructive",
       });
       return;
     }
-    
-    if (glucoseLevel && isNaN(Number(glucoseLevel))) {
-      toast({
-        title: "Invalid glucose level",
-        description: "Please enter a valid number for glucose level",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    let numericGlucoseLevel: number | undefined = undefined;
-    
-    if (glucoseLevel) {
-      numericGlucoseLevel = Number(glucoseLevel);
+
+    try {
+      const numericGlucoseLevel = glucoseLevel ? parseFloat(glucoseLevel) : undefined;
       
-      // Convert from mmol/L to mg/dL if necessary for storage
-      // (We always store as mg/dL in the database for consistency)
-      if (glucoseUnit === 'mmol/L') {
-        numericGlucoseLevel = convertGlucoseValue(
-          numericGlucoseLevel,
-          'mmol/L',
-          'mg/dL'
-        );
+      // Convert nutrition strings to numbers only if they have values
+      const calories = nutritionData.calories ? parseFloat(nutritionData.calories) : undefined;
+      const protein = nutritionData.protein ? parseFloat(nutritionData.protein) : undefined;
+      const carbs = nutritionData.carbs ? parseFloat(nutritionData.carbs) : undefined;
+      const fat = nutritionData.fat ? parseFloat(nutritionData.fat) : undefined;
+
+      await addLog({
+        timestamp: new Date(),
+        glucoseLevel: isNaN(numericGlucoseLevel!) ? undefined : numericGlucoseLevel,
+        food: food.trim() || undefined,
+        mealContext,
+        glucoseMeasurementMethod: numericGlucoseLevel ? measurementMethod : undefined,
+        calories: isNaN(calories!) ? undefined : calories,
+        protein: isNaN(protein!) ? undefined : protein,
+        carbs: isNaN(carbs!) ? undefined : carbs,
+        fat: isNaN(fat!) ? undefined : fat,
+        notes: notes.trim() || undefined,
+      });
+
+      // Reset form
+      setGlucoseLevel('');
+      setFood('');
+      setMealContext('before');
+      setMeasurementMethod('finger_prick');
+      setNotes('');
+      setNutritionData({ calories: '', protein: '', carbs: '', fat: '' });
+      setShowNutrition(false);
+
+      if (onLogAdded) {
+        onLogAdded();
       }
-    }
-    
-    const newLog = {
-      timestamp: new Date(),
-      glucoseLevel: numericGlucoseLevel,
-      mealContext,
-      glucoseMeasurementMethod: glucoseMeasurementMethod || undefined,
-      food: food.trim() || undefined,
-      calories: calories ? Number(calories) : undefined,
-      protein: protein ? Number(protein) : undefined,
-      carbs: carbs ? Number(carbs) : undefined,
-      notes: notes.trim() || undefined,
-    };
-    
-    await addLog(newLog);
-    
-    // Reset form
-    setGlucoseLevel('');
-    setMealContext('before');
-    setGlucoseMeasurementMethod('');
-    setFood('');
-    setCalories('');
-    setProtein('');
-    setCarbs('');
-    setNotes('');
-    
-    // Navigate to logs page via callback if provided
-    if (onLogAdded) {
-      onLogAdded();
+    } catch (error) {
+      console.error('Error adding log:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
-      <div className="mb-4">
-        <h3 className="text-base font-medium text-gray-700 mb-2">Add Log Details</h3>
-      </div>
-      
-      {/* Glucose Information Card */}
-      <Card className="bg-blue-50/30 border-blue-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-blue-800 flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            Glucose Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <Card className="w-full max-w-md mx-auto">
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <GlucoseLevelField
             value={glucoseLevel}
             onChange={setGlucoseLevel}
             disabled={isLoading}
           />
-          
-          {glucoseLevel && (
-            <>
-              <MealContextField
-                value={mealContext}
-                onChange={setMealContext}
-                disabled={isLoading}
-              />
-              
-              <GlucoseMeasurementMethodField
-                value={glucoseMeasurementMethod}
-                onChange={setGlucoseMeasurementMethod}
-                disabled={isLoading}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Food Information Card */}
-      <Card className="bg-green-50/30 border-green-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-green-800 flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Food Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+
           <FoodField
             value={food}
             onChange={setFood}
             disabled={isLoading}
           />
-          
-          {food.trim() && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-green-700">Nutritional Information (optional)</h4>
-              <NutritionFields
-                calories={calories}
-                protein={protein}
-                carbs={carbs}
-                onCaloriesChange={setCalories}
-                onProteinChange={setProtein}
-                onCarbsChange={setCarbs}
-                disabled={isLoading}
-              />
-            </div>
+
+          <MealContextField
+            value={mealContext}
+            onChange={setMealContext}
+            disabled={isLoading}
+          />
+
+          {glucoseLevel && (
+            <GlucoseMeasurementMethodField
+              value={measurementMethod}
+              onChange={setMeasurementMethod}
+              disabled={isLoading}
+            />
           )}
-        </CardContent>
-      </Card>
-      
-      {/* Notes Card */}
-      <Card className="bg-gray-50/30 border-gray-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-800 flex items-center gap-2">
-            <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-            Additional Notes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowNutrition(!showNutrition)}
+                className="flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <Target className="h-4 w-4" />
+                {showNutrition ? 'Hide' : 'Add'} Nutrition Info
+              </Button>
+            </div>
+
+            <AnimatePresence>
+              {showNutrition && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <NutritionFields
+                    calories={nutritionData.calories}
+                    protein={nutritionData.protein}
+                    carbs={nutritionData.carbs}
+                    fat={nutritionData.fat}
+                    onCaloriesChange={(value) => updateNutritionField('calories', value)}
+                    onProteinChange={(value) => updateNutritionField('protein', value)}
+                    onCarbsChange={(value) => updateNutritionField('carbs', value)}
+                    onFatChange={(value) => updateNutritionField('fat', value)}
+                    disabled={isLoading}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <NotesField
             value={notes}
             onChange={setNotes}
             disabled={isLoading}
           />
-        </CardContent>
-      </Card>
-      
-      <SubmitButton loading={isLoading} />
-    </form>
+
+          <SubmitButton
+            hasValidData={hasValidData}
+            isLoading={isLoading}
+          />
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
