@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import type { Json } from '@/integrations/supabase/types';
 
 interface SubscriptionTier {
   id: string;
@@ -14,7 +15,7 @@ interface SubscriptionTier {
 
 interface UserSubscription {
   id: string;
-  status: 'free' | 'pending' | 'active' | 'expired' | 'cancelled';
+  status: string;
   tier_id: string;
   expires_at: string | null;
   payment_method: string | null;
@@ -57,7 +58,18 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         .eq('is_active', true);
       
       if (error) throw error;
-      setTiers(data || []);
+      
+      // Transform the data to match our interface
+      const transformedTiers = (data || []).map(tier => ({
+        id: tier.id,
+        name: tier.name,
+        price: tier.price,
+        duration_days: tier.duration_days,
+        features: Array.isArray(tier.features) ? tier.features as string[] : [],
+        is_active: tier.is_active
+      }));
+      
+      setTiers(transformedTiers);
     } catch (error) {
       console.error('Error fetching subscription tiers:', error);
     }
@@ -80,7 +92,20 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         .maybeSingle();
 
       if (error) throw error;
-      setSubscription(data);
+      
+      // Transform the data to match our interface
+      if (data) {
+        const transformedSubscription: UserSubscription = {
+          id: data.id,
+          status: data.status,
+          tier_id: data.tier_id,
+          expires_at: data.expires_at,
+          payment_method: data.payment_method
+        };
+        setSubscription(transformedSubscription);
+      } else {
+        setSubscription(null);
+      }
     } catch (error) {
       console.error('Error fetching user subscription:', error);
       setSubscription(null);
