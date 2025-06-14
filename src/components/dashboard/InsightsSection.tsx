@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import InsightCard from '@/components/insights/InsightCard';
@@ -17,6 +17,37 @@ const InsightsSection: React.FC<InsightsSectionProps> = ({
   isLoading,
   refreshInsights
 }) => {
+  // Don't render the section if there are no insights and not loading
+  if (!isLoading && allInsights.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="p-5 rounded-xl bg-white shadow-sm"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">AI Insights</h3>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={refreshInsights}
+          >
+            <RefreshCw size={14} className="mr-1" />
+            Refresh
+          </Button>
+        </div>
+        
+        <div className="text-center py-8">
+          <Brain className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">
+            Start logging your glucose readings to receive AI-powered insights
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -25,7 +56,7 @@ const InsightsSection: React.FC<InsightsSectionProps> = ({
       className="p-5 rounded-xl bg-white shadow-sm"
     >
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Enhanced AI Insights</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">AI Insights</h3>
         <div className="mb-4">
           {isLoading ? null : (
             <Button 

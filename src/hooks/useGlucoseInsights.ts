@@ -43,11 +43,7 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' | '3m' | '6m'
       const recentLogs = getGlucoseLogsOnly(dataCount);
       
       if (recentLogs.length === 0) {
-        setInsights([
-          "Start logging your glucose readings to receive personalized insights.",
-          "Regular tracking helps identify patterns in your glucose levels.",
-          "Try logging meals and exercise to get more specific recommendations."
-        ]);
+        setInsights([]);
         setStats(null);
         setAnalysis(null);
         return;
@@ -97,10 +93,7 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' | '3m' | '6m'
           description: "Failed to load AI insights. Please try again later.",
           variant: "destructive"
         });
-        setInsights([
-          "Unable to generate insights right now.",
-          "Please check your connection and try again."
-        ]);
+        setInsights([]);
         setStats(null);
         setAnalysis(null);
         return;
@@ -117,20 +110,13 @@ export const useGlucoseInsights = (timeRange: '24h' | '7d' | '30d' | '3m' | '6m'
           setAnalysis(data.analysis);
         }
       } else {
-        setInsights([
-          "Keep logging your glucose to receive more personalized insights.",
-          "The more data you provide, the better the insights will be.",
-          "Try adding meal and exercise information for enhanced recommendations."
-        ]);
+        setInsights([]);
         setStats(null);
         setAnalysis(null);
       }
     } catch (err) {
       console.error('Error in useGlucoseInsights:', err);
-      setInsights([
-        "Something went wrong when generating insights.",
-        "Please try refreshing the page."
-      ]);
+      setInsights([]);
       setStats(null);
       setAnalysis(null);
     } finally {
