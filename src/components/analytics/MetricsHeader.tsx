@@ -24,22 +24,12 @@ const MetricsHeader: React.FC<MetricsHeaderProps> = ({
   onRefresh,
   loading,
   hasBackfilled,
-  dailyActiveUsersLength,
-  getDateRangeMessage
+  dailyActiveUsersLength
 }) => {
   return (
     <div className="flex justify-between items-center mb-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-        <p className="text-lg text-gray-600 mt-1">
-          Viewing data for {selectedDate.toLocaleDateString()}
-        </p>
-        {hasBackfilled && dailyActiveUsersLength > 0 && (
-          <p className="text-sm text-green-600 mt-1 flex items-center">
-            <CheckCircle className="h-4 w-4 mr-1" />
-            ✅ Historical data loaded: {getDateRangeMessage()}
-          </p>
-        )}
         {hasBackfilled && dailyActiveUsersLength === 0 && (
           <p className="text-sm text-blue-600 mt-1 flex items-center">
             <Database className="h-4 w-4 mr-1" />
