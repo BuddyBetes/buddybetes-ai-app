@@ -32,13 +32,26 @@ const Metrics = () => {
   const currentDayData = getCurrentDayData();
   const previousDayData = getPreviousDayData();
 
+  // Fixed trend calculation with better debugging
   const getTrend = (today: number, yesterday: number) => {
-    if (!yesterday) return null;
+    console.log('Trend calculation debug:', { 
+      today, 
+      yesterday, 
+      selectedDate: selectedDate.toDateString(),
+      currentDayData,
+      previousDayData 
+    });
+    
+    if (!yesterday || yesterday === 0) return null;
+    
     const change = ((today - yesterday) / yesterday) * 100;
-    return {
+    const result = {
       value: Math.abs(change),
       isPositive: change >= 0
     };
+    
+    console.log('Calculated trend:', { change, result });
+    return result;
   };
 
   // Set date range from June 1, 2025 onwards
