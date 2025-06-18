@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Database, CheckCircle } from 'lucide-react';
+import { RefreshCw, Database, CheckCircle, Calendar, TrendingUp } from 'lucide-react';
 import MetricsPasswordProtection from '@/components/analytics/MetricsPasswordProtection';
 import MetricCard from '@/components/analytics/MetricCard';
 import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
@@ -75,7 +75,7 @@ const Metrics = () => {
             {hasBackfilled && dailyActiveUsers.length > 1 && (
               <p className="text-sm text-green-600 mt-1 flex items-center">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                ✅ Historical data loaded: {dailyActiveUsers.length} days from glucose logs (May 20th - June 18th)
+                ✅ Historical data loaded: {dailyActiveUsers.length} days from health data logs
               </p>
             )}
             {hasBackfilled && dailyActiveUsers.length <= 1 && (
@@ -99,55 +99,90 @@ const Metrics = () => {
           </div>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <MetricCard
-            title="Daily Active Users"
-            value={currentDayData?.total_active_users || 0}
-            description={`Active users ${formatDateDescription(selectedDate)}`}
-            trend={currentDayData && previousDayData ? getTrend(currentDayData.total_active_users, previousDayData.total_active_users) : undefined}
-          />
-          <MetricCard
-            title="New Users"
-            value={currentDayData?.new_users || 0}
-            description={`New signups ${formatDateDescription(selectedDate)}`}
-            trend={currentDayData && previousDayData ? getTrend(currentDayData.new_users, previousDayData.new_users) : undefined}
-          />
-          <MetricCard
-            title="Total Sessions"
-            value={currentDayData?.total_sessions || 0}
-            description={`Sessions ${formatDateDescription(selectedDate)}`}
-            trend={currentDayData && previousDayData ? getTrend(currentDayData.total_sessions, previousDayData.total_sessions) : undefined}
-          />
-          <MetricCard
-            title="Day 1 Retention"
-            value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 1 day"
-          />
+        {/* Daily Metrics (Date Filtered) */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-3 flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+            Daily Metrics - {selectedDate.toLocaleDateString()}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <MetricCard
+              title="Daily Active Users"
+              value={currentDayData?.total_active_users || 0}
+              description={`Active users ${formatDateDescription(selectedDate)}`}
+              trend={currentDayData && previousDayData ? getTrend(currentDayData.total_active_users, previousDayData.total_active_users) : undefined}
+            />
+            <MetricCard
+              title="New Users"
+              value={currentDayData?.new_users || 0}
+              description={`New signups ${formatDateDescription(selectedDate)}`}
+              trend={currentDayData && previousDayData ? getTrend(currentDayData.new_users, previousDayData.new_users) : undefined}
+            />
+            <MetricCard
+              title="Total Sessions"
+              value={currentDayData?.total_sessions || 0}
+              description={`Sessions ${formatDateDescription(selectedDate)}`}
+              trend={currentDayData && previousDayData ? getTrend(currentDayData.total_sessions, previousDayData.total_sessions) : undefined}
+            />
+            <MetricCard
+              title="Returning Users"
+              value={currentDayData?.returning_users || 0}
+              description={`Users who came back ${formatDateDescription(selectedDate)}`}
+              trend={currentDayData && previousDayData ? getTrend(currentDayData.returning_users, previousDayData.returning_users) : undefined}
+            />
+          </div>
         </div>
 
-        {/* User Metrics and Retention */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <MetricCard
-            title="Total Registered Users"
-            value={retentionData?.total_registered_users || 0}
-            description="All users who signed up"
-          />
-          <MetricCard
-            title="Active Users with Logs"
-            value={retentionData?.total_users || 0}
-            description="Users who logged glucose data"
-          />
-          <MetricCard
-            title="Engagement Rate"
-            value={retentionData ? `${retentionData.engagement_rate.toFixed(1)}%` : '0%'}
-            description="Users actively logging data"
-          />
-          <MetricCard
-            title="Day 7 Retention"
-            value={retentionData ? `${retentionData.day_7_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 7 days"
-          />
+        {/* Overall Metrics (Not Date Filtered) */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-3 flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+            Overall Platform Metrics
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <MetricCard
+              title="Total Registered Users"
+              value={retentionData?.total_registered_users || 0}
+              description="All users who signed up"
+            />
+            <MetricCard
+              title="Active Users with Health Data"
+              value={retentionData?.total_users || 0}
+              description="Users who logged any health data"
+            />
+            <MetricCard
+              title="Engagement Rate"
+              value={retentionData ? `${retentionData.engagement_rate.toFixed(1)}%` : '0%'}
+              description="Users actively using health features"
+            />
+            <MetricCard
+              title="Day 1 Retention"
+              value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
+              description="Users returning after 1 day"
+            />
+          </div>
+        </div>
+
+        {/* Retention Metrics */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">Retention Analysis</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <MetricCard
+              title="Day 1 Retention"
+              value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
+              description="Users returning after 1 day"
+            />
+            <MetricCard
+              title="Day 7 Retention"
+              value={retentionData ? `${retentionData.day_7_retention.toFixed(1)}%` : '0%'}
+              description="Users returning after 7 days"
+            />
+            <MetricCard
+              title="Day 30 Retention"
+              value={retentionData ? `${retentionData.day_30_retention.toFixed(1)}%` : '0%'}
+              description="Users returning after 30 days"
+            />
+          </div>
         </div>
 
         {/* Charts */}
@@ -159,7 +194,7 @@ const Metrics = () => {
         {/* Historical Data Summary */}
         {dailyActiveUsers.length > 0 && (
           <div className="mt-8 bg-white rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Historical Overview (From Glucose Logs)</h2>
+            <h2 className="text-xl font-semibold mb-4">Historical Overview (From Health Data Logs)</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">

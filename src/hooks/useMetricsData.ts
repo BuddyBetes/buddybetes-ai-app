@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,7 +39,7 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   const runBackfillIfNeeded = async () => {
     try {
-      console.log('Running FIXED analytics backfill to populate all historical data from 615 glucose logs...');
+      console.log('Running FIXED analytics backfill to populate all historical data from health data logs...');
       
       // Run the FIXED backfill function that now works properly
       const { error } = await supabase.rpc('backfill_analytics_data');
@@ -46,7 +47,7 @@ export const useMetricsData = (selectedDate?: Date) => {
       if (error) {
         console.error('Error running backfill:', error);
       } else {
-        console.log('🎉 Backfill completed successfully! All 615 glucose logs processed into 30 days of historical analytics data (May 20th - June 18th)');
+        console.log('🎉 Backfill completed successfully! All health data logs processed into historical analytics data');
         setHasBackfilled(true);
       }
     } catch (error) {
@@ -62,7 +63,7 @@ export const useMetricsData = (selectedDate?: Date) => {
       .limit(30);
 
     if (!error && data) {
-      console.log('✅ Fetched daily active users:', data.length, 'days of historical data from glucose logs');
+      console.log('✅ Fetched daily active users:', data.length, 'days of historical data from health logs');
       setDailyActiveUsers(data);
     } else {
       console.error('Error fetching daily active users:', error);
@@ -70,18 +71,21 @@ export const useMetricsData = (selectedDate?: Date) => {
   };
 
   const fetchRetentionData = async () => {
-    // Fetch retention cohort data (users with glucose logs)
+    // Fetch retention cohort data (users with any health data)
     const { data: cohortData, error: cohortError } = await supabase
       .from('user_retention_cohorts')
       .select('day_1_return, day_7_return, day_30_return');
 
-    // Fetch total registered users count
+    // Fetch total registered users count with proper query
     const { count: totalRegistered, error: profilesError } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true });
 
+    console.log('🔍 Debug - Profiles count query result:', { totalRegistered, profilesError });
+    console.log('🔍 Debug - Cohort data:', { cohortCount: cohortData?.length, cohortError });
+
     if (!cohortError && cohortData && cohortData.length > 0 && !profilesError && totalRegistered !== null) {
-      const totalUsers = cohortData.length; // Users with glucose logs
+      const totalUsers = cohortData.length; // Users with any health data
       const day1Retention = cohortData.filter(u => u.day_1_return).length;
       const day7Retention = cohortData.filter(u => u.day_7_return).length;
       const day30Retention = cohortData.filter(u => u.day_30_return).length;
@@ -96,10 +100,14 @@ export const useMetricsData = (selectedDate?: Date) => {
         engagement_rate: engagementRate
       });
       
-      console.log('✅ Fetched retention data for', totalUsers, 'active users and', totalRegistered, 'total registered users');
-      console.log('📊 Engagement rate:', engagementRate.toFixed(1) + '%');
+      console.log('✅ Fetched retention data:', {
+        activeUsers: totalUsers,
+        registeredUsers: totalRegistered,
+        engagementRate: engagementRate.toFixed(1) + '%'
+      });
     } else {
-      console.error('Error fetching retention data:', cohortError || profilesError);
+      console.error('Error fetching retention data:', { cohortError, profilesError });
+      console.log('Raw data received:', { cohortData, totalRegistered });
     }
   };
 
@@ -173,7 +181,7 @@ export const useMetricsData = (selectedDate?: Date) => {
   const refreshData = async () => {
     setLoading(true);
     
-    // Run the FIXED backfill to ensure all historical data is populated
+    // Run the backfill to ensure all historical data is populated
     await runBackfillIfNeeded();
     
     // Update daily stats with enhanced function
