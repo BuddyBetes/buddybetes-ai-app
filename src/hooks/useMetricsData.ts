@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +14,8 @@ interface RetentionData {
   day_7_retention: number;
   day_30_retention: number;
   total_users: number;
+  total_registered_users: number;
+  engagement_rate: number;
 }
 
 interface EngagementData {
@@ -69,26 +70,36 @@ export const useMetricsData = (selectedDate?: Date) => {
   };
 
   const fetchRetentionData = async () => {
-    const { data, error } = await supabase
+    // Fetch retention cohort data (users with glucose logs)
+    const { data: cohortData, error: cohortError } = await supabase
       .from('user_retention_cohorts')
       .select('day_1_return, day_7_return, day_30_return');
 
-    if (!error && data && data.length > 0) {
-      const totalUsers = data.length;
-      const day1Retention = data.filter(u => u.day_1_return).length;
-      const day7Retention = data.filter(u => u.day_7_return).length;
-      const day30Retention = data.filter(u => u.day_30_return).length;
+    // Fetch total registered users count
+    const { count: totalRegistered, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+
+    if (!cohortError && cohortData && cohortData.length > 0 && !profilesError && totalRegistered !== null) {
+      const totalUsers = cohortData.length; // Users with glucose logs
+      const day1Retention = cohortData.filter(u => u.day_1_return).length;
+      const day7Retention = cohortData.filter(u => u.day_7_return).length;
+      const day30Retention = cohortData.filter(u => u.day_30_return).length;
+      const engagementRate = totalRegistered > 0 ? (totalUsers / totalRegistered) * 100 : 0;
 
       setRetentionData({
         day_1_retention: totalUsers > 0 ? (day1Retention / totalUsers) * 100 : 0,
         day_7_retention: totalUsers > 0 ? (day7Retention / totalUsers) * 100 : 0,
         day_30_retention: totalUsers > 0 ? (day30Retention / totalUsers) * 100 : 0,
-        total_users: totalUsers
+        total_users: totalUsers,
+        total_registered_users: totalRegistered,
+        engagement_rate: engagementRate
       });
       
-      console.log('✅ Fetched retention data for', totalUsers, 'users from glucose log patterns');
+      console.log('✅ Fetched retention data for', totalUsers, 'active users and', totalRegistered, 'total registered users');
+      console.log('📊 Engagement rate:', engagementRate.toFixed(1) + '%');
     } else {
-      console.error('Error fetching retention data:', error);
+      console.error('Error fetching retention data:', cohortError || profilesError);
     }
   };
 
