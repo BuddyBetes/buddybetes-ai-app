@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -78,22 +77,20 @@ export const useMetricsData = (selectedDate?: Date) => {
       .select('day_1_return, day_7_return, day_30_return')
       .gte('signup_date', '2025-06-01');
 
-    // Use aggregate query to get total registered users count reliably
-    const { data: profilesData, error: profilesError } = await supabase
+    // Use count query to get total registered users accurately
+    const { count: totalRegistered, error: profilesCountError } = await supabase
       .from('profiles')
-      .select('id')
-      .not('id', 'is', null);
+      .select('*', { count: 'exact', head: true });
 
-    console.log('🔍 Debug - Raw profiles data:', { 
-      profilesData: profilesData?.length, 
-      profilesError,
+    console.log('🔍 Debug - Profiles count query:', { 
+      totalRegistered, 
+      profilesCountError,
       cohortData: cohortData?.length,
       cohortError 
     });
 
-    if (!cohortError && cohortData && !profilesError && profilesData) {
+    if (!cohortError && cohortData && !profilesCountError && totalRegistered !== null) {
       const totalUsers = cohortData.length; // Users with health data from June 1, 2025
-      const totalRegistered = profilesData.length; // All registered users
       const day1Retention = cohortData.filter(u => u.day_1_return).length;
       const day7Retention = cohortData.filter(u => u.day_7_return).length;
       const day30Retention = cohortData.filter(u => u.day_30_return).length;
@@ -114,7 +111,7 @@ export const useMetricsData = (selectedDate?: Date) => {
         engagementRate: engagementRate.toFixed(1) + '%'
       });
     } else {
-      console.error('Error fetching retention data:', { cohortError, profilesError });
+      console.error('Error fetching retention data:', { cohortError, profilesCountError });
     }
   };
 
