@@ -4,17 +4,21 @@ import type { FeatureUsage } from './types';
 
 export const fetchFeatureUsage = async (targetDate?: Date): Promise<FeatureUsage[]> => {
   const dateToUse = targetDate || new Date();
-  const startOfDay = new Date(dateToUse);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(dateToUse);
-  endOfDay.setHours(23, 59, 59, 999);
+  
+  // Calculate 30 days back from the selected date
+  const endDate = new Date(dateToUse);
+  endDate.setHours(23, 59, 59, 999);
+  
+  const startDate = new Date(dateToUse);
+  startDate.setDate(startDate.getDate() - 30);
+  startDate.setHours(0, 0, 0, 0);
 
   const { data, error } = await supabase
     .from('user_activity_logs')
     .select('action_target')
     .eq('action_type', 'feature_click')
-    .gte('timestamp', startOfDay.toISOString())
-    .lte('timestamp', endOfDay.toISOString());
+    .gte('timestamp', startDate.toISOString())
+    .lte('timestamp', endDate.toISOString());
 
   if (!error && data) {
     const featureCount: { [key: string]: number } = {};
@@ -29,7 +33,7 @@ export const fetchFeatureUsage = async (targetDate?: Date): Promise<FeatureUsage
       .sort((a, b) => b.usage_count - a.usage_count)
       .slice(0, 10);
 
-    console.log('✅ Fetched feature usage data for', dateToUse.toDateString(), ':', featureArray.length, 'features tracked');
+    console.log('✅ Fetched feature usage data for last 30 days from', dateToUse.toDateString(), ':', featureArray.length, 'features tracked');
     return featureArray;
   } else {
     console.error('Error fetching feature usage:', error);

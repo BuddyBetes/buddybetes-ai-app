@@ -10,13 +10,24 @@ interface FeatureUsage {
 
 interface FeatureUsageChartProps {
   data: FeatureUsage[];
+  selectedDate?: Date;
 }
 
-const FeatureUsageChart: React.FC<FeatureUsageChartProps> = ({ data }) => {
+const FeatureUsageChart: React.FC<FeatureUsageChartProps> = ({ data, selectedDate }) => {
+  const getDateRangeText = () => {
+    if (!selectedDate) return '(Last 30 Days)';
+    
+    const endDate = selectedDate;
+    const startDate = new Date(selectedDate);
+    startDate.setDate(startDate.getDate() - 30);
+    
+    return `(${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Top Features (Last 30 Days)</CardTitle>
+        <CardTitle>Top Features {getDateRangeText()}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

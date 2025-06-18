@@ -3,13 +3,15 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import MetricCard from './MetricCard';
 import EngagementHeatmap from './EngagementHeatmap';
-import type { DailyActiveUser, EngagementData } from '@/hooks/analytics/types';
+import FeatureUsageChart from './FeatureUsageChart';
+import type { DailyActiveUser, EngagementData, FeatureUsage } from '@/hooks/analytics/types';
 
 interface DailyMetricsSectionProps {
   selectedDate: Date;
   currentDayData: DailyActiveUser | null;
   previousDayData: DailyActiveUser | null;
   engagementData: EngagementData[];
+  featureUsage: FeatureUsage[];
   formatDateDescription: (date: Date) => string;
   getTrend: (today: number, yesterday: number) => { value: number; isPositive: boolean } | null;
 }
@@ -19,6 +21,7 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
   currentDayData,
   previousDayData,
   engagementData,
+  featureUsage,
   formatDateDescription,
   getTrend
 }) => {
@@ -55,9 +58,14 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
         />
       </div>
       
-      {/* Engagement Heatmap moved here from charts section */}
-      <div className="mb-8">
+      {/* Engagement Heatmap */}
+      <div className="mb-6">
         <EngagementHeatmap data={engagementData} />
+      </div>
+
+      {/* Feature Usage Chart */}
+      <div className="mb-6">
+        <FeatureUsageChart data={featureUsage} selectedDate={selectedDate} />
       </div>
     </div>
   );
