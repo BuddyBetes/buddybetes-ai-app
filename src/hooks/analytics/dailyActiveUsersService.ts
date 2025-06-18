@@ -11,7 +11,7 @@ export const fetchDailyActiveUsers = async (): Promise<DailyActiveUser[]> => {
     .limit(50);
 
   if (!error && data) {
-    console.log('✅ Fetched daily active users with improved analytics (using real account creation dates):', data.length, 'days of data');
+    console.log('✅ Fetched daily active users with FIXED new user counting (now counts ALL signups):', data.length, 'days of data');
     console.log('Daily active users data:', data);
     return data;
   } else {
@@ -22,12 +22,12 @@ export const fetchDailyActiveUsers = async (): Promise<DailyActiveUser[]> => {
 
 export const updateDailyActiveUsers = async (): Promise<void> => {
   try {
-    console.log('🔄 Updating daily active users with enhanced function (now uses real account creation dates)...');
+    console.log('🔄 Updating daily active users with FIXED function (new users = all signups, not just active ones)...');
     const { error } = await supabase.rpc('update_daily_active_users_enhanced');
     if (error) {
       console.error('Error updating daily active users:', error);
     } else {
-      console.log('✅ Daily active users updated successfully with improved new user detection');
+      console.log('✅ Daily active users updated successfully with corrected new user counting');
     }
   } catch (error) {
     console.error('Error calling update function:', error);

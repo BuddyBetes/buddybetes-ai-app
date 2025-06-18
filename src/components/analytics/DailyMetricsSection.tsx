@@ -32,25 +32,25 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
         <MetricCard
           title="Daily Active Users"
           value={currentDayData?.total_active_users || 0}
-          description={`Active users ${formatDateDescription(selectedDate)}`}
+          description={`Users who used the app ${formatDateDescription(selectedDate)}`}
           trend={currentDayData && previousDayData ? getTrend(currentDayData.total_active_users, previousDayData.total_active_users) : undefined}
         />
         <MetricCard
           title="New Users"
           value={currentDayData?.new_users || 0}
-          description={`New signups ${formatDateDescription(selectedDate)}`}
+          description={`All account signups ${formatDateDescription(selectedDate)} (regardless of activity)`}
           trend={currentDayData && previousDayData ? getTrend(currentDayData.new_users, previousDayData.new_users) : undefined}
         />
         <MetricCard
           title="Total Sessions"
           value={currentDayData?.total_sessions || 0}
-          description={`Sessions ${formatDateDescription(selectedDate)}`}
+          description={`App sessions ${formatDateDescription(selectedDate)}`}
           trend={currentDayData && previousDayData ? getTrend(currentDayData.total_sessions, previousDayData.total_sessions) : undefined}
         />
         <MetricCard
           title="Returning Users"
           value={currentDayData?.returning_users || 0}
-          description={`Users who came back ${formatDateDescription(selectedDate)}`}
+          description={`Existing users who were active ${formatDateDescription(selectedDate)}`}
           trend={currentDayData && previousDayData ? getTrend(currentDayData.returning_users, previousDayData.returning_users) : undefined}
         />
       </div>

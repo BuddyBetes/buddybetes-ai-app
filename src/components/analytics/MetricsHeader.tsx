@@ -30,10 +30,16 @@ const MetricsHeader: React.FC<MetricsHeaderProps> = ({
     <div className="flex justify-between items-center mb-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+        {hasBackfilled && (
+          <p className="text-sm text-green-600 mt-1 flex items-center">
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Fixed: "New users" now counts all daily signups (not just active ones)
+          </p>
+        )}
         {hasBackfilled && dailyActiveUsersLength === 0 && (
           <p className="text-sm text-blue-600 mt-1 flex items-center">
             <Database className="h-4 w-4 mr-1" />
-            Backfill completed - data from June 1, 2025 onwards
+            Data from June 1, 2025 onwards
           </p>
         )}
       </div>
