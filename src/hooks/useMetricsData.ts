@@ -33,6 +33,33 @@ export const useMetricsData = () => {
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasBackfilled, setHasBackfilled] = useState(false);
+
+  const runBackfillIfNeeded = async () => {
+    try {
+      // Check if we have any analytics data
+      const { data: existingData } = await supabase
+        .from('daily_active_users')
+        .select('*')
+        .limit(1);
+
+      if (!existingData || existingData.length === 0) {
+        console.log('No analytics data found, running backfill...');
+        
+        // Run the backfill function
+        const { error } = await supabase.rpc('backfill_analytics_data');
+        
+        if (error) {
+          console.error('Error running backfill:', error);
+        } else {
+          console.log('Backfill completed successfully');
+          setHasBackfilled(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking/running backfill:', error);
+    }
+  };
 
   const fetchDailyActiveUsers = async () => {
     const { data, error } = await supabase
@@ -43,6 +70,8 @@ export const useMetricsData = () => {
 
     if (!error && data) {
       setDailyActiveUsers(data);
+    } else {
+      console.error('Error fetching daily active users:', error);
     }
   };
 
@@ -51,7 +80,7 @@ export const useMetricsData = () => {
       .from('user_retention_cohorts')
       .select('day_1_return, day_7_return, day_30_return');
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const totalUsers = data.length;
       const day1Retention = data.filter(u => u.day_1_return).length;
       const day7Retention = data.filter(u => u.day_7_return).length;
@@ -63,6 +92,8 @@ export const useMetricsData = () => {
         day_30_retention: totalUsers > 0 ? (day30Retention / totalUsers) * 100 : 0,
         total_users: totalUsers
       });
+    } else {
+      console.error('Error fetching retention data:', error);
     }
   };
 
@@ -86,6 +117,8 @@ export const useMetricsData = () => {
       }));
 
       setEngagementData(engagementArray);
+    } else {
+      console.error('Error fetching engagement data:', error);
     }
   };
 
@@ -100,7 +133,8 @@ export const useMetricsData = () => {
       const featureCount: { [key: string]: number } = {};
       
       data.forEach(log => {
-        featureCount[log.action_target] = (featureCount[log.action_target] || 0) + 1;
+        const feature = log.action_target || 'unknown';
+        featureCount[feature] = (featureCount[feature] || 0) + 1;
       });
 
       const featureArray = Object.entries(featureCount)
@@ -109,17 +143,35 @@ export const useMetricsData = () => {
         .slice(0, 10);
 
       setFeatureUsage(featureArray);
+    } else {
+      console.error('Error fetching feature usage:', error);
     }
   };
 
   const refreshData = async () => {
     setLoading(true);
+    
+    // Run backfill if needed first
+    await runBackfillIfNeeded();
+    
+    // Update daily stats with enhanced function
+    try {
+      const { error } = await supabase.rpc('update_daily_active_users_enhanced');
+      if (error) {
+        console.error('Error updating daily active users:', error);
+      }
+    } catch (error) {
+      console.error('Error calling update function:', error);
+    }
+    
+    // Fetch all data
     await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
       fetchEngagementData(),
       fetchFeatureUsage()
     ]);
+    
     setLoading(false);
   };
 
@@ -133,6 +185,7 @@ export const useMetricsData = () => {
     engagementData,
     featureUsage,
     loading,
-    refreshData
+    refreshData,
+    hasBackfilled
   };
 };
