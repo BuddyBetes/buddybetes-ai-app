@@ -68,6 +68,42 @@ export type Database = {
           },
         ]
       }
+      daily_active_users: {
+        Row: {
+          avg_session_duration: unknown | null
+          created_at: string
+          date: string
+          id: string
+          new_users: number
+          returning_users: number
+          total_active_users: number
+          total_sessions: number
+          updated_at: string
+        }
+        Insert: {
+          avg_session_duration?: unknown | null
+          created_at?: string
+          date: string
+          id?: string
+          new_users?: number
+          returning_users?: number
+          total_active_users?: number
+          total_sessions?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_session_duration?: unknown | null
+          created_at?: string
+          date?: string
+          id?: string
+          new_users?: number
+          returning_users?: number
+          total_active_users?: number
+          total_sessions?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       glucose_logs: {
         Row: {
           calories: number | null
@@ -283,6 +319,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_logs: {
+        Row: {
+          action_target: string
+          action_type: string
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          action_target: string
+          action_type: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          action_target?: string
+          action_type?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_notifications: {
         Row: {
           created_at: string
@@ -319,6 +393,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_retention_cohorts: {
+        Row: {
+          created_at: string
+          day_1_return: boolean | null
+          day_30_return: boolean | null
+          day_7_return: boolean | null
+          id: string
+          last_activity_date: string | null
+          signup_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_1_return?: boolean | null
+          day_30_return?: boolean | null
+          day_7_return?: boolean | null
+          id?: string
+          last_activity_date?: string | null
+          signup_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_1_return?: boolean | null
+          day_30_return?: boolean | null
+          day_7_return?: boolean | null
+          id?: string
+          last_activity_date?: string | null
+          signup_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -336,6 +446,39 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          ip_address: unknown | null
+          session_end: string | null
+          session_start: string
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_address?: unknown | null
+          session_end?: string | null
+          session_start?: string
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          ip_address?: unknown | null
+          session_end?: string | null
+          session_start?: string
           user_id?: string
         }
         Relationships: []
@@ -403,6 +546,14 @@ export type Database = {
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      update_daily_active_users: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_retention_cohorts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

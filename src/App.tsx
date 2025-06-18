@@ -1,33 +1,37 @@
 
-import React, { useEffect } from "react";
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./components/AppRoutes";
-import { AuthProvider } from "./context/AuthContext";
-import { LogProvider } from "./context/LogContext";
 import { Toaster } from "@/components/ui/toaster";
-import { usePwaInstall } from "./hooks/usePwaInstall";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import { LogProvider } from "@/context/LogContext";
+import { PasswordResetProvider } from "@/context/passwordReset/PasswordResetContext";
+import AppRoutes from "@/components/AppRoutes";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
-function App() {
-  // Initialize the PWA installation hook with proper effect
-  const { canInstall } = usePwaInstall();
-  
-  // Log PWA installation availability
-  useEffect(() => {
-    if (canInstall) {
-      console.log("PWA can be installed on this device");
-    }
-  }, [canInstall]);
-  
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <LogProvider>
-          <AppRoutes />
-          <Toaster />
-        </LogProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  );
-}
+const queryClient = new QueryClient();
+
+const App = () => (
+  <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <PasswordResetProvider>
+            <LogProvider>
+              <AnalyticsTracker>
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                  <AppRoutes />
+                  <Toaster />
+                  <Sonner />
+                </div>
+              </AnalyticsTracker>
+            </LogProvider>
+          </PasswordResetProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </BrowserRouter>
+);
 
 export default App;

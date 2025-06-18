@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -20,6 +21,7 @@ import Terms from '@/pages/Terms';
 import Subscription from '@/pages/Subscription';
 import PaymentSuccess from '@/pages/PaymentSuccess';
 import AdminDashboard from '@/pages/AdminDashboard';
+import Metrics from '@/pages/Metrics';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -59,6 +61,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/metrics" element={<Metrics />} />
       <Route
         path="/dashboard"
         element={renderProtectedRoute(<Dashboard />)}
