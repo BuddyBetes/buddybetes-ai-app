@@ -5,7 +5,6 @@ import MetricsHeader from '@/components/analytics/MetricsHeader';
 import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
 import OverallMetricsSection from '@/components/analytics/OverallMetricsSection';
 import RetentionMetricsSection from '@/components/analytics/RetentionMetricsSection';
-import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
 import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
 import HistoricalOverviewSection from '@/components/analytics/HistoricalOverviewSection';
 import { useMetricsData } from '@/hooks/useMetricsData';
@@ -92,6 +91,7 @@ const Metrics = () => {
           selectedDate={selectedDate}
           currentDayData={currentDayData}
           previousDayData={previousDayData}
+          engagementData={engagementData}
           formatDateDescription={formatDateDescription}
           getTrend={getTrend}
         />
@@ -100,9 +100,8 @@ const Metrics = () => {
 
         <RetentionMetricsSection retentionData={retentionData} />
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EngagementHeatmap data={engagementData} />
+        {/* Charts - now only Feature Usage */}
+        <div className="grid grid-cols-1 gap-6 mb-6">
           <FeatureUsageChart data={featureUsage} />
         </div>
 
