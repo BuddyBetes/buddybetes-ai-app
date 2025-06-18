@@ -17,7 +17,7 @@ const OverallMetricsSection: React.FC<OverallMetricsSectionProps> = ({
         <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
         Overall Platform Metrics
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <MetricCard
           title="Total Registered Users"
           value={retentionData?.total_registered_users || 0}
@@ -32,11 +32,6 @@ const OverallMetricsSection: React.FC<OverallMetricsSectionProps> = ({
           title="Engagement Rate"
           value={retentionData ? `${retentionData.engagement_rate.toFixed(1)}%` : '0%'}
           description="Percentage of registered users who are active"
-        />
-        <MetricCard
-          title="Day 1 Retention"
-          value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
-          description="Users who logged data within 1 day of signup"
         />
       </div>
     </div>
