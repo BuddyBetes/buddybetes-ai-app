@@ -1,37 +1,55 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
-import { LogProvider } from "@/context/LogContext";
-import { PasswordResetProvider } from "@/context/passwordReset/PasswordResetContext";
-import AppRoutes from "@/components/AppRoutes";
-import AnalyticsTracker from "@/components/AnalyticsTracker";
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/context/AuthContext';
+import { LogProvider } from '@/context/LogContext';
+import { GlucoseUnitProvider } from '@/context/GlucoseUnitContext';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
+import { Toaster } from '@/components/ui/sonner';
+import AppRoutes from '@/components/AppRoutes';
+import Layout from '@/components/Layout';
+import AnalyticsTracker from '@/components/AnalyticsTracker';
+import { useSessionTracking } from '@/hooks/useSessionTracking';
+import './App.css';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const App = () => (
-  <BrowserRouter>
+const AppContent: React.FC = () => {
+  useSessionTracking();
+  
+  return (
+    <Layout>
+      <AnalyticsTracker />
+      <AppRoutes />
+      <Toaster />
+    </Layout>
+  );
+};
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <Router>
         <AuthProvider>
-          <PasswordResetProvider>
+          <SubscriptionProvider>
             <LogProvider>
-              <AnalyticsTracker>
-                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-                  <AppRoutes />
-                  <Toaster />
-                  <Sonner />
-                </div>
-              </AnalyticsTracker>
+              <GlucoseUnitProvider>
+                <AppContent />
+              </GlucoseUnitProvider>
             </LogProvider>
-          </PasswordResetProvider>
+          </SubscriptionProvider>
         </AuthProvider>
-      </TooltipProvider>
+      </Router>
     </QueryClientProvider>
-  </BrowserRouter>
-);
+  );
+}
 
 export default App;

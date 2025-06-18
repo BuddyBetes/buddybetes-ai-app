@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { runBackfillIfNeeded } from './analytics/backfillService';
 import { fetchDailyActiveUsers, updateDailyActiveUsers } from './analytics/dailyActiveUsersService';
@@ -17,12 +18,13 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   const refreshData = async () => {
     setLoading(true);
+    console.log('🔄 Refreshing analytics data...');
     
-    // Run the backfill to ensure data from June 1, 2025 onwards is populated
+    // Run the backfill to ensure data is up to date with improved logic
     const backfillSuccess = await runBackfillIfNeeded();
     setHasBackfilled(backfillSuccess);
     
-    // Update daily stats with enhanced function
+    // Update daily stats with enhanced function (now uses real account creation dates)
     await updateDailyActiveUsers();
     
     // Calculate 30 days back from current date for feature usage
@@ -43,6 +45,7 @@ export const useMetricsData = (selectedDate?: Date) => {
     setEngagementData(engagement);
     setFeatureUsage(features);
     
+    console.log('✅ Analytics data refresh completed');
     setLoading(false);
   };
 
@@ -54,6 +57,7 @@ export const useMetricsData = (selectedDate?: Date) => {
   useEffect(() => {
     if (selectedDate && dailyActiveUsers.length > 0) {
       const refreshDateSpecificData = async () => {
+        console.log('🔄 Refreshing date-specific engagement data for:', selectedDate.toDateString());
         const engagement = await fetchEngagementData(selectedDate);
         setEngagementData(engagement);
       };

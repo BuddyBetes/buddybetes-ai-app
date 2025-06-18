@@ -4,7 +4,7 @@ import type { RetentionData } from './types';
 
 export const fetchRetentionData = async (): Promise<RetentionData | null> => {
   try {
-    // Call the admin-only database function that bypasses RLS
+    // Call the improved admin-only database function
     const { data, error } = await supabase.rpc('get_analytics_retention_data');
 
     if (error) {
@@ -17,7 +17,7 @@ export const fetchRetentionData = async (): Promise<RetentionData | null> => {
       return null;
     }
 
-    console.log('✅ Fetched retention data via admin function:', data);
+    console.log('✅ Fetched improved retention data (now uses real account creation dates):', data);
 
     // Cast the JSON response to our expected structure
     const retentionData = data as {

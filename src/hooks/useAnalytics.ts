@@ -11,12 +11,18 @@ export const useAnalytics = () => {
     if (!user) return;
 
     try {
+      // Get current session ID from sessionStorage
+      const sessionId = sessionStorage.getItem('session_id');
+      
       await supabase.from('user_activity_logs').insert({
         user_id: user.id,
         action_type: 'page_visit',
         action_target: page,
+        session_id: sessionId,
         metadata: { timestamp: new Date().toISOString() }
       });
+      
+      console.log('📊 Tracked page visit:', page);
     } catch (error) {
       console.error('Error tracking page visit:', error);
     }
@@ -27,12 +33,18 @@ export const useAnalytics = () => {
     if (!user) return;
 
     try {
+      // Get current session ID from sessionStorage
+      const sessionId = sessionStorage.getItem('session_id');
+      
       await supabase.from('user_activity_logs').insert({
         user_id: user.id,
         action_type: 'feature_click',
         action_target: feature,
+        session_id: sessionId,
         metadata: { ...metadata, timestamp: new Date().toISOString() }
       });
+      
+      console.log('📊 Tracked feature click:', feature);
     } catch (error) {
       console.error('Error tracking feature click:', error);
     }
@@ -44,6 +56,13 @@ export const useAnalytics = () => {
 
     try {
       if (action === 'start') {
+        // Check if there's already an active session for today
+        const existingSessionId = sessionStorage.getItem('session_id');
+        if (existingSessionId) {
+          console.log('📊 Session already active:', existingSessionId);
+          return;
+        }
+
         const { data, error } = await supabase.from('user_sessions').insert({
           user_id: user.id,
           device_type: getDeviceType(),
@@ -53,6 +72,7 @@ export const useAnalytics = () => {
 
         if (!error && data) {
           sessionStorage.setItem('session_id', data.id);
+          console.log('📊 Started new session:', data.id);
         }
       } else if (action === 'end') {
         const sessionId = sessionStorage.getItem('session_id');
@@ -62,6 +82,7 @@ export const useAnalytics = () => {
             .update({ session_end: new Date().toISOString() })
             .eq('id', sessionId);
           sessionStorage.removeItem('session_id');
+          console.log('📊 Ended session:', sessionId);
         }
       }
     } catch (error) {
