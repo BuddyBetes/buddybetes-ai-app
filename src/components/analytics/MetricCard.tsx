@@ -25,7 +25,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, tren
         )}
         {trend && (
           <p className={`text-xs ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {trend.isPositive ? '+' : ''}{trend.value}% from last period
+            {trend.isPositive ? '+' : ''}{Math.round(trend.value)}% from yesterday
           </p>
         )}
       </CardContent>
