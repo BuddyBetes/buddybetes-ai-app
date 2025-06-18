@@ -21,22 +21,22 @@ const OverallMetricsSection: React.FC<OverallMetricsSectionProps> = ({
         <MetricCard
           title="Total Registered Users"
           value={retentionData?.total_registered_users || 0}
-          description="All users who signed up"
+          description="All users who created profiles"
         />
         <MetricCard
-          title="Active Users (Since June 1)"
+          title="Active Users"
           value={retentionData?.total_users || 0}
-          description="Users who logged health data from June 1, 2025"
+          description="Users who have logged any health data"
         />
         <MetricCard
           title="Engagement Rate"
           value={retentionData ? `${retentionData.engagement_rate.toFixed(1)}%` : '0%'}
-          description="Users actively using health features"
+          description="Percentage of registered users who are active"
         />
         <MetricCard
           title="Day 1 Retention"
           value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
-          description="Users returning after 1 day"
+          description="Users who logged data within 1 day of signup"
         />
       </div>
     </div>

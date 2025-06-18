@@ -15,7 +15,10 @@ const HistoricalOverviewSection: React.FC<HistoricalOverviewSectionProps> = ({
 
   return (
     <div className="mt-8 bg-white rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Historical Overview (From June 1, 2025)</h2>
+      <h2 className="text-xl font-semibold mb-4">Historical Overview</h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Retention metrics are calculated based on profile creation dates and first health data activity.
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="text-center">
           <div className="text-2xl font-bold text-blue-600">
