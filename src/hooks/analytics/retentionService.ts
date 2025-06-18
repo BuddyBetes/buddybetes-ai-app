@@ -26,6 +26,9 @@ export const fetchRetentionData = async (): Promise<RetentionData | null> => {
       day_30_retention: number;
       total_users: number;
       total_registered_users: number;
+      total_active_users: number;
+      health_data_users: number;
+      ai_assistant_users: number;
       engagement_rate: number;
     };
 
@@ -35,6 +38,9 @@ export const fetchRetentionData = async (): Promise<RetentionData | null> => {
       day_30_retention: retentionData.day_30_retention,
       total_users: retentionData.total_users,
       total_registered_users: retentionData.total_registered_users,
+      total_active_users: retentionData.total_active_users,
+      health_data_users: retentionData.health_data_users,
+      ai_assistant_users: retentionData.ai_assistant_users,
       engagement_rate: retentionData.engagement_rate
     };
   } catch (error) {

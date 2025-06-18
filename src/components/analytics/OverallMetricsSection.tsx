@@ -17,21 +17,33 @@ const OverallMetricsSection: React.FC<OverallMetricsSectionProps> = ({
         <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
         Overall Platform Metrics
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard
           title="Total Registered Users"
           value={retentionData?.total_registered_users || 0}
           description="All users who created profiles"
         />
         <MetricCard
-          title="Active Users"
-          value={retentionData?.total_users || 0}
-          description="Users who have logged any health data"
+          title="Total Active Users"
+          value={retentionData?.total_active_users || 0}
+          description="Users who have used health logging OR AI assistant"
         />
+        <MetricCard
+          title="Health Data Users"
+          value={retentionData?.health_data_users || 0}
+          description="Users who have logged glucose data"
+        />
+        <MetricCard
+          title="AI Assistant Users"
+          value={retentionData?.ai_assistant_users || 0}
+          description="Users who have used the AI assistant"
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
         <MetricCard
           title="Engagement Rate"
           value={retentionData ? `${retentionData.engagement_rate.toFixed(1)}%` : '0%'}
-          description="Percentage of registered users who are active"
+          description="Percentage of registered users who are active (using either feature)"
         />
       </div>
     </div>

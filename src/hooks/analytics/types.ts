@@ -13,6 +13,9 @@ export interface RetentionData {
   day_30_retention: number;
   total_users: number;
   total_registered_users: number;
+  total_active_users: number;
+  health_data_users: number;
+  ai_assistant_users: number;
   engagement_rate: number;
 }
 
