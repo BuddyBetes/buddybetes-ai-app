@@ -9,8 +9,8 @@ import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { Toaster } from '@/components/ui/sonner';
 import AppRoutes from '@/components/AppRoutes';
 import Layout from '@/components/Layout';
-import AnalyticsTracker from '@/components/AnalyticsTracker';
 import { useSessionTracking } from '@/hooks/useSessionTracking';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -24,10 +24,10 @@ const queryClient = new QueryClient({
 
 const AppContent: React.FC = () => {
   useSessionTracking();
+  usePageTracking();
   
   return (
     <Layout>
-      <AnalyticsTracker />
       <AppRoutes />
       <Toaster />
     </Layout>
