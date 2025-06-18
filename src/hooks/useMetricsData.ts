@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -37,24 +36,17 @@ export const useMetricsData = () => {
 
   const runBackfillIfNeeded = async () => {
     try {
-      // Check if we have any analytics data
-      const { data: existingData } = await supabase
-        .from('daily_active_users')
-        .select('*')
-        .limit(1);
-
-      if (!existingData || existingData.length === 0) {
-        console.log('No analytics data found, running backfill...');
-        
-        // Run the backfill function
-        const { error } = await supabase.rpc('backfill_analytics_data');
-        
-        if (error) {
-          console.error('Error running backfill:', error);
-        } else {
-          console.log('Backfill completed successfully');
-          setHasBackfilled(true);
-        }
+      // Always run backfill to ensure we have the latest historical data
+      console.log('Running analytics backfill to populate historical data...');
+      
+      // Run the backfill function
+      const { error } = await supabase.rpc('backfill_analytics_data');
+      
+      if (error) {
+        console.error('Error running backfill:', error);
+      } else {
+        console.log('Backfill completed successfully - historical data from glucose logs loaded');
+        setHasBackfilled(true);
       }
     } catch (error) {
       console.error('Error checking/running backfill:', error);
@@ -69,6 +61,7 @@ export const useMetricsData = () => {
       .limit(30);
 
     if (!error && data) {
+      console.log('Fetched daily active users:', data.length, 'days of data');
       setDailyActiveUsers(data);
     } else {
       console.error('Error fetching daily active users:', error);
@@ -151,7 +144,7 @@ export const useMetricsData = () => {
   const refreshData = async () => {
     setLoading(true);
     
-    // Run backfill if needed first
+    // Run backfill to ensure all historical data is populated
     await runBackfillIfNeeded();
     
     // Update daily stats with enhanced function
