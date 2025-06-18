@@ -19,13 +19,23 @@ export const fetchRetentionData = async (): Promise<RetentionData | null> => {
 
     console.log('✅ Fetched retention data via admin function:', data);
 
+    // Cast the JSON response to our expected structure
+    const retentionData = data as {
+      day_1_retention: number;
+      day_7_retention: number;
+      day_30_retention: number;
+      total_users: number;
+      total_registered_users: number;
+      engagement_rate: number;
+    };
+
     return {
-      day_1_retention: data.day_1_retention,
-      day_7_retention: data.day_7_retention,
-      day_30_retention: data.day_30_retention,
-      total_users: data.total_users,
-      total_registered_users: data.total_registered_users,
-      engagement_rate: data.engagement_rate
+      day_1_retention: retentionData.day_1_retention,
+      day_7_retention: retentionData.day_7_retention,
+      day_30_retention: retentionData.day_30_retention,
+      total_users: retentionData.total_users,
+      total_registered_users: retentionData.total_registered_users,
+      engagement_rate: retentionData.engagement_rate
     };
   } catch (error) {
     console.error('Error in fetchRetentionData:', error);
