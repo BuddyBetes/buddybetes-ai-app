@@ -39,15 +39,15 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   const runBackfillIfNeeded = async () => {
     try {
-      console.log('Running FIXED analytics backfill to populate all historical data from health data logs...');
+      console.log('Running analytics backfill from June 1, 2025 onwards...');
       
-      // Run the FIXED backfill function that now works properly
+      // Run the updated backfill function that starts from June 1, 2025
       const { error } = await supabase.rpc('backfill_analytics_data');
       
       if (error) {
         console.error('Error running backfill:', error);
       } else {
-        console.log('🎉 Backfill completed successfully! All health data logs processed into historical analytics data');
+        console.log('🎉 Backfill completed successfully! Analytics data from June 1, 2025 onwards');
         setHasBackfilled(true);
       }
     } catch (error) {
@@ -59,11 +59,12 @@ export const useMetricsData = (selectedDate?: Date) => {
     const { data, error } = await supabase
       .from('daily_active_users')
       .select('*')
+      .gte('date', '2025-06-01')
       .order('date', { ascending: false })
-      .limit(30);
+      .limit(50);
 
     if (!error && data) {
-      console.log('✅ Fetched daily active users:', data.length, 'days of historical data from health logs');
+      console.log('✅ Fetched daily active users from June 1, 2025:', data.length, 'days of data');
       setDailyActiveUsers(data);
     } else {
       console.error('Error fetching daily active users:', error);
@@ -71,21 +72,28 @@ export const useMetricsData = (selectedDate?: Date) => {
   };
 
   const fetchRetentionData = async () => {
-    // Fetch retention cohort data (users with any health data)
+    // Fetch retention cohort data (users with health data from June 1, 2025 onwards)
     const { data: cohortData, error: cohortError } = await supabase
       .from('user_retention_cohorts')
-      .select('day_1_return, day_7_return, day_30_return');
+      .select('day_1_return, day_7_return, day_30_return')
+      .gte('signup_date', '2025-06-01');
 
-    // Fetch total registered users count with proper query
-    const { count: totalRegistered, error: profilesError } = await supabase
+    // Use aggregate query to get total registered users count reliably
+    const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
-      .select('*', { count: 'exact', head: true });
+      .select('id')
+      .not('id', 'is', null);
 
-    console.log('🔍 Debug - Profiles count query result:', { totalRegistered, profilesError });
-    console.log('🔍 Debug - Cohort data:', { cohortCount: cohortData?.length, cohortError });
+    console.log('🔍 Debug - Raw profiles data:', { 
+      profilesData: profilesData?.length, 
+      profilesError,
+      cohortData: cohortData?.length,
+      cohortError 
+    });
 
-    if (!cohortError && cohortData && cohortData.length > 0 && !profilesError && totalRegistered !== null) {
-      const totalUsers = cohortData.length; // Users with any health data
+    if (!cohortError && cohortData && !profilesError && profilesData) {
+      const totalUsers = cohortData.length; // Users with health data from June 1, 2025
+      const totalRegistered = profilesData.length; // All registered users
       const day1Retention = cohortData.filter(u => u.day_1_return).length;
       const day7Retention = cohortData.filter(u => u.day_7_return).length;
       const day30Retention = cohortData.filter(u => u.day_30_return).length;
@@ -101,13 +109,12 @@ export const useMetricsData = (selectedDate?: Date) => {
       });
       
       console.log('✅ Fetched retention data:', {
-        activeUsers: totalUsers,
-        registeredUsers: totalRegistered,
+        activeUsersFromJune1: totalUsers,
+        totalRegisteredUsers: totalRegistered,
         engagementRate: engagementRate.toFixed(1) + '%'
       });
     } else {
       console.error('Error fetching retention data:', { cohortError, profilesError });
-      console.log('Raw data received:', { cohortData, totalRegistered });
     }
   };
 
@@ -181,7 +188,7 @@ export const useMetricsData = (selectedDate?: Date) => {
   const refreshData = async () => {
     setLoading(true);
     
-    // Run the backfill to ensure all historical data is populated
+    // Run the backfill to ensure data from June 1, 2025 onwards is populated
     await runBackfillIfNeeded();
     
     // Update daily stats with enhanced function

@@ -41,10 +41,8 @@ const Metrics = () => {
     };
   };
 
-  // Get min and max dates from historical data
-  const minDate = dailyActiveUsers.length > 0 
-    ? new Date(dailyActiveUsers[dailyActiveUsers.length - 1].date) 
-    : new Date('2024-05-20');
+  // Set date range from June 1, 2025 onwards
+  const minDate = new Date('2025-06-01');
   const maxDate = dailyActiveUsers.length > 0 
     ? new Date(dailyActiveUsers[0].date) 
     : new Date();
@@ -63,6 +61,17 @@ const Metrics = () => {
     }
   };
 
+  // Calculate actual date range for display
+  const getDateRangeMessage = () => {
+    if (dailyActiveUsers.length === 0) return 'No data available';
+    
+    const earliest = dailyActiveUsers[dailyActiveUsers.length - 1].date;
+    const latest = dailyActiveUsers[0].date;
+    const dayCount = dailyActiveUsers.length;
+    
+    return `${dayCount} days from ${new Date(earliest).toLocaleDateString()} to ${new Date(latest).toLocaleDateString()}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -72,16 +81,16 @@ const Metrics = () => {
             <p className="text-lg text-gray-600 mt-1">
               Viewing data for {selectedDate.toLocaleDateString()}
             </p>
-            {hasBackfilled && dailyActiveUsers.length > 1 && (
+            {hasBackfilled && dailyActiveUsers.length > 0 && (
               <p className="text-sm text-green-600 mt-1 flex items-center">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                ✅ Historical data loaded: {dailyActiveUsers.length} days from health data logs
+                ✅ Historical data loaded: {getDateRangeMessage()}
               </p>
             )}
-            {hasBackfilled && dailyActiveUsers.length <= 1 && (
+            {hasBackfilled && dailyActiveUsers.length === 0 && (
               <p className="text-sm text-blue-600 mt-1 flex items-center">
                 <Database className="h-4 w-4 mr-1" />
-                Backfill completed - refresh to see historical data
+                Backfill completed - data from June 1, 2025 onwards
               </p>
             )}
           </div>
@@ -146,9 +155,9 @@ const Metrics = () => {
               description="All users who signed up"
             />
             <MetricCard
-              title="Active Users with Health Data"
+              title="Active Users (Since June 1)"
               value={retentionData?.total_users || 0}
-              description="Users who logged any health data"
+              description="Users who logged health data from June 1, 2025"
             />
             <MetricCard
               title="Engagement Rate"
@@ -165,7 +174,7 @@ const Metrics = () => {
 
         {/* Retention Metrics */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">Retention Analysis</h2>
+          <h2 className="text-xl font-semibold mb-3">Retention Analysis (From June 1, 2025)</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <MetricCard
               title="Day 1 Retention"
@@ -194,7 +203,7 @@ const Metrics = () => {
         {/* Historical Data Summary */}
         {dailyActiveUsers.length > 0 && (
           <div className="mt-8 bg-white rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Historical Overview (From Health Data Logs)</h2>
+            <h2 className="text-xl font-semibold mb-4">Historical Overview (From June 1, 2025)</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
