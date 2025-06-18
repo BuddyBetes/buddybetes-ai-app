@@ -16,18 +16,6 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   });
 }
 
-// Use concurrent mode for better performance
+// Use standard rendering instead of delayed rendering to avoid React context issues
 const root = createRoot(document.getElementById("root")!);
-
-// Delay hydration until the page is idle
-if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-  // @ts-ignore - requestIdleCallback might not be in TypeScript's lib
-  window.requestIdleCallback(() => {
-    root.render(<App />);
-  });
-} else {
-  // Fallback for browsers that don't support requestIdleCallback
-  setTimeout(() => {
-    root.render(<App />);
-  }, 1);
-}
+root.render(<App />);
