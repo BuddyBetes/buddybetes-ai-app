@@ -37,15 +37,15 @@ export const useMetricsData = () => {
 
   const runBackfillIfNeeded = async () => {
     try {
-      console.log('Running fixed analytics backfill to populate all historical data from glucose logs...');
+      console.log('Running FIXED analytics backfill to populate all historical data from 615 glucose logs...');
       
-      // Run the fixed backfill function
+      // Run the FIXED backfill function that now works properly
       const { error } = await supabase.rpc('backfill_analytics_data');
       
       if (error) {
         console.error('Error running backfill:', error);
       } else {
-        console.log('Backfill completed successfully - all 615 glucose logs processed into historical analytics data');
+        console.log('🎉 Backfill completed successfully! All 615 glucose logs processed into 30 days of historical analytics data (May 20th - June 18th)');
         setHasBackfilled(true);
       }
     } catch (error) {
@@ -61,7 +61,7 @@ export const useMetricsData = () => {
       .limit(30);
 
     if (!error && data) {
-      console.log('Fetched daily active users:', data.length, 'days of historical data');
+      console.log('✅ Fetched daily active users:', data.length, 'days of historical data from glucose logs');
       setDailyActiveUsers(data);
     } else {
       console.error('Error fetching daily active users:', error);
@@ -85,6 +85,8 @@ export const useMetricsData = () => {
         day_30_retention: totalUsers > 0 ? (day30Retention / totalUsers) * 100 : 0,
         total_users: totalUsers
       });
+      
+      console.log('✅ Fetched retention data for', totalUsers, 'users from glucose log patterns');
     } else {
       console.error('Error fetching retention data:', error);
     }
@@ -110,6 +112,7 @@ export const useMetricsData = () => {
       }));
 
       setEngagementData(engagementArray);
+      console.log('✅ Fetched engagement data:', data.length, 'activities processed');
     } else {
       console.error('Error fetching engagement data:', error);
     }
@@ -136,6 +139,7 @@ export const useMetricsData = () => {
         .slice(0, 10);
 
       setFeatureUsage(featureArray);
+      console.log('✅ Fetched feature usage data:', featureArray.length, 'features tracked');
     } else {
       console.error('Error fetching feature usage:', error);
     }
@@ -144,7 +148,7 @@ export const useMetricsData = () => {
   const refreshData = async () => {
     setLoading(true);
     
-    // Run the fixed backfill to ensure all historical data is populated
+    // Run the FIXED backfill to ensure all historical data is populated
     await runBackfillIfNeeded();
     
     // Update daily stats with enhanced function

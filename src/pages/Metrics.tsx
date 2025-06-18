@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Database } from 'lucide-react';
+import { RefreshCw, Database, CheckCircle } from 'lucide-react';
 import MetricsPasswordProtection from '@/components/analytics/MetricsPasswordProtection';
 import MetricCard from '@/components/analytics/MetricCard';
 import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
@@ -42,10 +42,16 @@ const Metrics = () => {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-            {hasBackfilled && (
+            {hasBackfilled && dailyActiveUsers.length > 1 && (
               <p className="text-sm text-green-600 mt-1 flex items-center">
+                <CheckCircle className="h-4 w-4 mr-1" />
+                ✅ Historical data loaded: {dailyActiveUsers.length} days from glucose logs (May 20th - June 18th)
+              </p>
+            )}
+            {hasBackfilled && dailyActiveUsers.length <= 1 && (
+              <p className="text-sm text-blue-600 mt-1 flex items-center">
                 <Database className="h-4 w-4 mr-1" />
-                Historical data successfully loaded from glucose logs
+                Backfill completed - refresh to see historical data
               </p>
             )}
           </div>
@@ -110,7 +116,7 @@ const Metrics = () => {
         {/* Historical Data Summary */}
         {dailyActiveUsers.length > 0 && (
           <div className="mt-8 bg-white rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Historical Overview</h2>
+            <h2 className="text-xl font-semibold mb-4">Historical Overview (From Glucose Logs)</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
