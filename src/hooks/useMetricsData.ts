@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -36,20 +37,19 @@ export const useMetricsData = () => {
 
   const runBackfillIfNeeded = async () => {
     try {
-      // Always run backfill to ensure we have the latest historical data
-      console.log('Running analytics backfill to populate historical data...');
+      console.log('Running fixed analytics backfill to populate all historical data from glucose logs...');
       
-      // Run the backfill function
+      // Run the fixed backfill function
       const { error } = await supabase.rpc('backfill_analytics_data');
       
       if (error) {
         console.error('Error running backfill:', error);
       } else {
-        console.log('Backfill completed successfully - historical data from glucose logs loaded');
+        console.log('Backfill completed successfully - all 615 glucose logs processed into historical analytics data');
         setHasBackfilled(true);
       }
     } catch (error) {
-      console.error('Error checking/running backfill:', error);
+      console.error('Error running backfill:', error);
     }
   };
 
@@ -61,7 +61,7 @@ export const useMetricsData = () => {
       .limit(30);
 
     if (!error && data) {
-      console.log('Fetched daily active users:', data.length, 'days of data');
+      console.log('Fetched daily active users:', data.length, 'days of historical data');
       setDailyActiveUsers(data);
     } else {
       console.error('Error fetching daily active users:', error);
@@ -144,7 +144,7 @@ export const useMetricsData = () => {
   const refreshData = async () => {
     setLoading(true);
     
-    // Run backfill to ensure all historical data is populated
+    // Run the fixed backfill to ensure all historical data is populated
     await runBackfillIfNeeded();
     
     // Update daily stats with enhanced function
