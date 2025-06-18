@@ -39,7 +39,7 @@ export const fetchRetentionData = async (): Promise<RetentionData | null> => {
 
     const { data: day30Data, error: day30Error } = await supabase
       .from('user_retention_cohorts')
-      .select('user_id', { count: 'exact, head: true })
+      .select('user_id', { count: 'exact', head: true })
       .eq('day_30_return', true)
       .gte('signup_date', '2025-06-01');
 
