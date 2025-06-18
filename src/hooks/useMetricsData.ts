@@ -27,7 +27,7 @@ interface FeatureUsage {
   usage_count: number;
 }
 
-export const useMetricsData = () => {
+export const useMetricsData = (selectedDate?: Date) => {
   const [dailyActiveUsers, setDailyActiveUsers] = useState<DailyActiveUser[]>([]);
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
@@ -92,11 +92,18 @@ export const useMetricsData = () => {
     }
   };
 
-  const fetchEngagementData = async () => {
+  const fetchEngagementData = async (targetDate?: Date) => {
+    const dateToUse = targetDate || new Date();
+    const startOfDay = new Date(dateToUse);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(dateToUse);
+    endOfDay.setHours(23, 59, 59, 999);
+
     const { data, error } = await supabase
       .from('user_activity_logs')
       .select('timestamp')
-      .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+      .gte('timestamp', startOfDay.toISOString())
+      .lte('timestamp', endOfDay.toISOString());
 
     if (!error && data) {
       const hourlyData: { [key: number]: number } = {};
@@ -112,18 +119,25 @@ export const useMetricsData = () => {
       }));
 
       setEngagementData(engagementArray);
-      console.log('✅ Fetched engagement data:', data.length, 'activities processed');
+      console.log('✅ Fetched engagement data for', dateToUse.toDateString(), ':', data.length, 'activities processed');
     } else {
       console.error('Error fetching engagement data:', error);
     }
   };
 
-  const fetchFeatureUsage = async () => {
+  const fetchFeatureUsage = async (targetDate?: Date) => {
+    const dateToUse = targetDate || new Date();
+    const startOfDay = new Date(dateToUse);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(dateToUse);
+    endOfDay.setHours(23, 59, 59, 999);
+
     const { data, error } = await supabase
       .from('user_activity_logs')
       .select('action_target')
       .eq('action_type', 'feature_click')
-      .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+      .gte('timestamp', startOfDay.toISOString())
+      .lte('timestamp', endOfDay.toISOString());
 
     if (!error && data) {
       const featureCount: { [key: string]: number } = {};
@@ -139,7 +153,7 @@ export const useMetricsData = () => {
         .slice(0, 10);
 
       setFeatureUsage(featureArray);
-      console.log('✅ Fetched feature usage data:', featureArray.length, 'features tracked');
+      console.log('✅ Fetched feature usage data for', dateToUse.toDateString(), ':', featureArray.length, 'features tracked');
     } else {
       console.error('Error fetching feature usage:', error);
     }
@@ -165,16 +179,40 @@ export const useMetricsData = () => {
     await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
-      fetchEngagementData(),
-      fetchFeatureUsage()
+      fetchEngagementData(selectedDate),
+      fetchFeatureUsage(selectedDate)
     ]);
     
     setLoading(false);
   };
 
+  // Get current day data based on selected date
+  const getCurrentDayData = () => {
+    if (!selectedDate) return null;
+    const dateString = selectedDate.toISOString().split('T')[0];
+    return dailyActiveUsers.find(d => d.date === dateString);
+  };
+
+  // Get previous day data for comparison
+  const getPreviousDayData = () => {
+    if (!selectedDate) return null;
+    const previousDay = new Date(selectedDate);
+    previousDay.setDate(previousDay.getDate() - 1);
+    const dateString = previousDay.toISOString().split('T')[0];
+    return dailyActiveUsers.find(d => d.date === dateString);
+  };
+
   useEffect(() => {
     refreshData();
   }, []);
+
+  // Refresh engagement and feature data when selected date changes
+  useEffect(() => {
+    if (selectedDate && dailyActiveUsers.length > 0) {
+      fetchEngagementData(selectedDate);
+      fetchFeatureUsage(selectedDate);
+    }
+  }, [selectedDate]);
 
   return {
     dailyActiveUsers,
@@ -183,6 +221,8 @@ export const useMetricsData = () => {
     featureUsage,
     loading,
     refreshData,
-    hasBackfilled
+    hasBackfilled,
+    getCurrentDayData,
+    getPreviousDayData
   };
 };

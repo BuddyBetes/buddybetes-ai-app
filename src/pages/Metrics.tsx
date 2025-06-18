@@ -6,10 +6,13 @@ import MetricsPasswordProtection from '@/components/analytics/MetricsPasswordPro
 import MetricCard from '@/components/analytics/MetricCard';
 import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
 import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
+import DateFilter from '@/components/analytics/DateFilter';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Metrics = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  
   const { 
     dailyActiveUsers, 
     retentionData, 
@@ -17,15 +20,17 @@ const Metrics = () => {
     featureUsage, 
     loading, 
     refreshData,
-    hasBackfilled
-  } = useMetricsData();
+    hasBackfilled,
+    getCurrentDayData,
+    getPreviousDayData
+  } = useMetricsData(selectedDate);
 
   if (!isAuthenticated) {
     return <MetricsPasswordProtection onAuthenticated={() => setIsAuthenticated(true)} />;
   }
 
-  const todayData = dailyActiveUsers[0];
-  const yesterdayData = dailyActiveUsers[1];
+  const currentDayData = getCurrentDayData();
+  const previousDayData = getPreviousDayData();
 
   const getTrend = (today: number, yesterday: number) => {
     if (!yesterday) return null;
@@ -36,12 +41,37 @@ const Metrics = () => {
     };
   };
 
+  // Get min and max dates from historical data
+  const minDate = dailyActiveUsers.length > 0 
+    ? new Date(dailyActiveUsers[dailyActiveUsers.length - 1].date) 
+    : new Date('2024-05-20');
+  const maxDate = dailyActiveUsers.length > 0 
+    ? new Date(dailyActiveUsers[0].date) 
+    : new Date();
+
+  const formatDateDescription = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'yesterday';
+    } else {
+      return `on ${date.toLocaleDateString()}`;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+            <p className="text-lg text-gray-600 mt-1">
+              Viewing data for {selectedDate.toLocaleDateString()}
+            </p>
             {hasBackfilled && dailyActiveUsers.length > 1 && (
               <p className="text-sm text-green-600 mt-1 flex items-center">
                 <CheckCircle className="h-4 w-4 mr-1" />
@@ -55,31 +85,39 @@ const Metrics = () => {
               </p>
             )}
           </div>
-          <Button onClick={refreshData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center space-x-4">
+            <DateFilter 
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              minDate={minDate}
+              maxDate={maxDate}
+            />
+            <Button onClick={refreshData} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             title="Daily Active Users"
-            value={todayData?.total_active_users || 0}
-            description="Active users today"
-            trend={todayData && yesterdayData ? getTrend(todayData.total_active_users, yesterdayData.total_active_users) : undefined}
+            value={currentDayData?.total_active_users || 0}
+            description={`Active users ${formatDateDescription(selectedDate)}`}
+            trend={currentDayData && previousDayData ? getTrend(currentDayData.total_active_users, previousDayData.total_active_users) : undefined}
           />
           <MetricCard
             title="New Users"
-            value={todayData?.new_users || 0}
-            description="New signups today"
-            trend={todayData && yesterdayData ? getTrend(todayData.new_users, yesterdayData.new_users) : undefined}
+            value={currentDayData?.new_users || 0}
+            description={`New signups ${formatDateDescription(selectedDate)}`}
+            trend={currentDayData && previousDayData ? getTrend(currentDayData.new_users, previousDayData.new_users) : undefined}
           />
           <MetricCard
             title="Total Sessions"
-            value={todayData?.total_sessions || 0}
-            description="Sessions today"
-            trend={todayData && yesterdayData ? getTrend(todayData.total_sessions, yesterdayData.total_sessions) : undefined}
+            value={currentDayData?.total_sessions || 0}
+            description={`Sessions ${formatDateDescription(selectedDate)}`}
+            trend={currentDayData && previousDayData ? getTrend(currentDayData.total_sessions, previousDayData.total_sessions) : undefined}
           />
           <MetricCard
             title="Day 1 Retention"
