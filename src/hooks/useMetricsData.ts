@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { runBackfillIfNeeded } from './analytics/backfillService';
 import { fetchDailyActiveUsers, updateDailyActiveUsers } from './analytics/dailyActiveUsersService';
@@ -26,12 +25,17 @@ export const useMetricsData = (selectedDate?: Date) => {
     // Update daily stats with enhanced function
     await updateDailyActiveUsers();
     
+    // Calculate 30 days back from current date for feature usage
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    
     // Fetch all data
     const [dailyUsers, retention, engagement, features] = await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
       fetchEngagementData(selectedDate),
-      fetchFeatureUsage(selectedDate)
+      fetchFeatureUsage(startDate, endDate)
     ]);
     
     setDailyActiveUsers(dailyUsers);
@@ -46,16 +50,12 @@ export const useMetricsData = (selectedDate?: Date) => {
     refreshData();
   }, []);
 
-  // Refresh engagement and feature data when selected date changes
+  // Refresh engagement data when selected date changes (but keep feature usage as last 30 days)
   useEffect(() => {
     if (selectedDate && dailyActiveUsers.length > 0) {
       const refreshDateSpecificData = async () => {
-        const [engagement, features] = await Promise.all([
-          fetchEngagementData(selectedDate),
-          fetchFeatureUsage(selectedDate)
-        ]);
+        const engagement = await fetchEngagementData(selectedDate);
         setEngagementData(engagement);
-        setFeatureUsage(features);
       };
       refreshDateSpecificData();
     }

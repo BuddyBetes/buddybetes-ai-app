@@ -5,6 +5,7 @@ import MetricsHeader from '@/components/analytics/MetricsHeader';
 import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
 import OverallMetricsSection from '@/components/analytics/OverallMetricsSection';
 import RetentionMetricsSection from '@/components/analytics/RetentionMetricsSection';
+import FeatureUsageSection from '@/components/analytics/FeatureUsageSection';
 import HistoricalOverviewSection from '@/components/analytics/HistoricalOverviewSection';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
@@ -84,6 +85,16 @@ const Metrics = () => {
     return `${dayCount} days from ${new Date(earliest).toLocaleDateString()} to ${new Date(latest).toLocaleDateString()}`;
   };
 
+  // Calculate feature usage date range (last 30 days from current date)
+  const getFeatureUsageDateRange = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    return { startDate, endDate };
+  };
+
+  const { startDate: featureStartDate, endDate: featureEndDate } = getFeatureUsageDateRange();
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -104,7 +115,6 @@ const Metrics = () => {
           currentDayData={currentDayData}
           previousDayData={previousDayData}
           engagementData={engagementData}
-          featureUsage={featureUsage}
           formatDateDescription={formatDateDescription}
           getTrend={getTrend}
         />
@@ -112,6 +122,12 @@ const Metrics = () => {
         <OverallMetricsSection retentionData={retentionData} />
 
         <RetentionMetricsSection retentionData={retentionData} />
+
+        <FeatureUsageSection 
+          featureUsage={featureUsage}
+          startDate={featureStartDate}
+          endDate={featureEndDate}
+        />
 
         <HistoricalOverviewSection 
           dailyActiveUsers={dailyActiveUsers}
