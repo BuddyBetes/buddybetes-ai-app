@@ -44,14 +44,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, []);
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Add safe area padding at the top for iOS notch */}
       <div className="w-full h-safe-top bg-white fixed top-0 left-0 right-0 z-50"></div>
       
       {/* Only show AppHeader if not on assistant page */}
       {isAuthenticated && !isAssistant && <AppHeader />}
       
-      <main className={`flex-1 page-container ${isAssistant ? 'pt-0' : 'pt-16'} pb-24 px-4 mt-safe-top`}>
+      <main className={`flex-1 page-container ${isAssistant ? 'pt-0' : 'pt-16'} pb-24 px-4 mt-safe-top bg-gray-50 min-h-screen`}>
         {children}
       </main>
       
