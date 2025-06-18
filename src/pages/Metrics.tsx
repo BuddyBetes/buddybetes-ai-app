@@ -17,10 +17,16 @@ const Metrics = () => {
     dailyActiveUsers, 
     retentionData, 
     engagementData, 
-    featureUsage, 
+    featureUsage,
+    featureUsageStartDate,
+    featureUsageEndDate,
     loading, 
+    featureUsageLoading,
     refreshData,
     hasBackfilled,
+    handleFeatureUsageStartDateChange,
+    handleFeatureUsageEndDateChange,
+    resetFeatureUsageToLast30Days,
     getCurrentDayData,
     getPreviousDayData
   } = useMetricsData(selectedDate);
@@ -85,16 +91,6 @@ const Metrics = () => {
     return `${dayCount} days from ${new Date(earliest).toLocaleDateString()} to ${new Date(latest).toLocaleDateString()}`;
   };
 
-  // Calculate feature usage date range (last 30 days from current date)
-  const getFeatureUsageDateRange = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-    return { startDate, endDate };
-  };
-
-  const { startDate: featureStartDate, endDate: featureEndDate } = getFeatureUsageDateRange();
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -125,8 +121,12 @@ const Metrics = () => {
 
         <FeatureUsageSection 
           featureUsage={featureUsage}
-          startDate={featureStartDate}
-          endDate={featureEndDate}
+          startDate={featureUsageStartDate}
+          endDate={featureUsageEndDate}
+          onStartDateChange={handleFeatureUsageStartDateChange}
+          onEndDateChange={handleFeatureUsageEndDateChange}
+          onResetToLast30Days={resetFeatureUsageToLast30Days}
+          loading={featureUsageLoading}
         />
 
         <HistoricalOverviewSection 
