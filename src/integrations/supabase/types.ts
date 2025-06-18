@@ -539,6 +539,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_analytics_retention_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       has_active_subscription: {
         Args: { _user_id: string }
         Returns: boolean
