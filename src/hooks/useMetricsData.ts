@@ -32,6 +32,18 @@ interface FeatureUsage {
   usage_count: number;
 }
 
+interface AnalyticsResponse {
+  day_1_retention: number;
+  day_7_retention: number;
+  day_30_retention: number;
+  total_users: number;
+  total_registered_users: number;
+  total_active_users: number;
+  health_data_users: number;
+  ai_assistant_users: number;
+  engagement_rate: number;
+}
+
 export const useMetricsData = (selectedDate?: Date) => {
   const [dailyActiveUsers, setDailyActiveUsers] = useState<DailyActiveUser[]>([]);
   const [selectedDayData, setSelectedDayData] = useState<DailyActiveUser | null>(null);
@@ -98,16 +110,19 @@ export const useMetricsData = (selectedDate?: Date) => {
       }
 
       if (data) {
+        // Type cast the response to our expected structure
+        const analyticsData = data as AnalyticsResponse;
+        
         setRetentionData({
-          day_1_retention: data.day_1_retention || 0,
-          day_7_retention: data.day_7_retention || 0,
-          day_30_retention: data.day_30_retention || 0,
-          total_users: data.total_users || 0,
-          total_registered_users: data.total_registered_users || 0,
-          total_active_users: data.total_active_users || 0,
-          health_data_users: data.health_data_users || 0,
-          ai_assistant_users: data.ai_assistant_users || 0,
-          engagement_rate: data.engagement_rate || 0
+          day_1_retention: analyticsData.day_1_retention || 0,
+          day_7_retention: analyticsData.day_7_retention || 0,
+          day_30_retention: analyticsData.day_30_retention || 0,
+          total_users: analyticsData.total_users || 0,
+          total_registered_users: analyticsData.total_registered_users || 0,
+          total_active_users: analyticsData.total_active_users || 0,
+          health_data_users: analyticsData.health_data_users || 0,
+          ai_assistant_users: analyticsData.ai_assistant_users || 0,
+          engagement_rate: analyticsData.engagement_rate || 0
         });
       }
     } catch (error) {
