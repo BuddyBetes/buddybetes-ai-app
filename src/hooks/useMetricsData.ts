@@ -1,123 +1,138 @@
 
 import { useState, useEffect } from 'react';
-import { runBackfillIfNeeded } from './analytics/backfillService';
-import { fetchDailyActiveUsers, updateDailyActiveUsers } from './analytics/dailyActiveUsersService';
-import { fetchRetentionData } from './analytics/retentionService';
-import { fetchEngagementData } from './analytics/engagementService';
-import { fetchFeatureUsage } from './analytics/featureUsageService';
-import { getCurrentDayData, getPreviousDayData } from './analytics/utils';
-import type { DailyActiveUser, RetentionData, EngagementData, FeatureUsage } from './analytics/types';
+import { supabase } from '@/integrations/supabase/client';
 
-export const useMetricsData = (selectedDate?: Date) => {
+interface DailyActiveUser {
+  date: string;
+  total_active_users: number;
+  new_users: number;
+  returning_users: number;
+  total_sessions: number;
+}
+
+interface RetentionData {
+  day_1_retention: number;
+  day_7_retention: number;
+  day_30_retention: number;
+  total_users: number;
+}
+
+interface EngagementData {
+  hour: number;
+  activity_count: number;
+}
+
+interface FeatureUsage {
+  feature: string;
+  usage_count: number;
+}
+
+export const useMetricsData = () => {
   const [dailyActiveUsers, setDailyActiveUsers] = useState<DailyActiveUser[]>([]);
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [featureUsageLoading, setFeatureUsageLoading] = useState(false);
-  const [hasBackfilled, setHasBackfilled] = useState(false);
 
-  // Initialize feature usage date range (last 30 days)
-  const [featureUsageStartDate, setFeatureUsageStartDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date;
-  });
-  const [featureUsageEndDate, setFeatureUsageEndDate] = useState(() => new Date());
+  const fetchDailyActiveUsers = async () => {
+    const { data, error } = await supabase
+      .from('daily_active_users')
+      .select('*')
+      .order('date', { ascending: false })
+      .limit(30);
 
-  const refreshData = async () => {
-    setLoading(true);
-    console.log('🔄 Refreshing analytics data...');
-    
-    // Run the backfill to ensure data is up to date with improved logic
-    const backfillSuccess = await runBackfillIfNeeded();
-    setHasBackfilled(backfillSuccess);
-    
-    // Update daily stats with enhanced function (now uses real account creation dates)
-    await updateDailyActiveUsers();
-    
-    // Fetch core data
-    const [dailyUsers, retention, engagement] = await Promise.all([
-      fetchDailyActiveUsers(),
-      fetchRetentionData(),
-      fetchEngagementData(selectedDate)
-    ]);
-    
-    setDailyActiveUsers(dailyUsers);
-    setRetentionData(retention);
-    setEngagementData(engagement);
-    
-    // Fetch feature usage with current date range
-    await refreshFeatureUsage();
-    
-    console.log('✅ Analytics data refresh completed');
-    setLoading(false);
-  };
-
-  const refreshFeatureUsage = async () => {
-    setFeatureUsageLoading(true);
-    try {
-      const features = await fetchFeatureUsage(featureUsageStartDate, featureUsageEndDate);
-      setFeatureUsage(features);
-    } finally {
-      setFeatureUsageLoading(false);
+    if (!error && data) {
+      setDailyActiveUsers(data);
     }
   };
 
-  const handleFeatureUsageStartDateChange = (date: Date) => {
-    setFeatureUsageStartDate(date);
+  const fetchRetentionData = async () => {
+    const { data, error } = await supabase
+      .from('user_retention_cohorts')
+      .select('day_1_return, day_7_return, day_30_return');
+
+    if (!error && data) {
+      const totalUsers = data.length;
+      const day1Retention = data.filter(u => u.day_1_return).length;
+      const day7Retention = data.filter(u => u.day_7_return).length;
+      const day30Retention = data.filter(u => u.day_30_return).length;
+
+      setRetentionData({
+        day_1_retention: totalUsers > 0 ? (day1Retention / totalUsers) * 100 : 0,
+        day_7_retention: totalUsers > 0 ? (day7Retention / totalUsers) * 100 : 0,
+        day_30_retention: totalUsers > 0 ? (day30Retention / totalUsers) * 100 : 0,
+        total_users: totalUsers
+      });
+    }
   };
 
-  const handleFeatureUsageEndDateChange = (date: Date) => {
-    setFeatureUsageEndDate(date);
+  const fetchEngagementData = async () => {
+    const { data, error } = await supabase
+      .from('user_activity_logs')
+      .select('timestamp')
+      .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+    if (!error && data) {
+      const hourlyData: { [key: number]: number } = {};
+      
+      data.forEach(log => {
+        const hour = new Date(log.timestamp).getHours();
+        hourlyData[hour] = (hourlyData[hour] || 0) + 1;
+      });
+
+      const engagementArray = Array.from({ length: 24 }, (_, hour) => ({
+        hour,
+        activity_count: hourlyData[hour] || 0
+      }));
+
+      setEngagementData(engagementArray);
+    }
   };
 
-  const resetFeatureUsageToLast30Days = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-    setFeatureUsageStartDate(startDate);
-    setFeatureUsageEndDate(endDate);
+  const fetchFeatureUsage = async () => {
+    const { data, error } = await supabase
+      .from('user_activity_logs')
+      .select('action_target')
+      .eq('action_type', 'feature_click')
+      .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+    if (!error && data) {
+      const featureCount: { [key: string]: number } = {};
+      
+      data.forEach(log => {
+        featureCount[log.action_target] = (featureCount[log.action_target] || 0) + 1;
+      });
+
+      const featureArray = Object.entries(featureCount)
+        .map(([feature, count]) => ({ feature, usage_count: count }))
+        .sort((a, b) => b.usage_count - a.usage_count)
+        .slice(0, 10);
+
+      setFeatureUsage(featureArray);
+    }
+  };
+
+  const refreshData = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchDailyActiveUsers(),
+      fetchRetentionData(),
+      fetchEngagementData(),
+      fetchFeatureUsage()
+    ]);
+    setLoading(false);
   };
 
   useEffect(() => {
     refreshData();
   }, []);
 
-  // Refresh engagement data when selected date changes
-  useEffect(() => {
-    if (selectedDate && dailyActiveUsers.length > 0) {
-      const refreshDateSpecificData = async () => {
-        console.log('🔄 Refreshing date-specific engagement data for:', selectedDate.toDateString());
-        const engagement = await fetchEngagementData(selectedDate);
-        setEngagementData(engagement);
-      };
-      refreshDateSpecificData();
-    }
-  }, [selectedDate, dailyActiveUsers.length]);
-
-  // Refresh feature usage when date range changes
-  useEffect(() => {
-    if (dailyActiveUsers.length > 0) {
-      refreshFeatureUsage();
-    }
-  }, [featureUsageStartDate, featureUsageEndDate, dailyActiveUsers.length]);
-
   return {
     dailyActiveUsers,
     retentionData,
     engagementData,
     featureUsage,
-    featureUsageStartDate,
-    featureUsageEndDate,
     loading,
-    featureUsageLoading,
-    refreshData,
-    hasBackfilled,
-    handleFeatureUsageStartDateChange,
-    handleFeatureUsageEndDateChange,
-    resetFeatureUsageToLast30Days,
-    getCurrentDayData: () => getCurrentDayData(dailyActiveUsers, selectedDate),
-    getPreviousDayData: () => getPreviousDayData(dailyActiveUsers, selectedDate)
+    refreshData
   };
 };

@@ -1,138 +1,102 @@
 
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import MetricsPasswordProtection from '@/components/analytics/MetricsPasswordProtection';
-import MetricsHeader from '@/components/analytics/MetricsHeader';
-import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
-import OverallMetricsSection from '@/components/analytics/OverallMetricsSection';
-import RetentionMetricsSection from '@/components/analytics/RetentionMetricsSection';
-import FeatureUsageSection from '@/components/analytics/FeatureUsageSection';
-import HistoricalOverviewSection from '@/components/analytics/HistoricalOverviewSection';
+import MetricCard from '@/components/analytics/MetricCard';
+import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
+import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Metrics = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  
   const { 
     dailyActiveUsers, 
     retentionData, 
     engagementData, 
-    featureUsage,
-    featureUsageStartDate,
-    featureUsageEndDate,
+    featureUsage, 
     loading, 
-    featureUsageLoading,
-    refreshData,
-    hasBackfilled,
-    handleFeatureUsageStartDateChange,
-    handleFeatureUsageEndDateChange,
-    resetFeatureUsageToLast30Days,
-    getCurrentDayData,
-    getPreviousDayData
-  } = useMetricsData(selectedDate);
+    refreshData 
+  } = useMetricsData();
 
   if (!isAuthenticated) {
     return <MetricsPasswordProtection onAuthenticated={() => setIsAuthenticated(true)} />;
   }
 
-  const currentDayData = getCurrentDayData();
-  const previousDayData = getPreviousDayData();
+  const todayData = dailyActiveUsers[0];
+  const yesterdayData = dailyActiveUsers[1];
 
-  // Fixed trend calculation with better debugging
   const getTrend = (today: number, yesterday: number) => {
-    console.log('Trend calculation debug:', { 
-      today, 
-      yesterday, 
-      selectedDate: selectedDate.toDateString(),
-      currentDayData,
-      previousDayData 
-    });
-    
-    if (!yesterday || yesterday === 0) return null;
-    
+    if (!yesterday) return null;
     const change = ((today - yesterday) / yesterday) * 100;
-    const result = {
+    return {
       value: Math.abs(change),
       isPositive: change >= 0
     };
-    
-    console.log('Calculated trend:', { change, result });
-    return result;
-  };
-
-  // Set date range from June 1, 2025 onwards
-  const minDate = new Date('2025-06-01');
-  const maxDate = dailyActiveUsers.length > 0 
-    ? new Date(dailyActiveUsers[0].date) 
-    : new Date();
-
-  const formatDateDescription = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return 'today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'yesterday';
-    } else {
-      return `on ${date.toLocaleDateString()}`;
-    }
-  };
-
-  // Calculate actual date range for display
-  const getDateRangeMessage = () => {
-    if (dailyActiveUsers.length === 0) return 'No data available';
-    
-    const earliest = dailyActiveUsers[dailyActiveUsers.length - 1].date;
-    const latest = dailyActiveUsers[0].date;
-    const dayCount = dailyActiveUsers.length;
-    
-    return `${dayCount} days from ${new Date(earliest).toLocaleDateString()} to ${new Date(latest).toLocaleDateString()}`;
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <MetricsHeader
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          minDate={minDate}
-          maxDate={maxDate}
-          onRefresh={refreshData}
-          loading={loading}
-          hasBackfilled={hasBackfilled}
-          dailyActiveUsersLength={dailyActiveUsers.length}
-          getDateRangeMessage={getDateRangeMessage}
-        />
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <Button onClick={refreshData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
 
-        <DailyMetricsSection
-          selectedDate={selectedDate}
-          currentDayData={currentDayData}
-          previousDayData={previousDayData}
-          engagementData={engagementData}
-          formatDateDescription={formatDateDescription}
-          getTrend={getTrend}
-        />
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <MetricCard
+            title="Daily Active Users"
+            value={todayData?.total_active_users || 0}
+            description="Active users today"
+            trend={todayData && yesterdayData ? getTrend(todayData.total_active_users, yesterdayData.total_active_users) : undefined}
+          />
+          <MetricCard
+            title="New Users"
+            value={todayData?.new_users || 0}
+            description="New signups today"
+            trend={todayData && yesterdayData ? getTrend(todayData.new_users, yesterdayData.new_users) : undefined}
+          />
+          <MetricCard
+            title="Total Sessions"
+            value={todayData?.total_sessions || 0}
+            description="Sessions today"
+            trend={todayData && yesterdayData ? getTrend(todayData.total_sessions, yesterdayData.total_sessions) : undefined}
+          />
+          <MetricCard
+            title="Day 1 Retention"
+            value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
+            description="Users returning after 1 day"
+          />
+        </div>
 
-        <OverallMetricsSection retentionData={retentionData} />
+        {/* Retention Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <MetricCard
+            title="Day 7 Retention"
+            value={retentionData ? `${retentionData.day_7_retention.toFixed(1)}%` : '0%'}
+            description="Users returning after 7 days"
+          />
+          <MetricCard
+            title="Day 30 Retention"
+            value={retentionData ? `${retentionData.day_30_retention.toFixed(1)}%` : '0%'}
+            description="Users returning after 30 days"
+          />
+          <MetricCard
+            title="Total Users"
+            value={retentionData?.total_users || 0}
+            description="All registered users"
+          />
+        </div>
 
-        <RetentionMetricsSection retentionData={retentionData} />
-
-        <FeatureUsageSection 
-          featureUsage={featureUsage}
-          startDate={featureUsageStartDate}
-          endDate={featureUsageEndDate}
-          onStartDateChange={handleFeatureUsageStartDateChange}
-          onEndDateChange={handleFeatureUsageEndDateChange}
-          onResetToLast30Days={resetFeatureUsageToLast30Days}
-          loading={featureUsageLoading}
-        />
-
-        <HistoricalOverviewSection 
-          dailyActiveUsers={dailyActiveUsers}
-          retentionData={retentionData}
-        />
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <EngagementHeatmap data={engagementData} />
+          <FeatureUsageChart data={featureUsage} />
+        </div>
       </div>
     </div>
   );
