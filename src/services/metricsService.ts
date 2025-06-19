@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { DailyActiveUser, RetentionData, EngagementData, FeatureUsage, AnalyticsResponse } from '@/types/metrics';
 
@@ -19,7 +18,7 @@ export const fetchDailyActiveUsers = async (): Promise<DailyActiveUser[]> => {
   }
 };
 
-export const fetchAvailableDates = async (): Promise<Date[]> => {
+export const fetchAvailableDates = async (): Promise<string[]> => {
   const today = new Date().toISOString().split('T')[0];
   
   const { data, error } = await supabase
@@ -29,25 +28,19 @@ export const fetchAvailableDates = async (): Promise<Date[]> => {
     .order('date', { ascending: false });
 
   if (!error && data) {
-    return data.map(item => new Date(item.date + 'T00:00:00'));
+    // Return date strings directly - no timezone conversion issues
+    return data.map(item => item.date);
   } else {
     console.error('Error fetching available dates:', error);
     return [];
   }
 };
 
-export const fetchSpecificDateData = async (date: Date): Promise<{
+export const fetchSpecificDateData = async (dateString: string): Promise<{
   selectedDayData: DailyActiveUser | null;
   previousDayData: DailyActiveUser | null;
 }> => {
-  // Fix date formatting to ensure consistent timezone handling
-  const selectedDate = new Date(date);
-  selectedDate.setHours(0, 0, 0, 0); // Reset time to start of day
-  const dateString = selectedDate.toISOString().split('T')[0];
-  
   console.log('🔍 fetchSpecificDateData called for:', dateString);
-  console.log('🔍 Original date object:', date);
-  console.log('🔍 Normalized date object:', selectedDate);
   
   // Get data for selected date
   const { data: dayData, error: dayError } = await supabase
@@ -59,16 +52,15 @@ export const fetchSpecificDateData = async (date: Date): Promise<{
   let selectedDayData: DailyActiveUser | null = null;
   if (!dayError && dayData) {
     console.log('✅ Found selected day data:', dayData);
-    console.log('✅ Selected day new_users:', dayData.new_users);
     selectedDayData = dayData;
   } else {
     console.log('❌ No data found for selected date or error:', dayError);
   }
 
-  // Get data for previous day for comparison
-  const previousDate = new Date(selectedDate);
-  previousDate.setDate(previousDate.getDate() - 1);
-  const previousDateString = previousDate.toISOString().split('T')[0];
+  // Get data for previous day - calculate previous date as string
+  const date = new Date(dateString + 'T12:00:00.000Z'); // Use noon UTC to avoid timezone issues
+  date.setUTCDate(date.getUTCDate() - 1);
+  const previousDateString = date.toISOString().split('T')[0];
 
   const { data: prevData, error: prevError } = await supabase
     .from('daily_active_users')
@@ -79,7 +71,6 @@ export const fetchSpecificDateData = async (date: Date): Promise<{
   let previousDayData: DailyActiveUser | null = null;
   if (!prevError && prevData) {
     console.log('✅ Found previous day data:', prevData);
-    console.log('✅ Previous day new_users:', prevData.new_users);
     previousDayData = prevData;
   } else {
     console.log('❌ No previous day data found or error:', prevError);

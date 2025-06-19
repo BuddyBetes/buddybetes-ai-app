@@ -10,14 +10,14 @@ import {
   fetchAvailableDates
 } from '@/services/metricsService';
 
-export const useMetricsData = (selectedDate?: Date) => {
+export const useMetricsData = (selectedDateString?: string) => {
   const [dailyActiveUsers, setDailyActiveUsers] = useState<DailyActiveUser[]>([]);
   const [selectedDayData, setSelectedDayData] = useState<DailyActiveUser | null>(null);
   const [previousDayData, setPreviousDayData] = useState<DailyActiveUser | null>(null);
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
-  const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshData = async () => {
@@ -37,8 +37,8 @@ export const useMetricsData = (selectedDate?: Date) => {
     setFeatureUsage(features);
     setAvailableDates(dates);
 
-    if (selectedDate) {
-      const { selectedDayData: dayData, previousDayData: prevData } = await fetchSpecificDateData(selectedDate);
+    if (selectedDateString) {
+      const { selectedDayData: dayData, previousDayData: prevData } = await fetchSpecificDateData(selectedDateString);
       setSelectedDayData(dayData);
       setPreviousDayData(prevData);
     }
@@ -51,13 +51,13 @@ export const useMetricsData = (selectedDate?: Date) => {
   }, []);
 
   useEffect(() => {
-    if (selectedDate) {
-      fetchSpecificDateData(selectedDate).then(({ selectedDayData: dayData, previousDayData: prevData }) => {
+    if (selectedDateString) {
+      fetchSpecificDateData(selectedDateString).then(({ selectedDayData: dayData, previousDayData: prevData }) => {
         setSelectedDayData(dayData);
         setPreviousDayData(prevData);
       });
     }
-  }, [selectedDate]);
+  }, [selectedDateString]);
 
   return {
     dailyActiveUsers,

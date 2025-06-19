@@ -8,21 +8,23 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface DayNavigatorProps {
-  selectedDate: Date;
-  onDateChange: (date: Date) => void;
-  availableDates: Date[];
+  selectedDateString: string;
+  onDateChange: (dateString: string) => void;
+  availableDates: string[];
 }
 
 const DayNavigator: React.FC<DayNavigatorProps> = ({
-  selectedDate,
+  selectedDateString,
   onDateChange,
   availableDates
 }) => {
-  const getNextAvailableDate = (currentDate: Date, direction: 'next' | 'previous') => {
-    const sortedDates = [...availableDates].sort((a, b) => a.getTime() - b.getTime());
-    const currentIndex = sortedDates.findIndex(date => 
-      date.toDateString() === currentDate.toDateString()
-    );
+  // Convert string dates to Date objects for calendar component
+  const selectedDate = new Date(selectedDateString + 'T12:00:00.000Z');
+  const availableDateObjects = availableDates.map(dateStr => new Date(dateStr + 'T12:00:00.000Z'));
+
+  const getNextAvailableDate = (direction: 'next' | 'previous') => {
+    const sortedDates = [...availableDates].sort();
+    const currentIndex = sortedDates.findIndex(date => date === selectedDateString);
     
     if (direction === 'next') {
       return currentIndex < sortedDates.length - 1 ? sortedDates[currentIndex + 1] : null;
@@ -32,37 +34,45 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
   };
 
   const handlePreviousDay = () => {
-    const previousDate = getNextAvailableDate(selectedDate, 'previous');
+    const previousDate = getNextAvailableDate('previous');
     if (previousDate) {
       onDateChange(previousDate);
     }
   };
 
   const handleNextDay = () => {
-    const nextDate = getNextAvailableDate(selectedDate, 'next');
+    const nextDate = getNextAvailableDate('next');
     if (nextDate) {
       onDateChange(nextDate);
     }
   };
 
   const isDateAvailable = (date: Date) => {
-    return availableDates.some(availableDate => 
-      availableDate.toDateString() === date.toDateString()
-    );
+    const dateString = date.toISOString().split('T')[0];
+    return availableDates.includes(dateString);
   };
 
-  const canGoPrevious = getNextAvailableDate(selectedDate, 'previous') !== null;
-  const canGoNext = getNextAvailableDate(selectedDate, 'next') !== null;
+  const canGoPrevious = getNextAvailableDate('previous') !== null;
+  const canGoNext = getNextAvailableDate('next') !== null;
 
   const getMostRecentDate = () => {
     if (availableDates.length === 0) return null;
-    return [...availableDates].sort((a, b) => b.getTime() - a.getTime())[0];
+    return [...availableDates].sort().reverse()[0];
   };
 
   const getSecondMostRecentDate = () => {
     if (availableDates.length < 2) return null;
-    const sorted = [...availableDates].sort((a, b) => b.getTime() - a.getTime());
+    const sorted = [...availableDates].sort().reverse();
     return sorted[1];
+  };
+
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (date) {
+      const dateString = date.toISOString().split('T')[0];
+      if (availableDates.includes(dateString)) {
+        onDateChange(dateString);
+      }
+    }
   };
 
   return (
@@ -94,7 +104,7 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => date && onDateChange(date)}
+            onSelect={handleCalendarSelect}
             disabled={(date) => !isDateAvailable(date)}
             initialFocus
           />

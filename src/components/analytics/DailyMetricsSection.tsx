@@ -13,13 +13,13 @@ interface DailyActiveUser {
 }
 
 interface DailyMetricsSectionProps {
-  selectedDate: Date;
+  selectedDateString: string;
   dailyData: DailyActiveUser | null;
   previousDayData: DailyActiveUser | null;
 }
 
 const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
-  selectedDate,
+  selectedDateString,
   dailyData,
   previousDayData
 }) => {
@@ -31,6 +31,9 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
       isPositive: change >= 0
     };
   };
+
+  // Convert date string to Date object for formatting
+  const selectedDate = new Date(selectedDateString + 'T12:00:00.000Z');
 
   return (
     <TooltipProvider>

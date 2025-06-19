@@ -12,7 +12,7 @@ import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Metrics = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDateString, setSelectedDateString] = useState<string | null>(null);
 
   const { 
     selectedDayData,
@@ -23,15 +23,15 @@ const Metrics = () => {
     availableDates,
     loading, 
     refreshData 
-  } = useMetricsData(selectedDate || undefined);
+  } = useMetricsData(selectedDateString || undefined);
 
   // Set initial date to the most recent available date
   useEffect(() => {
-    if (availableDates.length > 0 && !selectedDate) {
-      const mostRecentDate = [...availableDates].sort((a, b) => b.getTime() - a.getTime())[0];
-      setSelectedDate(mostRecentDate);
+    if (availableDates.length > 0 && !selectedDateString) {
+      const mostRecentDate = [...availableDates].sort().reverse()[0];
+      setSelectedDateString(mostRecentDate);
     }
-  }, [availableDates, selectedDate]);
+  }, [availableDates, selectedDateString]);
 
   if (!isAuthenticated) {
     return <MetricsPasswordProtection onAuthenticated={() => setIsAuthenticated(true)} />;
@@ -52,17 +52,17 @@ const Metrics = () => {
         <OverviewMetricsSection retentionData={retentionData} />
 
         {/* Day Navigation - only show when we have available dates and a selected date */}
-        {availableDates.length > 0 && selectedDate && (
+        {availableDates.length > 0 && selectedDateString && (
           <>
             <DayNavigator
-              selectedDate={selectedDate}
-              onDateChange={setSelectedDate}
+              selectedDateString={selectedDateString}
+              onDateChange={setSelectedDateString}
               availableDates={availableDates}
             />
 
             {/* Daily Metrics */}
             <DailyMetricsSection
-              selectedDate={selectedDate}
+              selectedDateString={selectedDateString}
               dailyData={selectedDayData}
               previousDayData={previousDayData}
             />
