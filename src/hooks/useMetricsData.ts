@@ -71,7 +71,7 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   const fetchSpecificDateData = async (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
-    console.log('Fetching specific date data for:', dateString);
+    console.log('🔍 fetchSpecificDateData called for:', dateString);
     
     // Get data for selected date
     const { data: dayData, error: dayError } = await supabase
@@ -81,10 +81,12 @@ export const useMetricsData = (selectedDate?: Date) => {
       .single();
 
     if (!dayError && dayData) {
-      console.log('Selected day data:', dayData);
+      console.log('✅ Found selected day data:', dayData);
+      console.log('✅ About to set selectedDayData with new_users:', dayData.new_users);
       setSelectedDayData(dayData);
+      console.log('✅ setSelectedDayData called with:', dayData);
     } else {
-      console.log('No data found for selected date or error:', dayError);
+      console.log('❌ No data found for selected date or error:', dayError);
       setSelectedDayData(null);
     }
 
@@ -100,10 +102,12 @@ export const useMetricsData = (selectedDate?: Date) => {
       .single();
 
     if (!prevError && prevData) {
-      console.log('Previous day data:', prevData);
+      console.log('✅ Found previous day data:', prevData);
+      console.log('✅ About to set previousDayData with new_users:', prevData.new_users);
       setPreviousDayData(prevData);
+      console.log('✅ setPreviousDayData called with:', prevData);
     } else {
-      console.log('No previous day data found or error:', prevError);
+      console.log('❌ No previous day data found or error:', prevError);
       setPreviousDayData(null);
     }
   };
@@ -218,10 +222,30 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   useEffect(() => {
     if (selectedDate) {
-      console.log('Selected date changed, fetching data for:', selectedDate.toISOString().split('T')[0]);
-      fetchSpecificDateData(selectedDate);
+      console.log('🎯 useEffect triggered - Selected date changed, fetching data for:', selectedDate.toISOString().split('T')[0]);
+      console.log('🎯 Current selectedDayData before fetch:', selectedDayData);
+      console.log('🎯 Current previousDayData before fetch:', previousDayData);
+      
+      fetchSpecificDateData(selectedDate).then(() => {
+        console.log('🎯 fetchSpecificDateData completed');
+      });
     }
   }, [selectedDate]);
+
+  // Add logging whenever state changes
+  useEffect(() => {
+    console.log('🔄 selectedDayData state changed to:', selectedDayData);
+    if (selectedDayData) {
+      console.log('🔄 selectedDayData.new_users is now:', selectedDayData.new_users);
+    }
+  }, [selectedDayData]);
+
+  useEffect(() => {
+    console.log('🔄 previousDayData state changed to:', previousDayData);
+    if (previousDayData) {
+      console.log('🔄 previousDayData.new_users is now:', previousDayData.new_users);
+    }
+  }, [previousDayData]);
 
   return {
     dailyActiveUsers,
