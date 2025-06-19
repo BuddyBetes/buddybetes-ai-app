@@ -8,6 +8,11 @@ interface RetentionData {
   day_7_retention: number;
   day_30_retention: number;
   total_users: number;
+  total_registered_users: number;
+  total_active_users: number;
+  health_data_users: number;
+  ai_assistant_users: number;
+  engagement_rate: number;
 }
 
 interface OverviewMetricsSectionProps {
@@ -27,24 +32,24 @@ const OverviewMetricsSection: React.FC<OverviewMetricsSectionProps> = ({ retenti
           <MetricCard
             title="Day 1 Retention"
             value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 1 day"
-            tooltip="All-time: Percentage of users who used the app (logged glucose data or used AI assistant) within 1 day of account creation. Calculated from all users who signed up at least 1 day ago."
+            description="Users returning on/after day 1"
+            tooltip="All-time: Percentage of users who used the app on or after day 1 of account creation. Calculated from all users who signed up at least 1 day ago."
           />
           <MetricCard
             title="Day 7 Retention"
             value={retentionData ? `${retentionData.day_7_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 7 days"
-            tooltip="All-time: Percentage of users who used the app within 7 days of account creation. Calculated from all users who signed up at least 7 days ago."
+            description="Users returning on/after day 7"
+            tooltip="All-time: Percentage of users who used the app on or after day 7 of account creation. Calculated from all users who signed up at least 7 days ago."
           />
           <MetricCard
             title="Day 30 Retention"
             value={retentionData ? `${retentionData.day_30_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 30 days"
-            tooltip="All-time: Percentage of users who used the app within 30 days of account creation. Calculated from all users who signed up at least 30 days ago."
+            description="Users returning on/after day 30"
+            tooltip="All-time: Percentage of users who used the app on or after day 30 of account creation. Calculated from all users who signed up at least 30 days ago."
           />
           <MetricCard
             title="Total Users"
-            value={retentionData?.total_users || 0}
+            value={retentionData?.total_registered_users || 0}
             description="All registered users"
             tooltip="Total number of registered user accounts in the system from all time (from profiles table)."
           />

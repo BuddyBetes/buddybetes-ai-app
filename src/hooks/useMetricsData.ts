@@ -15,6 +15,11 @@ interface RetentionData {
   day_7_retention: number;
   day_30_retention: number;
   total_users: number;
+  total_registered_users: number;
+  total_active_users: number;
+  health_data_users: number;
+  ai_assistant_users: number;
+  engagement_rate: number;
 }
 
 interface EngagementData {
@@ -84,129 +89,39 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   const fetchRetentionData = async () => {
     try {
-      // Get total users from profiles table (all-time)
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, created_at');
+      // Use the existing database function which has SECURITY DEFINER privileges
+      const { data, error } = await supabase.rpc('get_analytics_retention_data');
 
-      if (profilesError) throw profilesError;
+      if (error) {
+        console.error('Error fetching retention data:', error);
+        throw error;
+      }
 
-      const totalUsers = profilesData?.length || 0;
-
-      if (totalUsers === 0) {
+      if (data) {
         setRetentionData({
-          day_1_retention: 0,
-          day_7_retention: 0,
-          day_30_retention: 0,
-          total_users: 0
+          day_1_retention: data.day_1_retention || 0,
+          day_7_retention: data.day_7_retention || 0,
+          day_30_retention: data.day_30_retention || 0,
+          total_users: data.total_users || 0,
+          total_registered_users: data.total_registered_users || 0,
+          total_active_users: data.total_active_users || 0,
+          health_data_users: data.health_data_users || 0,
+          ai_assistant_users: data.ai_assistant_users || 0,
+          engagement_rate: data.engagement_rate || 0
         });
-        return;
       }
-
-      // Calculate all-time retention rates
-      const today = new Date();
-      let day1ReturnUsers = 0;
-      let day7ReturnUsers = 0;
-      let day30ReturnUsers = 0;
-      let day1EligibleUsers = 0;
-      let day7EligibleUsers = 0;
-      let day30EligibleUsers = 0;
-
-      for (const profile of profilesData) {
-        const signupDate = new Date(profile.created_at);
-        const daysSinceSignup = Math.floor((today.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        // Check if user is eligible for each retention period
-        if (daysSinceSignup >= 1) {
-          day1EligibleUsers++;
-          
-          // Check if user had activity within 1 day of signup
-          const { data: day1Activity } = await supabase
-            .from('glucose_logs')
-            .select('created_at')
-            .eq('user_id', profile.id)
-            .gte('created_at', signupDate.toISOString())
-            .lte('created_at', new Date(signupDate.getTime() + 24 * 60 * 60 * 1000).toISOString())
-            .limit(1);
-
-          const { data: day1AssistantActivity } = await supabase
-            .from('assistant_conversations')
-            .select('created_at')
-            .eq('user_id', profile.id)
-            .gte('created_at', signupDate.toISOString())
-            .lte('created_at', new Date(signupDate.getTime() + 24 * 60 * 60 * 1000).toISOString())
-            .limit(1);
-
-          if ((day1Activity && day1Activity.length > 0) || (day1AssistantActivity && day1AssistantActivity.length > 0)) {
-            day1ReturnUsers++;
-          }
-        }
-
-        if (daysSinceSignup >= 7) {
-          day7EligibleUsers++;
-          
-          // Check if user had activity within 7 days of signup
-          const { data: day7Activity } = await supabase
-            .from('glucose_logs')
-            .select('created_at')
-            .eq('user_id', profile.id)
-            .gte('created_at', signupDate.toISOString())
-            .lte('created_at', new Date(signupDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString())
-            .limit(1);
-
-          const { data: day7AssistantActivity } = await supabase
-            .from('assistant_conversations')
-            .select('created_at')
-            .eq('user_id', profile.id)
-            .gte('created_at', signupDate.toISOString())
-            .lte('created_at', new Date(signupDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString())
-            .limit(1);
-
-          if ((day7Activity && day7Activity.length > 0) || (day7AssistantActivity && day7AssistantActivity.length > 0)) {
-            day7ReturnUsers++;
-          }
-        }
-
-        if (daysSinceSignup >= 30) {
-          day30EligibleUsers++;
-          
-          // Check if user had activity within 30 days of signup
-          const { data: day30Activity } = await supabase
-            .from('glucose_logs')
-            .select('created_at')
-            .eq('user_id', profile.id)
-            .gte('created_at', signupDate.toISOString())
-            .lte('created_at', new Date(signupDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())
-            .limit(1);
-
-          const { data: day30AssistantActivity } = await supabase
-            .from('assistant_conversations')
-            .select('created_at')
-            .eq('user_id', profile.id)
-            .gte('created_at', signupDate.toISOString())
-            .lte('created_at', new Date(signupDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())
-            .limit(1);
-
-          if ((day30Activity && day30Activity.length > 0) || (day30AssistantActivity && day30AssistantActivity.length > 0)) {
-            day30ReturnUsers++;
-          }
-        }
-      }
-
-      setRetentionData({
-        day_1_retention: day1EligibleUsers > 0 ? (day1ReturnUsers / day1EligibleUsers) * 100 : 0,
-        day_7_retention: day7EligibleUsers > 0 ? (day7ReturnUsers / day7EligibleUsers) * 100 : 0,
-        day_30_retention: day30EligibleUsers > 0 ? (day30ReturnUsers / day30EligibleUsers) * 100 : 0,
-        total_users: totalUsers
-      });
-
     } catch (error) {
       console.error('Error fetching retention data:', error);
       setRetentionData({
         day_1_retention: 0,
         day_7_retention: 0,
         day_30_retention: 0,
-        total_users: 0
+        total_users: 0,
+        total_registered_users: 0,
+        total_active_users: 0,
+        health_data_users: 0,
+        ai_assistant_users: 0,
+        engagement_rate: 0
       });
     }
   };
