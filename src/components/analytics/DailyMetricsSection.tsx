@@ -32,10 +32,6 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
     };
   };
 
-  console.log('🎯 DailyMetricsSection render - selectedDate:', format(selectedDate, 'yyyy-MM-dd'));
-  console.log('🎯 DailyMetricsSection render - dailyData:', dailyData);
-  console.log('🎯 DailyMetricsSection render - dailyData new_users:', dailyData?.new_users);
-
   return (
     <TooltipProvider>
       <div className="mb-8">

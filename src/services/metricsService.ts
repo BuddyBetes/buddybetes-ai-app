@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { DailyActiveUser, RetentionData, EngagementData, FeatureUsage, AnalyticsResponse } from '@/types/metrics';
 
