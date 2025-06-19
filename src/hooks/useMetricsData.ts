@@ -54,6 +54,7 @@ export const useMetricsData = (selectedDate?: Date) => {
   const [loading, setLoading] = useState(true);
 
   const fetchDailyActiveUsers = async () => {
+    console.log('Fetching daily active users...');
     const { data, error } = await supabase
       .from('daily_active_users')
       .select('*')
@@ -61,12 +62,16 @@ export const useMetricsData = (selectedDate?: Date) => {
       .limit(30);
 
     if (!error && data) {
+      console.log('Daily active users data:', data);
       setDailyActiveUsers(data);
+    } else {
+      console.error('Error fetching daily active users:', error);
     }
   };
 
   const fetchSpecificDateData = async (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
+    console.log('Fetching specific date data for:', dateString);
     
     // Get data for selected date
     const { data: dayData, error: dayError } = await supabase
@@ -76,8 +81,10 @@ export const useMetricsData = (selectedDate?: Date) => {
       .single();
 
     if (!dayError && dayData) {
+      console.log('Selected day data:', dayData);
       setSelectedDayData(dayData);
     } else {
+      console.log('No data found for selected date or error:', dayError);
       setSelectedDayData(null);
     }
 
@@ -93,14 +100,17 @@ export const useMetricsData = (selectedDate?: Date) => {
       .single();
 
     if (!prevError && prevData) {
+      console.log('Previous day data:', prevData);
       setPreviousDayData(prevData);
     } else {
+      console.log('No previous day data found or error:', prevError);
       setPreviousDayData(null);
     }
   };
 
   const fetchRetentionData = async () => {
     try {
+      console.log('Fetching retention data...');
       // Use the existing database function which has SECURITY DEFINER privileges
       const { data, error } = await supabase.rpc('get_analytics_retention_data');
 
@@ -110,8 +120,9 @@ export const useMetricsData = (selectedDate?: Date) => {
       }
 
       if (data) {
-        // Type cast the response to our expected structure
-        const analyticsData = data as AnalyticsResponse;
+        console.log('Raw retention data from RPC:', data);
+        // Type cast the response using unknown first to fix TypeScript error
+        const analyticsData = data as unknown as AnalyticsResponse;
         
         setRetentionData({
           day_1_retention: analyticsData.day_1_retention || 0,
@@ -188,6 +199,7 @@ export const useMetricsData = (selectedDate?: Date) => {
   };
 
   const refreshData = async () => {
+    console.log('Refreshing all data...');
     setLoading(true);
     await Promise.all([
       fetchDailyActiveUsers(),
@@ -197,6 +209,7 @@ export const useMetricsData = (selectedDate?: Date) => {
       selectedDate ? fetchSpecificDateData(selectedDate) : Promise.resolve()
     ]);
     setLoading(false);
+    console.log('Data refresh completed');
   };
 
   useEffect(() => {
@@ -205,6 +218,7 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   useEffect(() => {
     if (selectedDate) {
+      console.log('Selected date changed, fetching data for:', selectedDate.toISOString().split('T')[0]);
       fetchSpecificDateData(selectedDate);
     }
   }, [selectedDate]);
