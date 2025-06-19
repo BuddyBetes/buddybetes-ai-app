@@ -23,19 +23,21 @@ export const useMetricsData = (selectedDateString?: string) => {
   const refreshData = async () => {
     setLoading(true);
     
-    const [dailyUsers, retention, engagement, features, dates] = await Promise.all([
+    const [dailyUsers, retention, features, dates] = await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
-      fetchEngagementData(),
       fetchFeatureUsage(),
       fetchAvailableDates()
     ]);
 
     setDailyActiveUsers(dailyUsers);
     setRetentionData(retention);
-    setEngagementData(engagement);
     setFeatureUsage(features);
     setAvailableDates(dates);
+
+    // Fetch engagement data for selected date
+    const engagement = await fetchEngagementData(selectedDateString);
+    setEngagementData(engagement);
 
     if (selectedDateString) {
       const { selectedDayData: dayData, previousDayData: prevData } = await fetchSpecificDateData(selectedDateString);
@@ -52,9 +54,15 @@ export const useMetricsData = (selectedDateString?: string) => {
 
   useEffect(() => {
     if (selectedDateString) {
+      // Fetch specific date data
       fetchSpecificDateData(selectedDateString).then(({ selectedDayData: dayData, previousDayData: prevData }) => {
         setSelectedDayData(dayData);
         setPreviousDayData(prevData);
+      });
+
+      // Fetch engagement data for the selected date
+      fetchEngagementData(selectedDateString).then(engagement => {
+        setEngagementData(engagement);
       });
     }
   }, [selectedDateString]);

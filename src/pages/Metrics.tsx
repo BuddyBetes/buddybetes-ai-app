@@ -79,7 +79,10 @@ const Metrics = () => {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EngagementHeatmap data={engagementData} />
+          <EngagementHeatmap 
+            data={engagementData} 
+            selectedDateString={selectedDateString || undefined}
+          />
           <FeatureUsageChart data={featureUsage} />
         </div>
       </div>

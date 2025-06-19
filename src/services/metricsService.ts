@@ -124,26 +124,59 @@ export const fetchRetentionData = async (): Promise<RetentionData | null> => {
   }
 };
 
-export const fetchEngagementData = async (): Promise<EngagementData[]> => {
+export const fetchEngagementData = async (selectedDateString?: string): Promise<EngagementData[]> => {
+  console.log('🔍 fetchEngagementData called for date:', selectedDateString);
+  
+  if (!selectedDateString) {
+    console.log('❌ No date provided for engagement data');
+    return Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      activity_count: 0
+    }));
+  }
+
+  // Query activity logs for the specific date
+  const startOfDay = `${selectedDateString}T00:00:00.000Z`;
+  const endOfDay = `${selectedDateString}T23:59:59.999Z`;
+
   const { data, error } = await supabase
     .from('user_activity_logs')
     .select('timestamp')
-    .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+    .gte('timestamp', startOfDay)
+    .lte('timestamp', endOfDay);
 
-  if (!error && data) {
-    const hourlyData: { [key: number]: number } = {};
-    
-    data.forEach(log => {
-      const hour = new Date(log.timestamp).getHours();
-      hourlyData[hour] = (hourlyData[hour] || 0) + 1;
-    });
-
+  if (error) {
+    console.error('Error fetching engagement data:', error);
     return Array.from({ length: 24 }, (_, hour) => ({
       hour,
-      activity_count: hourlyData[hour] || 0
+      activity_count: 0
     }));
   }
-  return [];
+
+  if (!data || data.length === 0) {
+    console.log('📊 No activity data found for date:', selectedDateString);
+    return Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      activity_count: 0
+    }));
+  }
+
+  console.log('✅ Found activity data:', data.length, 'activities for', selectedDateString);
+
+  // Count activities by UTC hour
+  const hourlyData: { [key: number]: number } = {};
+  
+  data.forEach(log => {
+    // Extract UTC hour from timestamp
+    const utcHour = new Date(log.timestamp).getUTCHours();
+    hourlyData[utcHour] = (hourlyData[utcHour] || 0) + 1;
+  });
+
+  // Return complete 24-hour array
+  return Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    activity_count: hourlyData[hour] || 0
+  }));
 };
 
 export const fetchFeatureUsage = async (): Promise<FeatureUsage[]> => {
