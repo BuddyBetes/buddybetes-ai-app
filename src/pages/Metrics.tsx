@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import MetricsPasswordProtection from '@/components/analytics/MetricsPasswordProtection';
@@ -12,25 +12,30 @@ import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Metrics = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const { 
     selectedDayData,
     previousDayData,
     retentionData, 
     engagementData, 
-    featureUsage, 
+    featureUsage,
+    availableDates,
     loading, 
     refreshData 
-  } = useMetricsData(selectedDate);
+  } = useMetricsData(selectedDate || undefined);
+
+  // Set initial date to the most recent available date
+  useEffect(() => {
+    if (availableDates.length > 0 && !selectedDate) {
+      const mostRecentDate = [...availableDates].sort((a, b) => b.getTime() - a.getTime())[0];
+      setSelectedDate(mostRecentDate);
+    }
+  }, [availableDates, selectedDate]);
 
   if (!isAuthenticated) {
     return <MetricsPasswordProtection onAuthenticated={() => setIsAuthenticated(true)} />;
   }
-
-  // Analytics data started on June 1, 2025
-  const minDate = new Date('2025-06-01');
-  const maxDate = new Date();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -46,20 +51,31 @@ const Metrics = () => {
         {/* Overview Metrics */}
         <OverviewMetricsSection retentionData={retentionData} />
 
-        {/* Day Navigation */}
-        <DayNavigator
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          minDate={minDate}
-          maxDate={maxDate}
-        />
+        {/* Day Navigation - only show when we have available dates and a selected date */}
+        {availableDates.length > 0 && selectedDate && (
+          <>
+            <DayNavigator
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              availableDates={availableDates}
+            />
 
-        {/* Daily Metrics */}
-        <DailyMetricsSection
-          selectedDate={selectedDate}
-          dailyData={selectedDayData}
-          previousDayData={previousDayData}
-        />
+            {/* Daily Metrics */}
+            <DailyMetricsSection
+              selectedDate={selectedDate}
+              dailyData={selectedDayData}
+              previousDayData={previousDayData}
+            />
+          </>
+        )}
+
+        {/* Show message when no dates available */}
+        {availableDates.length === 0 && !loading && (
+          <div className="text-center py-8 text-gray-500">
+            <p>No historical data available yet.</p>
+            <p className="text-sm">Daily metrics will appear here once users start using the app.</p>
+          </div>
+        )}
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

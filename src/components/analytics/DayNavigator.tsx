@@ -10,34 +10,60 @@ import { cn } from '@/lib/utils';
 interface DayNavigatorProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
-  minDate: Date;
-  maxDate: Date;
+  availableDates: Date[];
 }
 
 const DayNavigator: React.FC<DayNavigatorProps> = ({
   selectedDate,
   onDateChange,
-  minDate,
-  maxDate
+  availableDates
 }) => {
+  const getNextAvailableDate = (currentDate: Date, direction: 'next' | 'previous') => {
+    const sortedDates = [...availableDates].sort((a, b) => a.getTime() - b.getTime());
+    const currentIndex = sortedDates.findIndex(date => 
+      date.toDateString() === currentDate.toDateString()
+    );
+    
+    if (direction === 'next') {
+      return currentIndex < sortedDates.length - 1 ? sortedDates[currentIndex + 1] : null;
+    } else {
+      return currentIndex > 0 ? sortedDates[currentIndex - 1] : null;
+    }
+  };
+
   const handlePreviousDay = () => {
-    const previousDay = new Date(selectedDate);
-    previousDay.setDate(previousDay.getDate() - 1);
-    if (previousDay >= minDate) {
-      onDateChange(previousDay);
+    const previousDate = getNextAvailableDate(selectedDate, 'previous');
+    if (previousDate) {
+      onDateChange(previousDate);
     }
   };
 
   const handleNextDay = () => {
-    const nextDay = new Date(selectedDate);
-    nextDay.setDate(nextDay.getDate() + 1);
-    if (nextDay <= maxDate) {
-      onDateChange(nextDay);
+    const nextDate = getNextAvailableDate(selectedDate, 'next');
+    if (nextDate) {
+      onDateChange(nextDate);
     }
   };
 
-  const isAtMinDate = selectedDate.toDateString() === minDate.toDateString();
-  const isAtMaxDate = selectedDate.toDateString() === maxDate.toDateString();
+  const isDateAvailable = (date: Date) => {
+    return availableDates.some(availableDate => 
+      availableDate.toDateString() === date.toDateString()
+    );
+  };
+
+  const canGoPrevious = getNextAvailableDate(selectedDate, 'previous') !== null;
+  const canGoNext = getNextAvailableDate(selectedDate, 'next') !== null;
+
+  const getMostRecentDate = () => {
+    if (availableDates.length === 0) return null;
+    return [...availableDates].sort((a, b) => b.getTime() - a.getTime())[0];
+  };
+
+  const getSecondMostRecentDate = () => {
+    if (availableDates.length < 2) return null;
+    const sorted = [...availableDates].sort((a, b) => b.getTime() - a.getTime());
+    return sorted[1];
+  };
 
   return (
     <div className="flex items-center gap-2 mb-6">
@@ -45,7 +71,7 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
         variant="outline"
         size="sm"
         onClick={handlePreviousDay}
-        disabled={isAtMinDate}
+        disabled={!canGoPrevious}
       >
         <ChevronLeft className="h-4 w-4" />
         Previous Day
@@ -69,7 +95,7 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
             mode="single"
             selected={selectedDate}
             onSelect={(date) => date && onDateChange(date)}
-            disabled={(date) => date < minDate || date > maxDate}
+            disabled={(date) => !isDateAvailable(date)}
             initialFocus
           />
         </PopoverContent>
@@ -79,7 +105,7 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
         variant="outline"
         size="sm"
         onClick={handleNextDay}
-        disabled={isAtMaxDate}
+        disabled={!canGoNext}
       >
         Next Day
         <ChevronRight className="h-4 w-4" />
@@ -89,20 +115,24 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onDateChange(new Date())}
+          onClick={() => {
+            const mostRecent = getMostRecentDate();
+            if (mostRecent) onDateChange(mostRecent);
+          }}
+          disabled={!getMostRecentDate()}
         >
-          Today
+          Latest
         </Button>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            onDateChange(yesterday);
+            const secondMostRecent = getSecondMostRecentDate();
+            if (secondMostRecent) onDateChange(secondMostRecent);
           }}
+          disabled={!getSecondMostRecentDate()}
         >
-          Yesterday
+          Previous
         </Button>
       </div>
     </div>

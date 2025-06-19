@@ -6,7 +6,8 @@ import {
   fetchSpecificDateData,
   fetchRetentionData,
   fetchEngagementData,
-  fetchFeatureUsage
+  fetchFeatureUsage,
+  fetchAvailableDates
 } from '@/services/metricsService';
 
 export const useMetricsData = (selectedDate?: Date) => {
@@ -16,22 +17,25 @@ export const useMetricsData = (selectedDate?: Date) => {
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
+  const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshData = async () => {
     setLoading(true);
     
-    const [dailyUsers, retention, engagement, features] = await Promise.all([
+    const [dailyUsers, retention, engagement, features, dates] = await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
       fetchEngagementData(),
-      fetchFeatureUsage()
+      fetchFeatureUsage(),
+      fetchAvailableDates()
     ]);
 
     setDailyActiveUsers(dailyUsers);
     setRetentionData(retention);
     setEngagementData(engagement);
     setFeatureUsage(features);
+    setAvailableDates(dates);
 
     if (selectedDate) {
       const { selectedDayData: dayData, previousDayData: prevData } = await fetchSpecificDateData(selectedDate);
@@ -62,6 +66,7 @@ export const useMetricsData = (selectedDate?: Date) => {
     retentionData,
     engagementData,
     featureUsage,
+    availableDates,
     loading,
     refreshData
   };

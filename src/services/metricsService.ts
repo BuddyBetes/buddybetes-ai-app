@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { DailyActiveUser, RetentionData, EngagementData, FeatureUsage, AnalyticsResponse } from '@/types/metrics';
 
@@ -14,6 +15,23 @@ export const fetchDailyActiveUsers = async (): Promise<DailyActiveUser[]> => {
     return data;
   } else {
     console.error('Error fetching daily active users:', error);
+    return [];
+  }
+};
+
+export const fetchAvailableDates = async (): Promise<Date[]> => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { data, error } = await supabase
+    .from('daily_active_users')
+    .select('date')
+    .neq('date', today) // Exclude today
+    .order('date', { ascending: false });
+
+  if (!error && data) {
+    return data.map(item => new Date(item.date + 'T00:00:00'));
+  } else {
+    console.error('Error fetching available dates:', error);
     return [];
   }
 };
