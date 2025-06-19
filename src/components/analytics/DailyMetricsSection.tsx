@@ -23,6 +23,16 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
   dailyData,
   previousDayData
 }) => {
+  // Debug logging
+  console.log('DailyMetricsSection - selectedDate:', selectedDate);
+  console.log('DailyMetricsSection - dailyData:', dailyData);
+  console.log('DailyMetricsSection - previousDayData:', previousDayData);
+  
+  if (dailyData) {
+    console.log('DailyMetricsSection - dailyData.new_users:', dailyData.new_users);
+    console.log('DailyMetricsSection - typeof dailyData.new_users:', typeof dailyData.new_users);
+  }
+
   const getTrend = (today: number, yesterday: number) => {
     if (!yesterday) return null;
     const change = ((today - yesterday) / yesterday) * 100;

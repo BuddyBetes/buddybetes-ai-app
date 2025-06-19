@@ -16,6 +16,13 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, tooltip, trend }) => {
+  // Debug logging for the New Users card specifically
+  if (title === "New Users") {
+    console.log('MetricCard - New Users title:', title);
+    console.log('MetricCard - New Users value:', value);
+    console.log('MetricCard - New Users typeof value:', typeof value);
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

@@ -24,6 +24,11 @@ const Metrics = () => {
     refreshData 
   } = useMetricsData(selectedDate);
 
+  // Debug logging in the main Metrics component
+  console.log('Metrics component - selectedDate:', selectedDate);
+  console.log('Metrics component - selectedDayData:', selectedDayData);
+  console.log('Metrics component - previousDayData:', previousDayData);
+
   if (!isAuthenticated) {
     return <MetricsPasswordProtection onAuthenticated={() => setIsAuthenticated(true)} />;
   }
