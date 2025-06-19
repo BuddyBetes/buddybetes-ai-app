@@ -50,7 +50,7 @@ const EngagementHeatmap: React.FC<EngagementHeatmapProps> = ({ data, selectedDat
         <div className="text-sm text-gray-600">
           {totalActivity > 0 ? (
             <>
-              {totalActivity} total activities • Hours shown in UTC
+              {totalActivity} total activities • Hours shown in Asia/Manila time (UTC+8)
             </>
           ) : (
             selectedDateString ? 'No activity recorded for this date' : 'Select a date to view hourly activity'
@@ -63,7 +63,7 @@ const EngagementHeatmap: React.FC<EngagementHeatmapProps> = ({ data, selectedDat
             <div
               key={item.hour}
               className={`aspect-square rounded ${getColor(getIntensity(item.activity_count))} flex items-center justify-center text-xs font-medium transition-colors duration-200 hover:ring-2 hover:ring-blue-300`}
-              title={`${formatHour(item.hour)} UTC - ${item.activity_count} activities`}
+              title={`${formatHour(item.hour)} Manila time - ${item.activity_count} activities`}
             >
               {item.hour}
             </div>

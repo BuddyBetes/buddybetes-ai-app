@@ -163,13 +163,15 @@ export const fetchEngagementData = async (selectedDateString?: string): Promise<
 
   console.log('✅ Found activity data:', data.length, 'activities for', selectedDateString);
 
-  // Count activities by UTC hour
+  // Count activities by Asia/Manila hour (UTC+8)
   const hourlyData: { [key: number]: number } = {};
   
   data.forEach(log => {
-    // Extract UTC hour from timestamp
-    const utcHour = new Date(log.timestamp).getUTCHours();
-    hourlyData[utcHour] = (hourlyData[utcHour] || 0) + 1;
+    // Convert UTC timestamp to Asia/Manila time
+    const utcDate = new Date(log.timestamp);
+    const manilaDate = new Date(utcDate.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours for UTC+8
+    const manilaHour = manilaDate.getUTCHours(); // Get hour in Manila timezone
+    hourlyData[manilaHour] = (hourlyData[manilaHour] || 0) + 1;
   });
 
   // Return complete 24-hour array
