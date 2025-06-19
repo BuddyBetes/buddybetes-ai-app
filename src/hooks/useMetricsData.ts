@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,8 +26,10 @@ interface FeatureUsage {
   usage_count: number;
 }
 
-export const useMetricsData = () => {
+export const useMetricsData = (selectedDate?: Date) => {
   const [dailyActiveUsers, setDailyActiveUsers] = useState<DailyActiveUser[]>([]);
+  const [selectedDayData, setSelectedDayData] = useState<DailyActiveUser | null>(null);
+  const [previousDayData, setPreviousDayData] = useState<DailyActiveUser | null>(null);
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
@@ -43,6 +44,40 @@ export const useMetricsData = () => {
 
     if (!error && data) {
       setDailyActiveUsers(data);
+    }
+  };
+
+  const fetchSpecificDateData = async (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    
+    // Get data for selected date
+    const { data: dayData, error: dayError } = await supabase
+      .from('daily_active_users')
+      .select('*')
+      .eq('date', dateString)
+      .single();
+
+    if (!dayError && dayData) {
+      setSelectedDayData(dayData);
+    } else {
+      setSelectedDayData(null);
+    }
+
+    // Get data for previous day for comparison
+    const previousDate = new Date(date);
+    previousDate.setDate(previousDate.getDate() - 1);
+    const previousDateString = previousDate.toISOString().split('T')[0];
+
+    const { data: prevData, error: prevError } = await supabase
+      .from('daily_active_users')
+      .select('*')
+      .eq('date', previousDateString)
+      .single();
+
+    if (!prevError && prevData) {
+      setPreviousDayData(prevData);
+    } else {
+      setPreviousDayData(null);
     }
   };
 
@@ -118,7 +153,8 @@ export const useMetricsData = () => {
       fetchDailyActiveUsers(),
       fetchRetentionData(),
       fetchEngagementData(),
-      fetchFeatureUsage()
+      fetchFeatureUsage(),
+      selectedDate ? fetchSpecificDateData(selectedDate) : Promise.resolve()
     ]);
     setLoading(false);
   };
@@ -127,8 +163,16 @@ export const useMetricsData = () => {
     refreshData();
   }, []);
 
+  useEffect(() => {
+    if (selectedDate) {
+      fetchSpecificDateData(selectedDate);
+    }
+  }, [selectedDate]);
+
   return {
     dailyActiveUsers,
+    selectedDayData,
+    previousDayData,
     retentionData,
     engagementData,
     featureUsage,

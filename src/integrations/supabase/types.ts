@@ -535,6 +535,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      backfill_analytics_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      get_analytics_retention_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       has_active_subscription: {
         Args: { _user_id: string }
         Returns: boolean
@@ -548,6 +556,10 @@ export type Database = {
         Returns: boolean
       }
       update_daily_active_users: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_daily_active_users_enhanced: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

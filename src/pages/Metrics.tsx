@@ -3,37 +3,34 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import MetricsPasswordProtection from '@/components/analytics/MetricsPasswordProtection';
-import MetricCard from '@/components/analytics/MetricCard';
 import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
 import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
+import DayNavigator from '@/components/analytics/DayNavigator';
+import OverviewMetricsSection from '@/components/analytics/OverviewMetricsSection';
+import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Metrics = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   const { 
-    dailyActiveUsers, 
+    selectedDayData,
+    previousDayData,
     retentionData, 
     engagementData, 
     featureUsage, 
     loading, 
     refreshData 
-  } = useMetricsData();
+  } = useMetricsData(selectedDate);
 
   if (!isAuthenticated) {
     return <MetricsPasswordProtection onAuthenticated={() => setIsAuthenticated(true)} />;
   }
 
-  const todayData = dailyActiveUsers[0];
-  const yesterdayData = dailyActiveUsers[1];
-
-  const getTrend = (today: number, yesterday: number) => {
-    if (!yesterday) return null;
-    const change = ((today - yesterday) / yesterday) * 100;
-    return {
-      value: Math.abs(change),
-      isPositive: change >= 0
-    };
-  };
+  // Analytics data started on June 1, 2025
+  const minDate = new Date('2025-06-01');
+  const maxDate = new Date();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -46,51 +43,23 @@ const Metrics = () => {
           </Button>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <MetricCard
-            title="Daily Active Users"
-            value={todayData?.total_active_users || 0}
-            description="Active users today"
-            trend={todayData && yesterdayData ? getTrend(todayData.total_active_users, yesterdayData.total_active_users) : undefined}
-          />
-          <MetricCard
-            title="New Users"
-            value={todayData?.new_users || 0}
-            description="New signups today"
-            trend={todayData && yesterdayData ? getTrend(todayData.new_users, yesterdayData.new_users) : undefined}
-          />
-          <MetricCard
-            title="Total Sessions"
-            value={todayData?.total_sessions || 0}
-            description="Sessions today"
-            trend={todayData && yesterdayData ? getTrend(todayData.total_sessions, yesterdayData.total_sessions) : undefined}
-          />
-          <MetricCard
-            title="Day 1 Retention"
-            value={retentionData ? `${retentionData.day_1_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 1 day"
-          />
-        </div>
+        {/* Overview Metrics */}
+        <OverviewMetricsSection retentionData={retentionData} />
 
-        {/* Retention Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <MetricCard
-            title="Day 7 Retention"
-            value={retentionData ? `${retentionData.day_7_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 7 days"
-          />
-          <MetricCard
-            title="Day 30 Retention"
-            value={retentionData ? `${retentionData.day_30_retention.toFixed(1)}%` : '0%'}
-            description="Users returning after 30 days"
-          />
-          <MetricCard
-            title="Total Users"
-            value={retentionData?.total_users || 0}
-            description="All registered users"
-          />
-        </div>
+        {/* Day Navigation */}
+        <DayNavigator
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          minDate={minDate}
+          maxDate={maxDate}
+        />
+
+        {/* Daily Metrics */}
+        <DailyMetricsSection
+          selectedDate={selectedDate}
+          dailyData={selectedDayData}
+          previousDayData={previousDayData}
+        />
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
