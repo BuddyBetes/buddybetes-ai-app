@@ -19,8 +19,6 @@ export const useMetricsData = (selectedDate?: Date) => {
   const [loading, setLoading] = useState(true);
 
   const refreshData = async () => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] 🔄 Refreshing all data...`);
     setLoading(true);
     
     const [dailyUsers, retention, engagement, features] = await Promise.all([
@@ -37,14 +35,11 @@ export const useMetricsData = (selectedDate?: Date) => {
 
     if (selectedDate) {
       const { selectedDayData: dayData, previousDayData: prevData } = await fetchSpecificDateData(selectedDate);
-      console.log(`[${timestamp}] 🔄 refreshData - Setting selectedDayData:`, dayData);
-      console.log(`[${timestamp}] 🔄 refreshData - Setting previousDayData:`, prevData);
       setSelectedDayData(dayData);
       setPreviousDayData(prevData);
     }
 
     setLoading(false);
-    console.log(`[${timestamp}] 🔄 Data refresh completed`);
   };
 
   useEffect(() => {
@@ -53,50 +48,12 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   useEffect(() => {
     if (selectedDate) {
-      const timestamp = new Date().toISOString();
-      const dateString = selectedDate.toISOString().split('T')[0];
-      console.log(`[${timestamp}] 🎯 useEffect triggered - Selected date changed:`, {
-        selectedDate: dateString,
-        selectedDateObject: selectedDate,
-        currentSelectedDayData: selectedDayData,
-        currentPreviousDayData: previousDayData
-      });
-      
       fetchSpecificDateData(selectedDate).then(({ selectedDayData: dayData, previousDayData: prevData }) => {
-        const updateTimestamp = new Date().toISOString();
-        console.log(`[${updateTimestamp}] 🎯 useEffect - About to update state:`, {
-          dayData,
-          prevData,
-          dayDataNewUsers: dayData?.new_users,
-          prevDataNewUsers: prevData?.new_users
-        });
-        
         setSelectedDayData(dayData);
         setPreviousDayData(prevData);
-        
-        console.log(`[${updateTimestamp}] 🎯 useEffect - State update completed`);
       });
     }
   }, [selectedDate]);
-
-  // Enhanced logging with timestamps for state changes
-  useEffect(() => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] 🔄 selectedDayData state changed:`, {
-      selectedDayData,
-      newUsers: selectedDayData?.new_users,
-      stateChangeTime: timestamp
-    });
-  }, [selectedDayData]);
-
-  useEffect(() => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] 🔄 previousDayData state changed:`, {
-      previousDayData,
-      newUsers: previousDayData?.new_users,
-      stateChangeTime: timestamp
-    });
-  }, [previousDayData]);
 
   return {
     dailyActiveUsers,

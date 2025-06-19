@@ -16,25 +16,6 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, tooltip, trend }) => {
-  // Enhanced debug logging with timestamps for the New Users card specifically
-  if (title === "New Users") {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] 🎯 MetricCard RENDER - New Users:`, {
-      title,
-      value,
-      valueType: typeof value,
-      description,
-      trend,
-      renderTime: timestamp
-    });
-    
-    // Log the actual DOM value that will be rendered
-    console.log(`[${timestamp}] 🎯 MetricCard DOM VALUE for New Users:`, value);
-    
-    // Check if there are multiple renders with different values
-    console.log(`[${timestamp}] 🎯 MetricCard STACK TRACE for New Users:`, new Error().stack);
-  }
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
