@@ -48,7 +48,10 @@ export const useMetricsData = (selectedDate?: Date) => {
 
   useEffect(() => {
     if (selectedDate) {
+      console.log('🎯 useMetricsData: Selected date changed to:', selectedDate.toISOString().split('T')[0]);
       fetchSpecificDateData(selectedDate).then(({ selectedDayData: dayData, previousDayData: prevData }) => {
+        console.log('🎯 useMetricsData: Setting selectedDayData:', dayData);
+        console.log('🎯 useMetricsData: Setting previousDayData:', prevData);
         setSelectedDayData(dayData);
         setPreviousDayData(prevData);
       });

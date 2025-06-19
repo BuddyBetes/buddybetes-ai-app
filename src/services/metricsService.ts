@@ -23,8 +23,14 @@ export const fetchSpecificDateData = async (date: Date): Promise<{
   selectedDayData: DailyActiveUser | null;
   previousDayData: DailyActiveUser | null;
 }> => {
-  const dateString = date.toISOString().split('T')[0];
+  // Fix date formatting to ensure consistent timezone handling
+  const selectedDate = new Date(date);
+  selectedDate.setHours(0, 0, 0, 0); // Reset time to start of day
+  const dateString = selectedDate.toISOString().split('T')[0];
+  
   console.log('🔍 fetchSpecificDateData called for:', dateString);
+  console.log('🔍 Original date object:', date);
+  console.log('🔍 Normalized date object:', selectedDate);
   
   // Get data for selected date
   const { data: dayData, error: dayError } = await supabase
@@ -36,15 +42,14 @@ export const fetchSpecificDateData = async (date: Date): Promise<{
   let selectedDayData: DailyActiveUser | null = null;
   if (!dayError && dayData) {
     console.log('✅ Found selected day data:', dayData);
-    console.log('✅ About to set selectedDayData with new_users:', dayData.new_users);
+    console.log('✅ Selected day new_users:', dayData.new_users);
     selectedDayData = dayData;
-    console.log('✅ setSelectedDayData called with:', dayData);
   } else {
     console.log('❌ No data found for selected date or error:', dayError);
   }
 
   // Get data for previous day for comparison
-  const previousDate = new Date(date);
+  const previousDate = new Date(selectedDate);
   previousDate.setDate(previousDate.getDate() - 1);
   const previousDateString = previousDate.toISOString().split('T')[0];
 
@@ -57,9 +62,8 @@ export const fetchSpecificDateData = async (date: Date): Promise<{
   let previousDayData: DailyActiveUser | null = null;
   if (!prevError && prevData) {
     console.log('✅ Found previous day data:', prevData);
-    console.log('✅ About to set previousDayData with new_users:', prevData.new_users);
+    console.log('✅ Previous day new_users:', prevData.new_users);
     previousDayData = prevData;
-    console.log('✅ setPreviousDayData called with:', prevData);
   } else {
     console.log('❌ No previous day data found or error:', prevError);
   }
