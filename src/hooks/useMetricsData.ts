@@ -1,48 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-
-interface DailyActiveUser {
-  date: string;
-  total_active_users: number;
-  new_users: number;
-  returning_users: number;
-  total_sessions: number;
-}
-
-interface RetentionData {
-  day_1_retention: number;
-  day_7_retention: number;
-  day_30_retention: number;
-  total_users: number;
-  total_registered_users: number;
-  total_active_users: number;
-  health_data_users: number;
-  ai_assistant_users: number;
-  engagement_rate: number;
-}
-
-interface EngagementData {
-  hour: number;
-  activity_count: number;
-}
-
-interface FeatureUsage {
-  feature: string;
-  usage_count: number;
-}
-
-interface AnalyticsResponse {
-  day_1_retention: number;
-  day_7_retention: number;
-  day_30_retention: number;
-  total_users: number;
-  total_registered_users: number;
-  total_active_users: number;
-  health_data_users: number;
-  ai_assistant_users: number;
-  engagement_rate: number;
-}
+import type { DailyActiveUser, RetentionData, EngagementData, FeatureUsage } from '@/types/metrics';
+import {
+  fetchDailyActiveUsers,
+  fetchSpecificDateData,
+  fetchRetentionData,
+  fetchEngagementData,
+  fetchFeatureUsage
+} from '@/services/metricsService';
 
 export const useMetricsData = (selectedDate?: Date) => {
   const [dailyActiveUsers, setDailyActiveUsers] = useState<DailyActiveUser[]>([]);
@@ -53,165 +18,28 @@ export const useMetricsData = (selectedDate?: Date) => {
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchDailyActiveUsers = async () => {
-    console.log('Fetching daily active users...');
-    const { data, error } = await supabase
-      .from('daily_active_users')
-      .select('*')
-      .order('date', { ascending: false })
-      .limit(30);
-
-    if (!error && data) {
-      console.log('Daily active users data:', data);
-      setDailyActiveUsers(data);
-    } else {
-      console.error('Error fetching daily active users:', error);
-    }
-  };
-
-  const fetchSpecificDateData = async (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
-    console.log('🔍 fetchSpecificDateData called for:', dateString);
-    
-    // Get data for selected date
-    const { data: dayData, error: dayError } = await supabase
-      .from('daily_active_users')
-      .select('*')
-      .eq('date', dateString)
-      .single();
-
-    if (!dayError && dayData) {
-      console.log('✅ Found selected day data:', dayData);
-      console.log('✅ About to set selectedDayData with new_users:', dayData.new_users);
-      setSelectedDayData(dayData);
-      console.log('✅ setSelectedDayData called with:', dayData);
-    } else {
-      console.log('❌ No data found for selected date or error:', dayError);
-      setSelectedDayData(null);
-    }
-
-    // Get data for previous day for comparison
-    const previousDate = new Date(date);
-    previousDate.setDate(previousDate.getDate() - 1);
-    const previousDateString = previousDate.toISOString().split('T')[0];
-
-    const { data: prevData, error: prevError } = await supabase
-      .from('daily_active_users')
-      .select('*')
-      .eq('date', previousDateString)
-      .single();
-
-    if (!prevError && prevData) {
-      console.log('✅ Found previous day data:', prevData);
-      console.log('✅ About to set previousDayData with new_users:', prevData.new_users);
-      setPreviousDayData(prevData);
-      console.log('✅ setPreviousDayData called with:', prevData);
-    } else {
-      console.log('❌ No previous day data found or error:', prevError);
-      setPreviousDayData(null);
-    }
-  };
-
-  const fetchRetentionData = async () => {
-    try {
-      console.log('Fetching retention data...');
-      // Use the existing database function which has SECURITY DEFINER privileges
-      const { data, error } = await supabase.rpc('get_analytics_retention_data');
-
-      if (error) {
-        console.error('Error fetching retention data:', error);
-        throw error;
-      }
-
-      if (data) {
-        console.log('Raw retention data from RPC:', data);
-        // Type cast the response using unknown first to fix TypeScript error
-        const analyticsData = data as unknown as AnalyticsResponse;
-        
-        setRetentionData({
-          day_1_retention: analyticsData.day_1_retention || 0,
-          day_7_retention: analyticsData.day_7_retention || 0,
-          day_30_retention: analyticsData.day_30_retention || 0,
-          total_users: analyticsData.total_users || 0,
-          total_registered_users: analyticsData.total_registered_users || 0,
-          total_active_users: analyticsData.total_active_users || 0,
-          health_data_users: analyticsData.health_data_users || 0,
-          ai_assistant_users: analyticsData.ai_assistant_users || 0,
-          engagement_rate: analyticsData.engagement_rate || 0
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching retention data:', error);
-      setRetentionData({
-        day_1_retention: 0,
-        day_7_retention: 0,
-        day_30_retention: 0,
-        total_users: 0,
-        total_registered_users: 0,
-        total_active_users: 0,
-        health_data_users: 0,
-        ai_assistant_users: 0,
-        engagement_rate: 0
-      });
-    }
-  };
-
-  const fetchEngagementData = async () => {
-    const { data, error } = await supabase
-      .from('user_activity_logs')
-      .select('timestamp')
-      .gte('timestamp', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-
-    if (!error && data) {
-      const hourlyData: { [key: number]: number } = {};
-      
-      data.forEach(log => {
-        const hour = new Date(log.timestamp).getHours();
-        hourlyData[hour] = (hourlyData[hour] || 0) + 1;
-      });
-
-      const engagementArray = Array.from({ length: 24 }, (_, hour) => ({
-        hour,
-        activity_count: hourlyData[hour] || 0
-      }));
-
-      setEngagementData(engagementArray);
-    }
-  };
-
-  const fetchFeatureUsage = async () => {
-    const { data, error } = await supabase
-      .from('user_activity_logs')
-      .select('action_target')
-      .eq('action_type', 'feature_click')
-      .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-    if (!error && data) {
-      const featureCount: { [key: string]: number } = {};
-      
-      data.forEach(log => {
-        featureCount[log.action_target] = (featureCount[log.action_target] || 0) + 1;
-      });
-
-      const featureArray = Object.entries(featureCount)
-        .map(([feature, count]) => ({ feature, usage_count: count }))
-        .sort((a, b) => b.usage_count - a.usage_count)
-        .slice(0, 10);
-
-      setFeatureUsage(featureArray);
-    }
-  };
-
   const refreshData = async () => {
     console.log('Refreshing all data...');
     setLoading(true);
-    await Promise.all([
+    
+    const [dailyUsers, retention, engagement, features] = await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
       fetchEngagementData(),
-      fetchFeatureUsage(),
-      selectedDate ? fetchSpecificDateData(selectedDate) : Promise.resolve()
+      fetchFeatureUsage()
     ]);
+
+    setDailyActiveUsers(dailyUsers);
+    setRetentionData(retention);
+    setEngagementData(engagement);
+    setFeatureUsage(features);
+
+    if (selectedDate) {
+      const { selectedDayData: dayData, previousDayData: prevData } = await fetchSpecificDateData(selectedDate);
+      setSelectedDayData(dayData);
+      setPreviousDayData(prevData);
+    }
+
     setLoading(false);
     console.log('Data refresh completed');
   };
@@ -226,7 +54,9 @@ export const useMetricsData = (selectedDate?: Date) => {
       console.log('🎯 Current selectedDayData before fetch:', selectedDayData);
       console.log('🎯 Current previousDayData before fetch:', previousDayData);
       
-      fetchSpecificDateData(selectedDate).then(() => {
+      fetchSpecificDateData(selectedDate).then(({ selectedDayData: dayData, previousDayData: prevData }) => {
+        setSelectedDayData(dayData);
+        setPreviousDayData(prevData);
         console.log('🎯 fetchSpecificDateData completed');
       });
     }
