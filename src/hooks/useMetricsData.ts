@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -82,21 +83,130 @@ export const useMetricsData = (selectedDate?: Date) => {
   };
 
   const fetchRetentionData = async () => {
-    const { data, error } = await supabase
-      .from('user_retention_cohorts')
-      .select('day_1_return, day_7_return, day_30_return');
+    try {
+      // Get total users from profiles table (all-time)
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, created_at');
 
-    if (!error && data) {
-      const totalUsers = data.length;
-      const day1Retention = data.filter(u => u.day_1_return).length;
-      const day7Retention = data.filter(u => u.day_7_return).length;
-      const day30Retention = data.filter(u => u.day_30_return).length;
+      if (profilesError) throw profilesError;
+
+      const totalUsers = profilesData?.length || 0;
+
+      if (totalUsers === 0) {
+        setRetentionData({
+          day_1_retention: 0,
+          day_7_retention: 0,
+          day_30_retention: 0,
+          total_users: 0
+        });
+        return;
+      }
+
+      // Calculate all-time retention rates
+      const today = new Date();
+      let day1ReturnUsers = 0;
+      let day7ReturnUsers = 0;
+      let day30ReturnUsers = 0;
+      let day1EligibleUsers = 0;
+      let day7EligibleUsers = 0;
+      let day30EligibleUsers = 0;
+
+      for (const profile of profilesData) {
+        const signupDate = new Date(profile.created_at);
+        const daysSinceSignup = Math.floor((today.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        // Check if user is eligible for each retention period
+        if (daysSinceSignup >= 1) {
+          day1EligibleUsers++;
+          
+          // Check if user had activity within 1 day of signup
+          const { data: day1Activity } = await supabase
+            .from('glucose_logs')
+            .select('created_at')
+            .eq('user_id', profile.id)
+            .gte('created_at', signupDate.toISOString())
+            .lte('created_at', new Date(signupDate.getTime() + 24 * 60 * 60 * 1000).toISOString())
+            .limit(1);
+
+          const { data: day1AssistantActivity } = await supabase
+            .from('assistant_conversations')
+            .select('created_at')
+            .eq('user_id', profile.id)
+            .gte('created_at', signupDate.toISOString())
+            .lte('created_at', new Date(signupDate.getTime() + 24 * 60 * 60 * 1000).toISOString())
+            .limit(1);
+
+          if ((day1Activity && day1Activity.length > 0) || (day1AssistantActivity && day1AssistantActivity.length > 0)) {
+            day1ReturnUsers++;
+          }
+        }
+
+        if (daysSinceSignup >= 7) {
+          day7EligibleUsers++;
+          
+          // Check if user had activity within 7 days of signup
+          const { data: day7Activity } = await supabase
+            .from('glucose_logs')
+            .select('created_at')
+            .eq('user_id', profile.id)
+            .gte('created_at', signupDate.toISOString())
+            .lte('created_at', new Date(signupDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString())
+            .limit(1);
+
+          const { data: day7AssistantActivity } = await supabase
+            .from('assistant_conversations')
+            .select('created_at')
+            .eq('user_id', profile.id)
+            .gte('created_at', signupDate.toISOString())
+            .lte('created_at', new Date(signupDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString())
+            .limit(1);
+
+          if ((day7Activity && day7Activity.length > 0) || (day7AssistantActivity && day7AssistantActivity.length > 0)) {
+            day7ReturnUsers++;
+          }
+        }
+
+        if (daysSinceSignup >= 30) {
+          day30EligibleUsers++;
+          
+          // Check if user had activity within 30 days of signup
+          const { data: day30Activity } = await supabase
+            .from('glucose_logs')
+            .select('created_at')
+            .eq('user_id', profile.id)
+            .gte('created_at', signupDate.toISOString())
+            .lte('created_at', new Date(signupDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())
+            .limit(1);
+
+          const { data: day30AssistantActivity } = await supabase
+            .from('assistant_conversations')
+            .select('created_at')
+            .eq('user_id', profile.id)
+            .gte('created_at', signupDate.toISOString())
+            .lte('created_at', new Date(signupDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())
+            .limit(1);
+
+          if ((day30Activity && day30Activity.length > 0) || (day30AssistantActivity && day30AssistantActivity.length > 0)) {
+            day30ReturnUsers++;
+          }
+        }
+      }
 
       setRetentionData({
-        day_1_retention: totalUsers > 0 ? (day1Retention / totalUsers) * 100 : 0,
-        day_7_retention: totalUsers > 0 ? (day7Retention / totalUsers) * 100 : 0,
-        day_30_retention: totalUsers > 0 ? (day30Retention / totalUsers) * 100 : 0,
+        day_1_retention: day1EligibleUsers > 0 ? (day1ReturnUsers / day1EligibleUsers) * 100 : 0,
+        day_7_retention: day7EligibleUsers > 0 ? (day7ReturnUsers / day7EligibleUsers) * 100 : 0,
+        day_30_retention: day30EligibleUsers > 0 ? (day30ReturnUsers / day30EligibleUsers) * 100 : 0,
         total_users: totalUsers
+      });
+
+    } catch (error) {
+      console.error('Error fetching retention data:', error);
+      setRetentionData({
+        day_1_retention: 0,
+        day_7_retention: 0,
+        day_30_retention: 0,
+        total_users: 0
       });
     }
   };
