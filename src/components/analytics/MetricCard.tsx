@@ -16,11 +16,23 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, description, tooltip, trend }) => {
-  // Debug logging for the New Users card specifically
+  // Enhanced debug logging with timestamps for the New Users card specifically
   if (title === "New Users") {
-    console.log('MetricCard - New Users title:', title);
-    console.log('MetricCard - New Users value:', value);
-    console.log('MetricCard - New Users typeof value:', typeof value);
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] 🎯 MetricCard RENDER - New Users:`, {
+      title,
+      value,
+      valueType: typeof value,
+      description,
+      trend,
+      renderTime: timestamp
+    });
+    
+    // Log the actual DOM value that will be rendered
+    console.log(`[${timestamp}] 🎯 MetricCard DOM VALUE for New Users:`, value);
+    
+    // Check if there are multiple renders with different values
+    console.log(`[${timestamp}] 🎯 MetricCard STACK TRACE for New Users:`, new Error().stack);
   }
 
   return (

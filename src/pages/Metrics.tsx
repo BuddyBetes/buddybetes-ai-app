@@ -24,10 +24,19 @@ const Metrics = () => {
     refreshData 
   } = useMetricsData(selectedDate);
 
-  // Debug logging in the main Metrics component
-  console.log('Metrics component - selectedDate:', selectedDate);
-  console.log('Metrics component - selectedDayData:', selectedDayData);
-  console.log('Metrics component - previousDayData:', previousDayData);
+  // Enhanced debug logging with timestamps in main Metrics component
+  const timestamp = new Date().toISOString();
+  const dateString = selectedDate.toISOString().split('T')[0];
+  
+  console.log(`[${timestamp}] 🎯 Metrics component RENDER:`, {
+    selectedDate: dateString,
+    selectedDateObject: selectedDate,
+    selectedDayData,
+    previousDayData,
+    selectedDayDataNewUsers: selectedDayData?.new_users,
+    previousDayDataNewUsers: previousDayData?.new_users,
+    renderTime: timestamp
+  });
 
   if (!isAuthenticated) {
     return <MetricsPasswordProtection onAuthenticated={() => setIsAuthenticated(true)} />;

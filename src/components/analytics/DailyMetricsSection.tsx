@@ -23,15 +23,18 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
   dailyData,
   previousDayData
 }) => {
-  // Debug logging
-  console.log('DailyMetricsSection - selectedDate:', selectedDate);
-  console.log('DailyMetricsSection - dailyData:', dailyData);
-  console.log('DailyMetricsSection - previousDayData:', previousDayData);
+  const timestamp = new Date().toISOString();
+  const dateString = selectedDate.toISOString().split('T')[0];
   
-  if (dailyData) {
-    console.log('DailyMetricsSection - dailyData.new_users:', dailyData.new_users);
-    console.log('DailyMetricsSection - typeof dailyData.new_users:', typeof dailyData.new_users);
-  }
+  // Enhanced debug logging with timestamps
+  console.log(`[${timestamp}] 🎯 DailyMetricsSection RENDER:`, {
+    selectedDate: dateString,
+    dailyData,
+    previousDayData,
+    dailyDataNewUsers: dailyData?.new_users,
+    previousDayDataNewUsers: previousDayData?.new_users,
+    renderTime: timestamp
+  });
 
   const getTrend = (today: number, yesterday: number) => {
     if (!yesterday) return null;
@@ -41,6 +44,17 @@ const DailyMetricsSection: React.FC<DailyMetricsSectionProps> = ({
       isPositive: change >= 0
     };
   };
+
+  // Log the exact props being passed to MetricCard for New Users
+  if (dailyData) {
+    console.log(`[${timestamp}] 🎯 DailyMetricsSection - About to render New Users MetricCard with:`, {
+      title: "New Users",
+      value: dailyData.new_users,
+      valueType: typeof dailyData.new_users,
+      trend: previousDayData ? getTrend(dailyData.new_users, previousDayData.new_users) : undefined,
+      renderTime: timestamp
+    });
+  }
 
   return (
     <TooltipProvider>
