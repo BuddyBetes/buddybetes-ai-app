@@ -121,55 +121,79 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Apply Discount Code</CardTitle>
+              <CardTitle className="text-xl">Complete Your Purchase</CardTitle>
+              <p className="text-muted-foreground">
+                Have a discount code? Apply it below or continue directly to payment.
+              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <DiscountCodeInput
-                onDiscountApplied={handleDiscountApplied}
-                onDiscountRemoved={handleDiscountRemoved}
-                appliedDiscount={appliedDiscount}
-              />
-              
-              {appliedDiscount && appliedDiscount.discount_percentage < 100 && (
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      Great! You'll get {appliedDiscount.discount_percentage}% off your subscription.
-                      Continue to payment to complete your purchase.
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={handleContinueToPayment}
-                    className="w-full"
-                  >
-                    Continue to Payment
-                  </Button>
-                </div>
-              )}
-              
-              {!appliedDiscount && (
+            <CardContent className="space-y-6">
+              {/* Primary CTA - Continue to Payment */}
+              <div className="space-y-3">
                 <Button 
                   onClick={handleContinueToPayment}
-                  variant="outline"
+                  size="lg"
                   className="w-full"
                 >
-                  Skip and Continue to Payment
+                  Continue to Payment
                 </Button>
-              )}
-              
-              {isProcessingFreeAccess && (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-sm text-gray-600 mt-2">Activating your free access...</p>
+                <p className="text-xs text-center text-muted-foreground">
+                  Secure checkout powered by Stripe
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
                 </div>
-              )}
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or apply discount code
+                  </span>
+                </div>
+              </div>
+
+              {/* Discount Code Section */}
+              <div className="space-y-4">
+                <DiscountCodeInput
+                  onDiscountApplied={handleDiscountApplied}
+                  onDiscountRemoved={handleDiscountRemoved}
+                  appliedDiscount={appliedDiscount}
+                />
+                
+                {appliedDiscount && appliedDiscount.discount_percentage < 100 && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-700 font-medium">
+                        🎉 Discount Applied! You'll save {appliedDiscount.discount_percentage}% 
+                      </p>
+                      <p className="text-xs text-green-600 mt-1">
+                        Continue to payment to complete your discounted purchase.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={handleContinueToPayment}
+                      className="w-full"
+                    >
+                      Continue to Payment ({appliedDiscount.discount_percentage}% off)
+                    </Button>
+                  </div>
+                )}
+                
+                {isProcessingFreeAccess && (
+                  <div className="text-center py-6">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="text-sm text-muted-foreground mt-3">Activating your free access...</p>
+                  </div>
+                )}
+              </div>
               
               <Button 
                 onClick={onBack}
                 variant="ghost"
                 className="w-full"
               >
-                Back to Subscription Plans
+                ← Back to Plans
               </Button>
             </CardContent>
           </Card>
