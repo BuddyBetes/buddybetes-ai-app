@@ -10,11 +10,18 @@ type PaymentMethod = 'gcash' | 'bpi' | 'stripe';
 interface PaymentMethodSelectorProps {
   onBack: () => void;
   onSelectMethod: (method: PaymentMethod) => void;
+  appliedDiscount?: {
+    id: string;
+    code: string;
+    discount_percentage: number;
+    duration_days: number | null;
+  } | null;
 }
 
 const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   onBack,
   onSelectMethod,
+  appliedDiscount,
 }) => {
   const paymentDetails = {
     stripe: {
@@ -54,6 +61,14 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         </Button>
         <h2 className="text-xl font-semibold">Choose Payment Method</h2>
       </div>
+
+      {appliedDiscount && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-700">
+            <strong>{appliedDiscount.code}</strong> discount applied: {appliedDiscount.discount_percentage}% off
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-4">
         {Object.entries(paymentDetails).map(([method, details]) => {

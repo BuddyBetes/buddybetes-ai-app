@@ -56,29 +56,51 @@ serve(async (req) => {
     });
 
     if (session.payment_status === "paid" && session.metadata?.user_id === user.id) {
-      // Find the Founders Access tier
+      const tierIdFromMetadata = session.metadata?.tier_id;
+      
+      // Get tier details
       const { data: tier, error: tierError } = await supabaseClient
         .from('subscription_tiers')
         .select('*')
-        .eq('name', 'Founders Access')
+        .eq('id', tierIdFromMetadata || '')
         .single();
 
-      if (tierError) throw new Error(`Failed to fetch tier: ${tierError.message}`);
+      if (tierError) {
+        // Fallback to Founders Access tier if tier_id not found
+        const { data: fallbackTier, error: fallbackError } = await supabaseClient
+          .from('subscription_tiers')
+          .select('*')
+          .eq('name', 'Founders Access')
+          .single();
+        
+        if (fallbackError) throw new Error(`Failed to fetch tier: ${fallbackError.message}`);
+        Object.assign(tier, fallbackTier);
+      }
+      
       logStep("Tier found", { tierId: tier.id });
 
       // Create or update user subscription
+      const subscriptionData = {
+        user_id: user.id,
+        tier_id: tier.id,
+        status: 'active',
+        payment_method: 'stripe',
+        amount_paid: session.amount_total ? session.amount_total / 100 : 999, // Convert from cents
+        starts_at: new Date().toISOString(),
+        expires_at: null, // Lifetime access for Founders Access
+        updated_at: new Date().toISOString()
+      };
+
+      // If duration_days is specified in tier and not lifetime, set expiry
+      if (tier.duration_days) {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + tier.duration_days);
+        subscriptionData.expires_at = expiryDate.toISOString();
+      }
+
       const { data: subscription, error: subscriptionError } = await supabaseClient
         .from('user_subscriptions')
-        .upsert({
-          user_id: user.id,
-          tier_id: tier.id,
-          status: 'active',
-          payment_method: 'stripe',
-          amount_paid: session.amount_total ? session.amount_total / 100 : 999, // Convert from cents
-          starts_at: new Date().toISOString(),
-          expires_at: null, // Lifetime access
-          updated_at: new Date().toISOString()
-        }, {
+        .upsert(subscriptionData, {
           onConflict: 'user_id'
         })
         .select()
@@ -86,6 +108,44 @@ serve(async (req) => {
 
       if (subscriptionError) throw new Error(`Failed to create subscription: ${subscriptionError.message}`);
       logStep("Subscription created/updated", { subscriptionId: subscription.id });
+
+      // Handle discount code redemption if applicable
+      const discountCodeId = session.metadata?.discount_code_id;
+      if (discountCodeId) {
+        logStep("Processing discount code redemption", { discountCodeId });
+        
+        // Record the redemption
+        const { error: redemptionError } = await supabaseClient
+          .from('discount_redemptions')
+          .insert({
+            user_id: user.id,
+            discount_code_id: discountCodeId,
+            subscription_id: subscription.id
+          });
+
+        if (redemptionError) {
+          logStep("Error recording discount redemption", { error: redemptionError });
+          // Don't fail the whole process for this
+        } else {
+          // Update discount code usage count
+          const { data: currentCode } = await supabaseClient
+            .from('discount_codes')
+            .select('current_uses')
+            .eq('id', discountCodeId)
+            .single();
+            
+          const { error: updateError } = await supabaseClient
+            .from('discount_codes')
+            .update({ current_uses: (currentCode?.current_uses || 0) + 1 })
+            .eq('id', discountCodeId);
+
+          if (updateError) {
+            logStep("Error updating discount code usage", { error: updateError });
+          } else {
+            logStep("Discount code redemption recorded successfully");
+          }
+        }
+      }
 
       return new Response(JSON.stringify({ 
         success: true, 

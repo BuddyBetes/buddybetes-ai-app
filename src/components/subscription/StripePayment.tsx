@@ -9,11 +9,12 @@ import { useIsPwa } from '@/hooks/use-pwa';
 
 interface StripePaymentProps {
   tierId: string;
+  discountCodeId?: string;
   onBack: () => void;
   onSuccess: () => void;
 }
 
-const StripePayment: React.FC<StripePaymentProps> = ({ tierId, onBack, onSuccess }) => {
+const StripePayment: React.FC<StripePaymentProps> = ({ tierId, discountCodeId, onBack, onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const isPwa = useIsPwa();
@@ -23,7 +24,7 @@ const StripePayment: React.FC<StripePaymentProps> = ({ tierId, onBack, onSuccess
       setIsLoading(true);
       
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
-        body: { tierId }
+        body: { tierId, discountCodeId }
       });
 
       if (error) throw error;

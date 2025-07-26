@@ -85,6 +85,18 @@ const Subscription = () => {
           )}
         </div>
 
+        {/* Discount Code Hint */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="text-center"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-200 rounded-full text-purple-700">
+            <span className="text-sm font-medium">💡 Have a discount code? Apply it during checkout!</span>
+          </div>
+        </motion.div>
+
         {/* Founders Offer */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

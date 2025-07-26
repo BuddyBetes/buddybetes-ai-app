@@ -43,8 +43,8 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { tierId } = await req.json();
-    logStep("Request data received", { tierId });
+    const { tierId, discountCodeId } = await req.json();
+    logStep("Request data received", { tierId, discountCodeId });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
@@ -58,26 +58,92 @@ serve(async (req) => {
       logStep("No existing customer found");
     }
 
+    // Get tier details for pricing
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    const { data: tier, error: tierError } = await supabaseService
+      .from("subscription_tiers")
+      .select("*")
+      .eq("id", tierId)
+      .single();
+
+    if (tierError || !tier) {
+      throw new Error("Invalid subscription tier");
+    }
+
+    let discountAmount = 0;
+    let discountPercentage = 0;
+
+    // Handle discount code if provided
+    if (discountCodeId) {
+      const { data: discountCode, error: discountError } = await supabaseService
+        .from("discount_codes")
+        .select("*")
+        .eq("id", discountCodeId)
+        .single();
+
+      if (discountError || !discountCode) {
+        throw new Error("Invalid discount code");
+      }
+
+      discountPercentage = discountCode.discount_percentage;
+      discountAmount = Math.round((tier.price * discountPercentage) / 100);
+      logStep("Discount applied", { discountPercentage, discountAmount });
+    }
+
+    const finalPrice = Math.max(0, tier.price - discountAmount);
+
     // Get the origin for the success URL
     const origin = req.headers.get("origin") || "http://localhost:3000";
     logStep("Origin detected", { origin });
 
-    // Create a one-time payment session using your Stripe price
+    // Create line items with discount
+    const lineItems = [];
+    
+    // Main product
+    lineItems.push({
+      price_data: {
+        currency: "php",
+        product_data: {
+          name: tier.name,
+          description: `${tier.name} subscription`,
+        },
+        unit_amount: tier.price * 100, // Convert to centavos
+      },
+      quantity: 1,
+    });
+
+    // Add discount as negative line item if applicable
+    if (discountAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "php",
+          product_data: {
+            name: `Discount (${discountPercentage}% off)`,
+          },
+          unit_amount: -discountAmount * 100, // Negative amount for discount
+        },
+        quantity: 1,
+      });
+    }
+
+    // Create a one-time payment session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: "price_1RZygKIM1Ur4QVEvdQis5BeV", // Your Founders Access price ID
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: "payment", // One-time payment
       success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/subscription?payment=cancelled`,
       metadata: {
         user_id: user.id,
         tier_id: tierId,
+        discount_code_id: discountCodeId || "",
+        discount_percentage: discountPercentage.toString(),
       },
     });
 
