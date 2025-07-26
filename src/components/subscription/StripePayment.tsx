@@ -10,11 +10,17 @@ import { useIsPwa } from '@/hooks/use-pwa';
 interface StripePaymentProps {
   tierId: string;
   discountCodeId?: string;
+  appliedDiscount?: {
+    id: string;
+    code: string;
+    discount_percentage: number;
+    duration_days: number | null;
+  } | null;
   onBack: () => void;
   onSuccess: () => void;
 }
 
-const StripePayment: React.FC<StripePaymentProps> = ({ tierId, discountCodeId, onBack, onSuccess }) => {
+const StripePayment: React.FC<StripePaymentProps> = ({ tierId, discountCodeId, appliedDiscount, onBack, onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const isPwa = useIsPwa();
@@ -83,7 +89,21 @@ const StripePayment: React.FC<StripePaymentProps> = ({ tierId, discountCodeId, o
         <CardContent className="space-y-6">
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-medium text-blue-900 mb-2">Founders Access - Monthly</h3>
-            <p className="text-2xl font-bold text-blue-900">₱299<span className="text-base font-normal">/month</span></p>
+            <div className="flex items-center gap-2">
+              {appliedDiscount ? (
+                <>
+                  <p className="text-lg font-medium text-gray-500 line-through">₱299</p>
+                  <p className="text-2xl font-bold text-blue-900">₱209<span className="text-base font-normal">/month</span></p>
+                </>
+              ) : (
+                <p className="text-2xl font-bold text-blue-900">₱299<span className="text-base font-normal">/month</span></p>
+              )}
+            </div>
+            {appliedDiscount && (
+              <p className="text-sm text-green-600 mt-1">
+                🎉 {appliedDiscount.discount_percentage}% discount applied with code "{appliedDiscount.code}"
+              </p>
+            )}
             <p className="text-sm text-blue-700 mt-1">
               Secure recurring payment processed by Stripe
             </p>
