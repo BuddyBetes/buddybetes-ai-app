@@ -12,6 +12,12 @@ type PaymentMethod = 'gcash' | 'bpi';
 interface PaymentDetailsProps {
   paymentMethod: PaymentMethod;
   tierPrice?: number;
+  appliedDiscount?: {
+    id: string;
+    code: string;
+    discount_percentage: number;
+    duration_days: number | null;
+  } | null;
   onBack: () => void;
   onContinue: () => void;
 }
@@ -19,6 +25,7 @@ interface PaymentDetailsProps {
 const PaymentDetails: React.FC<PaymentDetailsProps> = ({
   paymentMethod,
   tierPrice,
+  appliedDiscount,
   onBack,
   onContinue,
 }) => {
@@ -93,6 +100,11 @@ const PaymentDetails: React.FC<PaymentDetailsProps> = ({
               <p className="text-sm text-blue-800">
                 <strong>Amount to send: ₱{tierPrice}</strong>
               </p>
+              {appliedDiscount && (
+                <p className="text-xs text-green-600 mt-1">
+                  🎉 {appliedDiscount.discount_percentage}% discount applied with code "{appliedDiscount.code}"
+                </p>
+              )}
               <p className="text-xs text-blue-600 mt-1">
                 Please send the exact amount
               </p>

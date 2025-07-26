@@ -15,6 +15,13 @@ type PaymentMethod = 'gcash' | 'bpi';
 interface ReceiptUploadProps {
   tierId: string;
   paymentMethod: PaymentMethod;
+  effectivePrice?: number;
+  appliedDiscount?: {
+    id: string;
+    code: string;
+    discount_percentage: number;
+    duration_days: number | null;
+  } | null;
   onBack: () => void;
   onSuccess: () => void;
 }
@@ -22,6 +29,8 @@ interface ReceiptUploadProps {
 const ReceiptUpload: React.FC<ReceiptUploadProps> = ({
   tierId,
   paymentMethod,
+  effectivePrice,
+  appliedDiscount,
   onBack,
   onSuccess,
 }) => {
@@ -86,7 +95,7 @@ const ReceiptUpload: React.FC<ReceiptUploadProps> = ({
         tier_id: tierId,
         status: 'pending' as const,
         payment_method: paymentMethod,
-        amount_paid: tier.price,
+        amount_paid: effectivePrice || tier.price,
         expires_at: tier.duration_days ? null : null,
         starts_at: null
       };
@@ -108,7 +117,7 @@ const ReceiptUpload: React.FC<ReceiptUploadProps> = ({
           receipt_url: receiptPath,
           payment_method: paymentMethod,
           reference_number: referenceNumber || null,
-          amount: tier.price,
+          amount: effectivePrice || tier.price,
           verification_status: 'pending'
         });
 

@@ -34,6 +34,12 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
   const { toast } = useToast();
 
   const tier = tiers.find(t => t.id === tierId);
+  
+  // Calculate the effective price after discount
+  const getEffectivePrice = () => {
+    if (!tier || !appliedDiscount) return tier?.price;
+    return tier.price * (1 - appliedDiscount.discount_percentage / 100);
+  };
 
   const handleDiscountApplied = async (discount: {
     id: string;
@@ -223,7 +229,8 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
       return (
         <PaymentDetails
           paymentMethod={paymentMethod! as 'gcash' | 'bpi'}
-          tierPrice={tier?.price}
+          tierPrice={getEffectivePrice()}
+          appliedDiscount={appliedDiscount}
           onBack={handleBackToMethodSelection}
           onContinue={handleContinueToUpload}
         />
@@ -234,6 +241,8 @@ const PaymentFlow: React.FC<PaymentFlowProps> = ({ tierId, onBack }) => {
         <ReceiptUpload
           tierId={tierId}
           paymentMethod={paymentMethod! as 'gcash' | 'bpi'}
+          effectivePrice={getEffectivePrice()}
+          appliedDiscount={appliedDiscount}
           onBack={handleBackToDetails}
           onSuccess={handlePaymentSuccess}
         />
