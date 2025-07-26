@@ -132,7 +132,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     return tier?.features.includes(feature) || false;
   };
 
-  // Updated to handle lifetime subscriptions (where expires_at is null)
+  // Updated to handle both lifetime subscriptions and monthly subscriptions
   const hasActiveSubscription = subscription?.status === 'active' && 
     (subscription.expires_at === null || new Date(subscription.expires_at) > new Date());
 

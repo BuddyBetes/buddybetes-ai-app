@@ -118,11 +118,12 @@ const Subscription = () => {
               </CardTitle>
               <div className="space-y-2 w-full">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-3xl sm:text-4xl font-bold text-gray-900">₱999</span>
-                  <span className="text-lg text-gray-500 line-through">₱1,999</span>
+                  <span className="text-3xl sm:text-4xl font-bold text-gray-900">₱299</span>
+                  <span className="text-base font-normal text-gray-600">/month</span>
+                  <span className="text-lg text-gray-500 line-through ml-2">₱399</span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  {foundersAccessTier?.duration_days === null ? 'Lifetime access' : 'One-time payment • Lifetime access'}
+                  Monthly subscription • Cancel anytime
                 </p>
               </div>
             </CardHeader>

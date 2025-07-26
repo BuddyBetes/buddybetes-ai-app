@@ -82,10 +82,10 @@ const StripePayment: React.FC<StripePaymentProps> = ({ tierId, discountCodeId, o
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-medium text-blue-900 mb-2">Founders Access - Lifetime</h3>
-            <p className="text-2xl font-bold text-blue-900">₱999</p>
+            <h3 className="font-medium text-blue-900 mb-2">Founders Access - Monthly</h3>
+            <p className="text-2xl font-bold text-blue-900">₱299<span className="text-base font-normal">/month</span></p>
             <p className="text-sm text-blue-700 mt-1">
-              Secure payment processed by Stripe
+              Secure recurring payment processed by Stripe
             </p>
           </div>
 
@@ -115,7 +115,7 @@ const StripePayment: React.FC<StripePaymentProps> = ({ tierId, discountCodeId, o
                 <p>1. Click "Pay with Stripe" to {isPwa ? 'go to' : 'open'} secure checkout</p>
                 <p>2. Complete your payment using any major credit/debit card</p>
                 <p>3. You'll be automatically redirected back with confirmation</p>
-                <p>4. Your premium access will be activated instantly</p>
+                <p>4. Your monthly subscription will be activated instantly</p>
               </div>
             </div>
           </div>
@@ -123,8 +123,8 @@ const StripePayment: React.FC<StripePaymentProps> = ({ tierId, discountCodeId, o
           <div className="text-xs text-gray-500 space-y-1">
             <p>• 256-bit SSL encryption for secure payments</p>
             <p>• Supports Visa, Mastercard, American Express, and more</p>
-            <p>• Instant activation upon successful payment</p>
-            <p>• 30-day money-back guarantee</p>
+            <p>• Instant subscription activation upon successful payment</p>
+            <p>• Cancel anytime through your account settings</p>
           </div>
         </CardContent>
       </Card>

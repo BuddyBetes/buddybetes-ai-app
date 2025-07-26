@@ -67,7 +67,7 @@ serve(async (req) => {
 
     const { data: tier, error: tierError } = await supabaseService
       .from("subscription_tiers")
-      .select("*")
+      .select("*, stripe_price_id, stripe_price_id_discounted")
       .eq("id", tierId)
       .single();
 
@@ -75,75 +75,53 @@ serve(async (req) => {
       throw new Error("Invalid subscription tier");
     }
 
-    let discountAmount = 0;
-    let discountPercentage = 0;
+    let discountCode = null;
+    let priceId = tier.stripe_price_id;
 
     // Handle discount code if provided
     if (discountCodeId) {
-      const { data: discountCode, error: discountError } = await supabaseService
+      const { data: discount, error: discountError } = await supabaseService
         .from("discount_codes")
         .select("*")
         .eq("id", discountCodeId)
         .single();
 
-      if (discountError || !discountCode) {
+      if (discountError || !discount) {
         throw new Error("Invalid discount code");
       }
 
-      discountPercentage = discountCode.discount_percentage;
-      discountAmount = Math.round((tier.price * discountPercentage) / 100);
-      logStep("Discount applied", { discountPercentage, discountAmount });
+      discountCode = discount;
+      // Use the discounted price if available and if it's the PDS30 discount
+      if (discount.code === 'PDS30' && tier.stripe_price_id_discounted) {
+        priceId = tier.stripe_price_id_discounted;
+        logStep("PDS30 discount applied - using discounted product", { priceId });
+      } else {
+        logStep("Discount applied", { discountPercentage: discount.discount_percentage });
+      }
     }
-
-    const finalPrice = Math.max(0, tier.price - discountAmount);
 
     // Get the origin for the success URL
     const origin = req.headers.get("origin") || "http://localhost:3000";
     logStep("Origin detected", { origin });
 
-    // Create line items with discount
-    const lineItems = [];
-    
-    // Main product
-    lineItems.push({
-      price_data: {
-        currency: "php",
-        product_data: {
-          name: tier.name,
-          description: `${tier.name} subscription`,
-        },
-        unit_amount: tier.price * 100, // Convert to centavos
-      },
-      quantity: 1,
-    });
-
-    // Add discount as negative line item if applicable
-    if (discountAmount > 0) {
-      lineItems.push({
-        price_data: {
-          currency: "php",
-          product_data: {
-            name: `Discount (${discountPercentage}% off)`,
-          },
-          unit_amount: -discountAmount * 100, // Negative amount for discount
-        },
-        quantity: 1,
-      });
-    }
-
-    // Create a one-time payment session
+    // Create subscription session using predefined Stripe price
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: lineItems,
-      mode: "payment", // One-time payment
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: "subscription", // Recurring subscription
       success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/subscription?payment=cancelled`,
       metadata: {
         user_id: user.id,
         tier_id: tierId,
         discount_code_id: discountCodeId || "",
-        discount_percentage: discountPercentage.toString(),
+        discount_code: discountCode?.code || "",
       },
     });
 
