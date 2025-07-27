@@ -35,6 +35,8 @@ interface OnboardingContentProps {
     diabetesType: string;
     glucoseUnit: GlucoseUnit;
   }>>;
+  marketingOptIn: boolean;
+  setMarketingOptIn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const OnboardingContent: React.FC<OnboardingContentProps> = ({
@@ -42,7 +44,9 @@ const OnboardingContent: React.FC<OnboardingContentProps> = ({
   personalInfo,
   healthData,
   setPersonalInfo,
-  setHealthData
+  setHealthData,
+  marketingOptIn,
+  setMarketingOptIn
 }) => {
   const renderStepContent = () => {
     switch (currentStep) {
@@ -50,7 +54,9 @@ const OnboardingContent: React.FC<OnboardingContentProps> = ({
         return (
           <OnboardingPersonalInfo 
             personalInfo={personalInfo} 
-            setPersonalInfo={setPersonalInfo} 
+            setPersonalInfo={setPersonalInfo}
+            marketingOptIn={marketingOptIn}
+            setMarketingOptIn={setMarketingOptIn}
           />
         );
       case 1:

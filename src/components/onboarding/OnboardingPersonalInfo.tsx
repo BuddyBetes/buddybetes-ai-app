@@ -8,6 +8,7 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,8 @@ interface PersonalInfo {
 interface OnboardingPersonalInfoProps {
   personalInfo: PersonalInfo;
   setPersonalInfo: React.Dispatch<React.SetStateAction<PersonalInfo>>;
+  marketingOptIn: boolean;
+  setMarketingOptIn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const formSchema = z.object({
@@ -32,6 +35,8 @@ const formSchema = z.object({
 const OnboardingPersonalInfo: React.FC<OnboardingPersonalInfoProps> = ({
   personalInfo,
   setPersonalInfo,
+  marketingOptIn,
+  setMarketingOptIn,
 }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,6 +104,26 @@ const OnboardingPersonalInfo: React.FC<OnboardingPersonalInfoProps> = ({
               </FormItem>
             )}
           />
+          
+          <div className="flex items-start space-x-3 mt-6 p-4 bg-gray-50 rounded-lg">
+            <Checkbox 
+              id="marketing-opt-in"
+              checked={marketingOptIn}
+              onCheckedChange={(checked) => setMarketingOptIn(checked as boolean)}
+              className="mt-0.5"
+            />
+            <div className="flex flex-col space-y-1">
+              <label 
+                htmlFor="marketing-opt-in" 
+                className="text-sm font-medium text-gray-700 cursor-pointer"
+              >
+                Subscribe to Buddybetes newsletter
+              </label>
+              <p className="text-xs text-gray-500">
+                Get updates about new features, diabetes tips, and community stories. You can unsubscribe anytime.
+              </p>
+            </div>
+          </div>
         </form>
       </Form>
     </div>

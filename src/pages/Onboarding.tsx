@@ -37,6 +37,8 @@ const Onboarding = () => {
     lastName: '',
   });
   
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  
   const [healthData, setHealthData] = useState({
     gender: '',
     birthdate: undefined as Date | undefined,
@@ -134,6 +136,16 @@ const Onboarding = () => {
       // Update glucose unit in context
       await setGlucoseUnit(healthData.glucoseUnit);
       
+      // Submit to Mailchimp if user opted in for marketing emails
+      if (marketingOptIn && user.email && personalInfo.firstName) {
+        try {
+          await submitToMailchimp(user.email, personalInfo.firstName);
+        } catch (error) {
+          console.error('Failed to subscribe to marketing emails:', error);
+          // Don't show error to user as this shouldn't block onboarding completion
+        }
+      }
+      
       toast({
         title: "Onboarding completed!",
         description: "Your profile has been set up successfully.",
@@ -150,6 +162,20 @@ const Onboarding = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to submit to Mailchimp
+  const submitToMailchimp = async (email: string, firstName: string) => {
+    const formData = new FormData();
+    formData.append('EMAIL', email);
+    formData.append('FNAME', firstName);
+    formData.append('b_cfbc83a07a3542e2559bace72_c81e3803c2', ''); // honeypot field
+    
+    await fetch('https://buddybetes.us22.list-manage.com/subscribe/post?u=cfbc83a07a3542e2559bace72&id=c81e3803c2&f_id=0001cfe1f0', {
+      method: 'POST',
+      body: formData,
+      mode: 'no-cors', // Required for Mailchimp form submissions
+    });
   };
 
   const variants = {
@@ -178,6 +204,8 @@ const Onboarding = () => {
           healthData={healthData}
           setPersonalInfo={setPersonalInfo}
           setHealthData={setHealthData}
+          marketingOptIn={marketingOptIn}
+          setMarketingOptIn={setMarketingOptIn}
         />
 
         <OnboardingNavigation
