@@ -164,32 +164,37 @@ const Onboarding = () => {
     }
   };
 
-  // Function to submit to Mailchimp using hidden form
+  // Function to submit to Mailchimp using improved hidden form approach
   const submitToMailchimp = async (email: string, firstName: string): Promise<void> => {
-    console.log('Attempting newsletter subscription for:', email);
+    console.log('=== Starting newsletter subscription process ===');
+    console.log('Email:', email);
+    console.log('First Name:', firstName);
     
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       try {
-        // Create hidden iframe to handle the form submission
+        // Create hidden iframe
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
-        iframe.name = 'hidden_iframe';
+        iframe.name = 'mailchimp_iframe';
+        iframe.id = 'mailchimp_iframe';
         document.body.appendChild(iframe);
+        console.log('✓ Created iframe');
 
-        // Create hidden form
+        // Create hidden form with complete Mailchimp URL including f_id
         const form = document.createElement('form');
-        form.action = 'https://buddybetes.us22.list-manage.com/subscribe/post';
+        form.action = 'https://buddybetes.us22.list-manage.com/subscribe/post?u=cfbc83a07a3542e2559bace72&id=c81e3803c2&f_id=0001cfe1f0';
         form.method = 'POST';
-        form.target = 'hidden_iframe';
+        form.target = 'mailchimp_iframe';
         form.style.display = 'none';
+        console.log('✓ Created form with URL:', form.action);
 
-        // Add form fields
+        // Add required form fields
         const fields = [
           { name: 'u', value: 'cfbc83a07a3542e2559bace72' },
           { name: 'id', value: 'c81e3803c2' },
           { name: 'EMAIL', value: email },
           { name: 'FNAME', value: firstName },
-          { name: 'b_cfbc83a07a3542e2559bace72_c81e3803c2', value: '' } // honeypot
+          { name: 'b_cfbc83a07a3542e2559bace72_c81e3803c2', value: '' } // anti-spam honeypot
         ];
 
         fields.forEach(field => {
@@ -198,55 +203,70 @@ const Onboarding = () => {
           input.name = field.name;
           input.value = field.value;
           form.appendChild(input);
+          console.log(`✓ Added field: ${field.name} = ${field.value}`);
         });
 
         document.body.appendChild(form);
+        console.log('✓ Form appended to body');
 
-        // Handle iframe load event
-        const handleLoad = () => {
-          console.log('Newsletter subscription form submitted successfully');
+        let completed = false;
+        
+        const cleanup = () => {
+          if (!completed) {
+            completed = true;
+            try {
+              if (document.body.contains(form)) document.body.removeChild(form);
+              if (document.body.contains(iframe)) document.body.removeChild(iframe);
+              console.log('✓ Cleanup completed');
+            } catch (e) {
+              console.log('Cleanup error (non-critical):', e);
+            }
+          }
+        };
+
+        const handleSuccess = () => {
+          if (completed) return;
+          console.log('=== Newsletter subscription completed ===');
+          cleanup();
+          
+          // Show more cautious success message
+          console.log('Showing success notification');
           toast({
-            title: "Newsletter subscription sent!",
-            description: "Thanks for subscribing to our newsletter.",
+            title: "Newsletter subscription submitted",
+            description: "You should receive a confirmation email shortly.",
           });
           
-          // Cleanup
-          document.body.removeChild(form);
-          document.body.removeChild(iframe);
           resolve();
         };
 
-        const handleError = () => {
-          console.log('Newsletter subscription completed (assuming success)');
-          toast({
-            title: "Newsletter subscription sent!", 
-            description: "Thanks for subscribing to our newsletter.",
-          });
-          
-          // Cleanup
-          document.body.removeChild(form);
-          document.body.removeChild(iframe);
-          resolve();
-        };
+        // More reliable timeout approach
+        const submitTimeout = setTimeout(() => {
+          if (!completed) {
+            console.log('=== Subscription timeout - assuming success ===');
+            handleSuccess();
+          }
+        }, 3000); // Reduced timeout to 3 seconds
 
-        // Set up event handlers
-        iframe.onload = handleLoad;
-        iframe.onerror = handleError;
+        // Try to detect iframe content changes
+        iframe.onload = () => {
+          console.log('Iframe loaded - checking content...');
+          setTimeout(() => {
+            if (!completed) {
+              console.log('Iframe content loaded - assuming success');
+              clearTimeout(submitTimeout);
+              handleSuccess();
+            }
+          }, 500);
+        };
 
         // Submit the form
+        console.log('🚀 Submitting form to Mailchimp...');
         form.submit();
-
-        // Timeout fallback
-        setTimeout(() => {
-          if (document.body.contains(form)) {
-            console.log('Newsletter subscription timeout - assuming success');
-            handleError();
-          }
-        }, 5000);
+        console.log('✓ Form submitted');
 
       } catch (error) {
-        console.error('Newsletter subscription failed:', error);
-        // Don't show error to user, just resolve silently
+        console.error('Newsletter subscription error:', error);
+        // Always resolve to not block onboarding
         resolve();
       }
     });
