@@ -166,16 +166,52 @@ const Onboarding = () => {
 
   // Function to submit to Mailchimp
   const submitToMailchimp = async (email: string, firstName: string) => {
-    const formData = new FormData();
-    formData.append('EMAIL', email);
-    formData.append('FNAME', firstName);
-    formData.append('b_cfbc83a07a3542e2559bace72_c81e3803c2', ''); // honeypot field
+    console.log('Attempting newsletter subscription for:', email);
     
-    await fetch('https://buddybetes.us22.list-manage.com/subscribe/post?u=cfbc83a07a3542e2559bace72&id=c81e3803c2&f_id=0001cfe1f0', {
-      method: 'POST',
-      body: formData,
-      mode: 'no-cors', // Required for Mailchimp form submissions
-    });
+    try {
+      // Try using our edge function first
+      const response = await supabase.functions.invoke('newsletter-subscribe', {
+        body: { email, firstName }
+      });
+
+      console.log('Newsletter subscription response:', response);
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const result = response.data;
+      if (result?.success) {
+        console.log('Newsletter subscription successful via edge function');
+        toast({
+          title: "Newsletter subscription successful!",
+          description: "You've been subscribed to our newsletter.",
+        });
+      } else {
+        console.log('Newsletter subscription status unclear');
+      }
+    } catch (error) {
+      console.error('Edge function failed, trying direct submission:', error);
+      
+      // Fallback to direct submission
+      try {
+        const formData = new FormData();
+        formData.append('EMAIL', email);
+        formData.append('FNAME', firstName);
+        formData.append('b_cfbc83a07a3542e2559bace72_c81e3803c2', '');
+        
+        await fetch('https://buddybetes.us22.list-manage.com/subscribe/post?u=cfbc83a07a3542e2559bace72&id=c81e3803c2&f_id=0001cfe1f0', {
+          method: 'POST',
+          body: formData,
+          mode: 'no-cors',
+        });
+        
+        console.log('Direct newsletter submission completed (status unknown due to CORS)');
+      } catch (directError) {
+        console.error('Direct newsletter submission also failed:', directError);
+        throw directError;
+      }
+    }
   };
 
   const variants = {
