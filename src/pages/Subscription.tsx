@@ -44,8 +44,11 @@ const Subscription = () => {
     );
   }
 
-  // Find Founders Access tier
-  const foundersAccessTier = tiers.find(t => t.name === 'Founders Access');
+  // Find Buddybetes Monthly tier
+  const buddybetesMonthlyTier = tiers.find(t => t.name === 'Buddybetes Monthly');
+  
+  console.log('Available tiers:', tiers.map(t => ({ id: t.id, name: t.name })));
+  console.log('Selected tier:', buddybetesMonthlyTier);
 
   return (
     <Layout>
@@ -142,13 +145,14 @@ const Subscription = () => {
 
               <div className="pt-4 border-t">
                 <Button 
-                  onClick={() => handleSelectTier(foundersAccessTier?.id || '')}
+                  onClick={() => handleSelectTier(buddybetesMonthlyTier?.id || '')}
                   className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-lg"
-                  disabled={subscription?.status === 'active' || subscription?.status === 'pending'}
+                  disabled={subscription?.status === 'active' || subscription?.status === 'pending' || !buddybetesMonthlyTier}
                 >
                   {subscription?.status === 'active' ? 'Already Subscribed' :
                    subscription?.status === 'pending' ? 'Payment Pending' :
-                   'Get Founders Access'}
+                   !buddybetesMonthlyTier ? 'Loading...' :
+                   'Get Buddybetes Monthly'}
                 </Button>
               </div>
             </CardContent>
