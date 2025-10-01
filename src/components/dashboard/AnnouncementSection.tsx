@@ -6,11 +6,22 @@ import {
   Gift, 
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
 import AnnouncementCard, { Announcement } from './AnnouncementCard';
 
 const ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: '0',
+    type: 'update',
+    title: 'Join Our Upcoming Event! 🎉',
+    description: 'Register now for our exclusive BuddyBetes community event. Enter our raffle for amazing prizes!',
+    icon: Calendar,
+    badge: 'New Event',
+    actionLabel: 'Register Now',
+    actionUrl: '/event/upcoming'
+  },
   {
     id: '1',
     type: 'update',
