@@ -66,61 +66,53 @@ serve(async (req) => {
 
     console.log('Registration created:', registration.id);
 
-    // If new user, create pending account
+    // If new user, create account immediately
+    let newUserId = userId;
     if (!userId) {
-      const verificationToken = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours expiry
+      // Generate a temporary password for the new user
+      const tempPassword = crypto.randomUUID();
 
-      const { error: pendingError } = await supabase
-        .from('pending_accounts')
-        .insert({
-          email,
+      // Create the user account
+      const { data: newUser, error: createUserError } = await supabase.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: true, // Auto-confirm email since we're not using email verification
+        user_metadata: {
           first_name: firstName,
           last_name: lastName,
-          verification_token: verificationToken,
-          event_registration_id: registration.id,
-          expires_at: expiresAt.toISOString(),
-        });
-
-      if (pendingError) throw pendingError;
-
-      console.log('Pending account created with token:', verificationToken);
-
-      // Send verification email
-      await supabase.functions.invoke('send-event-email', {
-        body: {
-          type: 'verification',
-          email,
-          firstName,
-          verificationToken,
-          eventId,
-        },
+        }
       });
-    } else {
-      // Send QR code email immediately for existing users
-      await supabase.functions.invoke('send-event-email', {
-        body: {
-          type: 'qr_code',
-          email,
-          firstName,
-          qrCode,
-          eventId,
-        },
+
+      if (createUserError) {
+        console.error('Error creating user:', createUserError);
+        throw createUserError;
+      }
+
+      newUserId = newUser.user.id;
+      console.log('New user created:', newUserId);
+
+      // Update the registration with the new user_id
+      const { error: updateError } = await supabase
+        .from('event_registrations')
+        .update({ user_id: newUserId })
+        .eq('id', registration.id);
+
+      if (updateError) throw updateError;
+
+      // Trigger password reset email (Supabase handles this automatically)
+      await supabase.auth.admin.generateLink({
+        type: 'recovery',
+        email,
       });
     }
-
-    // Mark email as sent
-    await supabase
-      .from('event_registrations')
-      .update({ email_sent: true })
-      .eq('id', registration.id);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         registrationId: registration.id,
-        requiresVerification: !userId,
+        qrCode: qrCode,
+        isNewUser: !userId,
+        userId: newUserId,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

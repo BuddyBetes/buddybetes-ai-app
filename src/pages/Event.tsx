@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import EventRSVPForm from '@/components/events/EventRSVPForm';
 import EventVideoSection from '@/components/events/EventVideoSection';
+import QRCodeDisplay from '@/components/events/QRCodeDisplay';
 
 interface Event {
   id: string;
@@ -28,6 +29,7 @@ const Event = () => {
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [userQrCode, setUserQrCode] = useState<string | null>(null);
 
   useEffect(() => {
     loadEvent();
@@ -61,15 +63,17 @@ const Event = () => {
     try {
       const { data } = await supabase
         .from('event_registrations')
-        .select('id')
+        .select('id, qr_code')
         .eq('event_id', eventId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      setIsRegistered(!!data);
+      if (data) {
+        setIsRegistered(true);
+        setUserQrCode(data.qr_code);
+      }
     } catch (error) {
-      // Not registered
-      setIsRegistered(false);
+      console.error('Error checking registration:', error);
     }
   };
 
@@ -84,7 +88,7 @@ const Event = () => {
         .eq('id', user.id)
         .single();
 
-      const { error } = await supabase.functions.invoke('event-registration', {
+      const { data, error } = await supabase.functions.invoke('event-registration', {
         body: {
           eventId: event.id,
           email: profile?.email || user.email,
@@ -96,8 +100,9 @@ const Event = () => {
 
       if (error) throw error;
 
-      toast.success('Registration confirmed! Check your email for your QR code.');
       setIsRegistered(true);
+      setUserQrCode(data.qrCode);
+      toast.success('Registration confirmed!');
     } catch (error: any) {
       console.error('Registration error:', error);
       toast.error(error.message || 'Failed to register');
@@ -178,17 +183,17 @@ const Event = () => {
               {registering ? 'Registering...' : 'Confirm Attendance & Get QR Code'}
             </Button>
           )}
-
-          {user && isRegistered && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 font-medium">
-                ✓ You're registered! Check your email for your QR code.
-              </p>
-            </div>
-          )}
         </Card>
 
         {event.video_url && <EventVideoSection videoUrl={event.video_url} />}
+
+        {user && isRegistered && userQrCode && (
+          <QRCodeDisplay 
+            qrCode={userQrCode}
+            eventTitle={event.title}
+            userName="Your Name"
+          />
+        )}
 
         {!user && <EventRSVPForm eventId={event.id} />}
       </div>

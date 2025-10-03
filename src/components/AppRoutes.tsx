@@ -17,7 +17,7 @@ import EmailConfirmed from '@/pages/auth/EmailConfirmed';
 import Profile from '@/pages/Profile';
 import Assistant from '@/pages/Assistant';
 import Event from '@/pages/Event';
-import VerifyAccount from '@/pages/VerifyAccount';
+
 import Settings from '@/pages/settings/Settings';
 import Terms from '@/pages/Terms';
 import Subscription from '@/pages/Subscription';
@@ -137,7 +137,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/confirm" element={<EmailConfirmed />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/event/:eventId" element={<Event />} />
-      <Route path="/verify-account" element={<VerifyAccount />} />
     </Routes>
   );
 };
