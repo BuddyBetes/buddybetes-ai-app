@@ -58,7 +58,7 @@ const ANNOUNCEMENTS: Announcement[] = [
     icon: Users,
     badge: 'New Event',
     actionLabel: 'Register Now!',
-    actionUrl: '/event/upcoming'
+    actionUrl: '/event/550e8400-e29b-41d4-a716-446655440000'
   }
 ];
 
