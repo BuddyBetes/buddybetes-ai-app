@@ -5,7 +5,6 @@ import { Activity, Calendar, Clock, Utensils } from 'lucide-react';
 import { useGlucoseUnit } from '@/context/GlucoseUnitContext';
 import { convertGlucoseValue } from '@/utils/glucoseUtils';
 import { GlucoseLog } from '@/context/LogContext';
-import AnnouncementSection from './AnnouncementSection';
 
 interface DashboardStatsProps {
   lastFoodEntry: any;
@@ -97,9 +96,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
         </div>
       </motion.div>
 
-      <AnnouncementSection />
-
-      <motion.div 
+      <motion.div
         custom={1}
         variants={cardVariants}
         className="p-4 rounded-xl bg-white shadow-sm flex flex-col items-start"

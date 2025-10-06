@@ -15,6 +15,10 @@ interface Event {
   event_date: string;
   location: string | null;
   video_url: string | null;
+  subtitle: string | null;
+  badge: string | null;
+  image_url: string | null;
+  color_gradient: string | null;
 }
 
 const AnnouncementsCarousel = () => {
@@ -110,62 +114,70 @@ const AnnouncementsCarousel = () => {
   return (
     <section className="w-full bg-gradient-to-b from-background to-muted/20 rounded-xl overflow-hidden">
       {/* Section Header */}
-      <div className="text-center pt-8 pb-6 px-4">
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-3">
-          <Bell className="h-4 w-4" />
-          <span className="text-sm font-medium">What's New</span>
+      <div className="text-center pt-4 pb-3 px-4">
+        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full mb-2">
+          <Bell className="h-3 w-3" />
+          <span className="text-xs font-medium">What's New</span>
         </div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">
+        <h2 className="text-2xl font-bold text-foreground">
           Latest Updates & Events
         </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Stay informed about new features, upcoming events, and community activities
-        </p>
       </div>
 
       {/* Main Slider */}
-      <div className="relative mb-6 px-4">
-        <div className="overflow-hidden rounded-2xl shadow-lg">
+      <div className="relative mb-4 px-4">
+        <div className="overflow-hidden rounded-xl shadow-lg">
           <div 
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           >
             {events.map((event) => (
               <div key={event.id} className="min-w-full">
-                <div className="relative h-64 md:h-80 bg-gradient-to-r from-primary/90 to-primary/70">
+                <div className="relative h-48 md:h-56">
+                  {/* Background Image with Overlay */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${event.image_url})` }}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-r ${event.color_gradient || 'from-primary/90 to-primary/70'} opacity-90`}></div>
+                  </div>
+
                   {/* Content */}
-                  <div className="relative h-full flex items-center px-8 md:px-12">
-                    <div className="max-w-2xl text-primary-foreground">
-                      <Badge className="mb-3 bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30">
-                        Upcoming Event
+                  <div className="relative h-full flex items-center px-6 md:px-10">
+                    <div className="max-w-2xl text-white">
+                      <Badge className="mb-2 bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 text-xs">
+                        {event.badge || 'Upcoming Event'}
                       </Badge>
-                      <h3 className="text-3xl md:text-4xl font-bold mb-2">
+                      <h3 className="text-2xl md:text-3xl font-bold mb-1">
                         {event.title}
                       </h3>
-                      <p className="text-lg mb-4 text-white/90 line-clamp-2">
+                      {event.subtitle && (
+                        <p className="text-base md:text-lg font-medium mb-2 text-white/95">
+                          {event.subtitle}
+                        </p>
+                      )}
+                      <p className="text-sm mb-3 text-white/90 line-clamp-2">
                         {event.description}
                       </p>
-                      <div className="flex flex-wrap items-center gap-4 mb-4">
-                        <div className="flex items-center gap-2 text-white/90">
-                          <Calendar className="h-4 w-4" />
-                          <span className="text-sm">{format(new Date(event.event_date), 'PPP')}</span>
-                        </div>
-                      </div>
                       <div className="flex flex-wrap items-center gap-3">
                         <Button 
                           onClick={() => handleShowInterest(event)}
-                          className="bg-white text-primary hover:bg-white/90 font-semibold"
+                          className="bg-white text-primary hover:bg-white/90 font-semibold text-sm h-8 px-4"
                         >
                           Register Now
-                          <ArrowRight className="ml-2 h-4 w-4" />
+                          <ArrowRight className="ml-2 h-3 w-3" />
                         </Button>
                         <Button 
                           onClick={() => setSelectedEvent(event)}
                           variant="outline"
-                          className="bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20 hover:text-white"
+                          className="bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20 hover:text-white text-sm h-8 px-4"
                         >
                           Learn More
                         </Button>
+                        <div className="flex items-center gap-1.5 text-white/80 ml-2">
+                          <Calendar className="h-3 w-3" />
+                          <span className="text-xs">{format(new Date(event.event_date), 'MMM d, yyyy')}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -183,20 +195,20 @@ const AnnouncementsCarousel = () => {
                 prevSlide();
                 setIsAutoPlaying(false);
               }}
-              className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110 z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 rounded-full shadow-lg transition-all hover:scale-110 z-10"
               aria-label="Previous slide"
             >
-              <ChevronLeft className="h-5 w-5 text-gray-800" />
+              <ChevronLeft className="h-4 w-4 text-gray-800" />
             </button>
             <button
               onClick={() => {
                 nextSlide();
                 setIsAutoPlaying(false);
               }}
-              className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110 z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 rounded-full shadow-lg transition-all hover:scale-110 z-10"
               aria-label="Next slide"
             >
-              <ChevronRight className="h-5 w-5 text-gray-800" />
+              <ChevronRight className="h-4 w-4 text-gray-800" />
             </button>
           </>
         )}
@@ -204,16 +216,16 @@ const AnnouncementsCarousel = () => {
 
       {/* Dot Indicators */}
       {events.length > 1 && (
-        <div className="flex justify-center gap-2 mb-6">
+        <div className="flex justify-center gap-1.5 mb-4">
           {events.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`transition-all ${
                 index === currentSlide
-                  ? 'w-8 bg-primary'
-                  : 'w-2 bg-muted hover:bg-muted-foreground/50'
-              } h-2 rounded-full`}
+                  ? 'w-6 bg-primary'
+                  : 'w-1.5 bg-muted hover:bg-muted-foreground/50'
+              } h-1.5 rounded-full`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -222,20 +234,23 @@ const AnnouncementsCarousel = () => {
 
       {/* Thumbnail Grid */}
       {events.length > 1 && (
-        <div className="flex flex-wrap justify-center gap-3 px-4 pb-6">
+        <div className="flex flex-wrap justify-center gap-2 px-4 pb-4">
           {events.map((event, index) => (
             <Card
               key={event.id}
               onClick={() => goToSlide(index)}
-              className={`cursor-pointer transition-all hover:shadow-lg w-60 ${
+              className={`cursor-pointer transition-all hover:shadow-lg w-52 ${
                 index === currentSlide ? 'ring-2 ring-primary shadow-lg' : ''
               }`}
             >
-              <CardContent className="p-3">
-                <div className="h-16 rounded-lg mb-2 bg-gradient-to-r from-primary/90 to-primary/70 flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-white" />
+              <CardContent className="p-2.5">
+                <div 
+                  className="h-14 rounded-lg mb-2 bg-cover bg-center relative overflow-hidden"
+                  style={{ backgroundImage: `url(${event.image_url})` }}
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${event.color_gradient || 'from-primary/90 to-primary/70'} opacity-70`}></div>
                 </div>
-                <h4 className="font-semibold text-xs text-foreground mb-1 line-clamp-2">
+                <h4 className="font-semibold text-xs text-foreground mb-0.5 line-clamp-2">
                   {event.title}
                 </h4>
                 <p className="text-xs text-muted-foreground">
@@ -254,7 +269,7 @@ const AnnouncementsCarousel = () => {
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-                  Upcoming Event
+                  {selectedEvent.badge || 'Upcoming Event'}
                 </Badge>
                 <button
                   onClick={() => {
@@ -266,12 +281,20 @@ const AnnouncementsCarousel = () => {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="h-32 rounded-lg mb-4 bg-gradient-to-r from-primary/90 to-primary/70 flex items-center justify-center">
-                <Calendar className="h-12 w-12 text-white" />
+              <div 
+                className="h-40 rounded-lg mb-4 bg-cover bg-center relative overflow-hidden"
+                style={{ backgroundImage: `url(${selectedEvent.image_url})` }}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${selectedEvent.color_gradient || 'from-primary/90 to-primary/70'} opacity-70`}></div>
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-2">
                 {selectedEvent.title}
               </h3>
+              {selectedEvent.subtitle && (
+                <p className="text-lg text-foreground/80 mb-3">
+                  {selectedEvent.subtitle}
+                </p>
+              )}
               <p className="text-muted-foreground mb-4 leading-relaxed whitespace-pre-wrap">
                 {selectedEvent.description}
               </p>

@@ -239,37 +239,49 @@ export type Database = {
       }
       events: {
         Row: {
+          badge: string | null
+          color_gradient: string | null
           created_at: string
           description: string
           event_date: string
           id: string
+          image_url: string | null
           is_active: boolean
           location: string | null
           max_attendees: number | null
+          subtitle: string | null
           title: string
           updated_at: string
           video_url: string | null
         }
         Insert: {
+          badge?: string | null
+          color_gradient?: string | null
           created_at?: string
           description: string
           event_date: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           location?: string | null
           max_attendees?: number | null
+          subtitle?: string | null
           title: string
           updated_at?: string
           video_url?: string | null
         }
         Update: {
+          badge?: string | null
+          color_gradient?: string | null
           created_at?: string
           description?: string
           event_date?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           location?: string | null
           max_attendees?: number | null
+          subtitle?: string | null
           title?: string
           updated_at?: string
           video_url?: string | null
