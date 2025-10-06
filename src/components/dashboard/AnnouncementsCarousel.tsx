@@ -139,13 +139,13 @@ const AnnouncementsCarousel = () => {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url(${event.image_url})` }}
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-r ${event.color_gradient || 'from-primary/90 to-primary/70'} opacity-90`}></div>
+                    <div className={`absolute inset-0 bg-gradient-to-r ${event.color_gradient || 'from-primary/90 to-primary/70'} opacity-95`}></div>
                   </div>
 
                   {/* Content */}
                   <div className="relative h-full flex items-center px-6 md:px-10">
-                    <div className="max-w-2xl text-white">
-                      <Badge className="mb-2 bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 text-xs">
+                    <div className="max-w-2xl text-white [&>*]:drop-shadow-lg">
+                      <Badge className="mb-2 bg-white/30 backdrop-blur-sm text-white border-white/40 hover:bg-white/40 text-xs font-semibold">
                         {event.badge || 'Upcoming Event'}
                       </Badge>
                       <h3 className="text-2xl md:text-3xl font-bold mb-1">
@@ -170,11 +170,11 @@ const AnnouncementsCarousel = () => {
                         <Button 
                           onClick={() => setSelectedEvent(event)}
                           variant="outline"
-                          className="bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20 hover:text-white text-sm h-8 px-4"
+                          className="bg-white/20 backdrop-blur-sm text-white border-white/40 hover:bg-white/30 hover:text-white text-sm h-8 px-4"
                         >
                           Learn More
                         </Button>
-                        <div className="flex items-center gap-1.5 text-white/80 ml-2">
+                        <div className="flex items-center gap-1.5 text-white drop-shadow-md ml-2">
                           <Calendar className="h-3 w-3" />
                           <span className="text-xs">{format(new Date(event.event_date), 'MMM d, yyyy')}</span>
                         </div>
@@ -216,48 +216,18 @@ const AnnouncementsCarousel = () => {
 
       {/* Dot Indicators */}
       {events.length > 1 && (
-        <div className="flex justify-center gap-1.5 mb-4">
+        <div className="flex justify-center gap-1.5 pb-4">
           {events.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`transition-all ${
                 index === currentSlide
-                  ? 'w-6 bg-primary'
-                  : 'w-1.5 bg-muted hover:bg-muted-foreground/50'
+                  ? 'w-6 bg-white shadow-md'
+                  : 'w-1.5 bg-white/50 hover:bg-white/70'
               } h-1.5 rounded-full`}
               aria-label={`Go to slide ${index + 1}`}
             />
-          ))}
-        </div>
-      )}
-
-      {/* Thumbnail Grid */}
-      {events.length > 1 && (
-        <div className="flex flex-wrap justify-center gap-2 px-4 pb-4">
-          {events.map((event, index) => (
-            <Card
-              key={event.id}
-              onClick={() => goToSlide(index)}
-              className={`cursor-pointer transition-all hover:shadow-lg w-52 ${
-                index === currentSlide ? 'ring-2 ring-primary shadow-lg' : ''
-              }`}
-            >
-              <CardContent className="p-2.5">
-                <div 
-                  className="h-14 rounded-lg mb-2 bg-cover bg-center relative overflow-hidden"
-                  style={{ backgroundImage: `url(${event.image_url})` }}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${event.color_gradient || 'from-primary/90 to-primary/70'} opacity-70`}></div>
-                </div>
-                <h4 className="font-semibold text-xs text-foreground mb-0.5 line-clamp-2">
-                  {event.title}
-                </h4>
-                <p className="text-xs text-muted-foreground">
-                  {format(new Date(event.event_date), 'MMM d, yyyy')}
-                </p>
-              </CardContent>
-            </Card>
           ))}
         </div>
       )}

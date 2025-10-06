@@ -37,38 +37,47 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
     if (!user) return;
 
     try {
-      // Check if already registered
+      // First, get user's email from profile or auth
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const userEmail = profile?.email || user.email || '';
+
+      // Check if already registered by EITHER user_id OR email
       const { data: existingReg } = await supabase
         .from('event_registrations')
-        .select('id, qr_code')
+        .select('id, qr_code, first_name, last_name, email')
         .eq('event_id', eventId)
-        .eq('user_id', user.id)
+        .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
         .maybeSingle();
 
       if (existingReg) {
         setIsAlreadyRegistered(true);
         setQrCode(existingReg.qr_code);
         setSuccess(true);
+        // Pre-populate form with existing registration data
+        setFormData({
+          email: existingReg.email || userEmail,
+          firstName: existingReg.first_name || profile?.first_name || '',
+          lastName: existingReg.last_name || profile?.last_name || '',
+        });
         setLoading(false);
         return;
       }
 
-      // Load profile data
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, email')
-        .eq('id', user.id)
-        .single();
-
+      // Not registered, populate form with profile data
       if (profile) {
         setFormData({
-          email: profile.email || user.email || '',
+          email: userEmail,
           firstName: profile.first_name || '',
           lastName: profile.last_name || '',
         });
       } else {
         setFormData({
-          email: user.email || '',
+          email: userEmail,
           firstName: '',
           lastName: '',
         });
