@@ -11,7 +11,6 @@ import DashboardStats from '@/components/dashboard/DashboardStats';
 import GlucoseChartSection from '@/components/dashboard/GlucoseChartSection';
 import InsightsSection from '@/components/dashboard/InsightsSection';
 import PaywallWrapper from '@/components/paywall/PaywallWrapper';
-import AnnouncementsCarousel from '@/components/dashboard/AnnouncementsCarousel';
 
 const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '3m' | '6m'>('7d');
@@ -58,8 +57,6 @@ const Dashboard = () => {
           displayAverage={displayAverage}
           logsToday={logsToday}
         />
-
-        <AnnouncementsCarousel />
 
         <GlucoseChartSection glucoseLogs={glucoseLogs} />
 

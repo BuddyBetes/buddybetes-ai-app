@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export interface Announcement {
   id: string;
-  type: 'community';
+  type: 'update' | 'tip' | 'promotion' | 'community';
   title: string;
   description: string;
   icon: LucideIcon;

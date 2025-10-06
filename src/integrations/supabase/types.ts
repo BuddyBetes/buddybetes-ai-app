@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -187,95 +187,6 @@ export type Database = {
           },
         ]
       }
-      event_registrations: {
-        Row: {
-          checked_in: boolean
-          created_at: string
-          email: string
-          email_sent: boolean
-          event_id: string
-          first_name: string
-          id: string
-          last_name: string
-          qr_code: string
-          registration_type: string
-          user_id: string | null
-        }
-        Insert: {
-          checked_in?: boolean
-          created_at?: string
-          email: string
-          email_sent?: boolean
-          event_id: string
-          first_name: string
-          id?: string
-          last_name: string
-          qr_code: string
-          registration_type: string
-          user_id?: string | null
-        }
-        Update: {
-          checked_in?: boolean
-          created_at?: string
-          email?: string
-          email_sent?: boolean
-          event_id?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          qr_code?: string
-          registration_type?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_registrations_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      events: {
-        Row: {
-          created_at: string
-          description: string
-          event_date: string
-          id: string
-          is_active: boolean
-          location: string | null
-          max_attendees: number | null
-          title: string
-          updated_at: string
-          video_url: string | null
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          event_date: string
-          id?: string
-          is_active?: boolean
-          location?: string | null
-          max_attendees?: number | null
-          title: string
-          updated_at?: string
-          video_url?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          event_date?: string
-          id?: string
-          is_active?: boolean
-          location?: string | null
-          max_attendees?: number | null
-          title?: string
-          updated_at?: string
-          video_url?: string | null
-        }
-        Relationships: []
-      }
       glucose_logs: {
         Row: {
           calories: number | null
@@ -430,47 +341,6 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "user_subscriptions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pending_accounts: {
-        Row: {
-          created_at: string
-          email: string
-          event_registration_id: string | null
-          expires_at: string
-          first_name: string
-          id: string
-          last_name: string
-          verification_token: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          event_registration_id?: string | null
-          expires_at: string
-          first_name: string
-          id?: string
-          last_name: string
-          verification_token: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          event_registration_id?: string | null
-          expires_at?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          verification_token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pending_accounts_event_registration_id_fkey"
-            columns: ["event_registration_id"]
-            isOneToOne: false
-            referencedRelation: "event_registrations"
             referencedColumns: ["id"]
           },
         ]
@@ -767,7 +637,7 @@ export type Database = {
         Returns: boolean
       }
       has_feature_access: {
-        Args: { _feature: string; _user_id: string }
+        Args: { _user_id: string; _feature: string }
         Returns: boolean
       }
       is_admin: {

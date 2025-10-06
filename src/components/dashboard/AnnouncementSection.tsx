@@ -6,59 +6,47 @@ import {
   Gift, 
   Users,
   ChevronLeft,
-  ChevronRight,
-  Calendar
+  ChevronRight
 } from 'lucide-react';
 import AnnouncementCard, { Announcement } from './AnnouncementCard';
 
 const ANNOUNCEMENTS: Announcement[] = [
-  // {
-  //   id: '0',
-  //   type: 'update',
-  //   title: 'Join Our Upcoming Event! 🎉',
-  //   description: 'Register now for our exclusive BuddyBetes community event. Enter our raffle for amazing prizes!',
-  //   icon: Calendar,
-  //   badge: 'New Event',
-  //   actionLabel: 'Register Now',
-  //   actionUrl: '/event/upcoming'
-  // },
-  // {
-  //   id: '1',
-  //   type: 'update',
-  //   title: 'Welcome to Your Dashboard',
-  //   description: 'Track your glucose levels, log meals, and get personalized insights all in one place.',
-  //   icon: Sparkles,
-  //   badge: 'New',
-  //   actionLabel: 'Get Started',
-  //   actionUrl: '/logs'
-  // },
-  // {
-  //   id: '2',
-  //   type: 'tip',
-  //   title: 'Daily Health Tip',
-  //   description: 'Monitor your glucose 2 hours after meals to understand how different foods affect your levels.',
-  //   icon: Lightbulb,
-  //   actionLabel: 'Learn More'
-  // },
-  // {
-  //   id: '3',
-  //   type: 'promotion',
-  //   title: '30 Days Free Premium',
-  //   description: 'Use code "Free30Days" to unlock AI insights, voice logging, and advanced analytics.',
-  //   icon: Gift,
-  //   badge: 'Limited',
-  //   actionLabel: 'Claim Now',
-  //   actionUrl: '/subscription'
-  // },
   {
-    id: '0',
+    id: '1',
+    type: 'update',
+    title: 'Welcome to Your Dashboard',
+    description: 'Track your glucose levels, log meals, and get personalized insights all in one place.',
+    icon: Sparkles,
+    badge: 'New',
+    actionLabel: 'Get Started',
+    actionUrl: '/logs'
+  },
+  {
+    id: '2',
+    type: 'tip',
+    title: 'Daily Health Tip',
+    description: 'Monitor your glucose 2 hours after meals to understand how different foods affect your levels.',
+    icon: Lightbulb,
+    actionLabel: 'Learn More'
+  },
+  {
+    id: '3',
+    type: 'promotion',
+    title: '30 Days Free Premium',
+    description: 'Use code "Free30Days" to unlock AI insights, voice logging, and advanced analytics.',
+    icon: Gift,
+    badge: 'Limited',
+    actionLabel: 'Claim Now',
+    actionUrl: '/subscription'
+  },
+  {
+    id: '4',
     type: 'community',
-    title: 'Join Our Upcoming Event! 🎉',
-    description: 'Register now for our exclusive BuddyBetes community event. Enter our raffle for amazing prizes!',
+    title: 'Try Voice Assistant',
+    description: 'Log your glucose and meals using voice commands. Just tap the microphone and speak naturally.',
     icon: Users,
-    badge: 'New Event',
-    actionLabel: 'Register Now!',
-    actionUrl: '/event/550e8400-e29b-41d4-a716-446655440000'
+    actionLabel: 'Try Voice Mode',
+    actionUrl: '/assistant'
   }
 ];
 
