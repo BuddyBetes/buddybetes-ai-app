@@ -214,23 +214,23 @@ const AnnouncementsCarousel = () => {
         )}
       </div>
 
-      {/* Dot Indicators */}
-      {events.length > 1 && (
-        <div className="flex justify-center gap-1.5 pb-4">
-          {events.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`transition-all ${
-                index === currentSlide
-                  ? 'w-6 bg-white shadow-md'
-                  : 'w-1.5 bg-white/50 hover:bg-white/70'
-              } h-1.5 rounded-full`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
+        {/* Dot Indicators */}
+        {events.length > 1 && (
+          <div className="flex justify-center gap-1.5 pb-4">
+            {events.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`transition-all ${
+                  index === currentSlide
+                    ? 'w-6 bg-primary shadow-md'
+                    : 'w-1.5 bg-gray-400 hover:bg-gray-600'
+                } h-1.5 rounded-full`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
 
       {/* Modal for Event Details */}
       {selectedEvent && !showRSVPForm && (

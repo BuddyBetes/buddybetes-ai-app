@@ -28,17 +28,20 @@ serve(async (req) => {
 
     console.log('Processing registration for:', { eventId, email, userId });
 
-    // Check if user already registered
+    // Check if user already registered by email OR user_id
     const { data: existingReg } = await supabase
       .from('event_registrations')
-      .select('id')
+      .select('id, qr_code')
       .eq('event_id', eventId)
-      .eq('email', email)
-      .single();
+      .or(userId ? `email.eq.${email},user_id.eq.${userId}` : `email.eq.${email}`)
+      .maybeSingle();
 
     if (existingReg) {
       return new Response(
-        JSON.stringify({ error: 'Already registered for this event' }),
+        JSON.stringify({ 
+          error: 'Already registered for this event',
+          qrCode: existingReg.qr_code
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
