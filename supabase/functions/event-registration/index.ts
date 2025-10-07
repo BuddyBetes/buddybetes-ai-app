@@ -39,10 +39,11 @@ serve(async (req) => {
     if (existingReg) {
       return new Response(
         JSON.stringify({ 
-          error: 'Already registered for this event',
+          success: true,
+          alreadyRegistered: true,
           qrCode: existingReg.qr_code
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

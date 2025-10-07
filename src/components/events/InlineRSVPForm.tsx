@@ -114,28 +114,21 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
 
       setSuccess(true);
       setQrCode(data.qrCode);
-      setIsAlreadyRegistered(true);
-      toast.success('Registration confirmed!');
+      
+      // Check if user was already registered
+      if (data.alreadyRegistered) {
+        setIsAlreadyRegistered(true);
+        toast.info('You are already registered for this event');
+      } else {
+        toast.success('Registration confirmed!');
+      }
       
       if (onSuccess) {
         setTimeout(onSuccess, 2000);
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      
-      // If error contains "Already registered", show QR code anyway
-      if (error.message?.includes('Already registered') && error.context?.body?.qrCode) {
-        setSuccess(true);
-        setQrCode(error.context.body.qrCode);
-        setIsAlreadyRegistered(true);
-        toast.info('You are already registered for this event');
-        
-        if (onSuccess) {
-          setTimeout(onSuccess, 2000);
-        }
-      } else {
-        toast.error(error.message || 'Failed to register');
-      }
+      toast.error(error.message || 'Failed to register');
     } finally {
       setSubmitting(false);
     }
