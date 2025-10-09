@@ -21,6 +21,9 @@ interface Event {
   max_attendees: number | null;
 }
 
+const STATIC_WEBINAR_ID = '22222222-2222-2222-2222-222222222222';
+const FACEBOOK_WEBINAR_URL = 'https://www.facebook.com/buddybetes';
+
 const Event = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { user } = useAuth();
@@ -155,7 +158,11 @@ const Event = () => {
           <div className="flex flex-wrap gap-4 mb-6 text-muted-foreground">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              <span>{format(new Date(event.event_date), 'PPP p')}</span>
+              <span>
+                {event.id === STATIC_WEBINAR_ID
+                  ? "Every Wednesday"
+                  : format(new Date(event.event_date), 'PPP p')}
+              </span>
             </div>
             {event.location && (
               <div className="flex items-center gap-2">
@@ -173,15 +180,25 @@ const Event = () => {
 
           <p className="text-lg mb-6 whitespace-pre-wrap">{event.description}</p>
 
-          {user && !isRegistered && (
+          {event.id === STATIC_WEBINAR_ID ? (
             <Button
-              onClick={handleQuickRegister}
-              disabled={registering}
+              onClick={() => window.open(FACEBOOK_WEBINAR_URL, '_blank')}
               size="lg"
               className="w-full md:w-auto"
             >
-              {registering ? 'Registering...' : 'Confirm Attendance & Get QR Code'}
+              Watch Now on Facebook
             </Button>
+          ) : (
+            user && !isRegistered && (
+              <Button
+                onClick={handleQuickRegister}
+                disabled={registering}
+                size="lg"
+                className="w-full md:w-auto"
+              >
+                {registering ? 'Registering...' : 'Confirm Attendance & Get QR Code'}
+              </Button>
+            )
           )}
         </Card>
 

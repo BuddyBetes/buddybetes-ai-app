@@ -8,6 +8,9 @@ import { Bell, Calendar, ChevronLeft, ChevronRight, X, ArrowRight } from "lucide
 import { format } from "date-fns";
 import InlineRSVPForm from "@/components/events/InlineRSVPForm";
 
+const STATIC_WEBINAR_ID = '22222222-2222-2222-2222-222222222222';
+const FACEBOOK_WEBINAR_URL = 'https://www.facebook.com/buddybetes';
+
 interface Event {
   id: string;
   title: string;
@@ -141,13 +144,19 @@ const AnnouncementsCarousel = () => {
                       {event.subtitle && <p className="text-sm mb-2 text-gray-200">{event.subtitle}</p>}
                       <p className="text-sm line-clamp-2 text-gray-300 mb-3">{event.description}</p>
                       <div className="flex flex-wrap items-center gap-3">
-                        <Button
-                          onClick={() => handleShowInterest(event)}
-                          className="bg-primary text-white hover:bg-primary/90 text-sm h-8 px-4"
-                        >
-                          Register Now
-                          <ArrowRight className="ml-2 h-3 w-3" />
-                        </Button>
+                  <Button
+                    onClick={() => {
+                      if (event.id === STATIC_WEBINAR_ID) {
+                        window.open(FACEBOOK_WEBINAR_URL, '_blank');
+                      } else {
+                        handleShowInterest(event);
+                      }
+                    }}
+                    className="bg-primary text-white hover:bg-primary/90 text-sm h-8 px-4"
+                  >
+                    {event.id === STATIC_WEBINAR_ID ? "Watch Now" : "Register Now"}
+                    <ArrowRight className="ml-2 h-3 w-3" />
+                  </Button>
                         <Button
                           onClick={() => setSelectedEvent(event)}
                           variant="outline"
@@ -155,10 +164,14 @@ const AnnouncementsCarousel = () => {
                         >
                           Learn More
                         </Button>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-200 ml-2">
-                          <Calendar className="h-3 w-3" />
-                          <span>{format(new Date(event.event_date), "MMM d, yyyy")}</span>
-                        </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-200 ml-2">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    {event.id === STATIC_WEBINAR_ID 
+                      ? "Every Wednesday" 
+                      : format(new Date(event.event_date), "MMM d, yyyy")}
+                  </span>
+                </div>
                       </div>
                     </div>
                   </div>
@@ -238,14 +251,24 @@ const AnnouncementsCarousel = () => {
               <p className="text-muted-foreground mb-4 leading-relaxed">{selectedEvent.description}</p>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                 <Calendar className="h-4 w-4" />
-                <span>{format(new Date(selectedEvent.event_date), "PPP p")}</span>
+                <span>
+                  {selectedEvent.id === STATIC_WEBINAR_ID
+                    ? "Every Wednesday"
+                    : format(new Date(selectedEvent.event_date), "PPP p")}
+                </span>
               </div>
               <div className="flex gap-3">
                 <Button
-                  onClick={() => handleShowInterest(selectedEvent)}
+                  onClick={() => {
+                    if (selectedEvent.id === STATIC_WEBINAR_ID) {
+                      window.open(FACEBOOK_WEBINAR_URL, '_blank');
+                    } else {
+                      handleShowInterest(selectedEvent);
+                    }
+                  }}
                   className="bg-primary text-white hover:bg-primary/90"
                 >
-                  Register Now
+                  {selectedEvent.id === STATIC_WEBINAR_ID ? "Watch Now" : "Register Now"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button

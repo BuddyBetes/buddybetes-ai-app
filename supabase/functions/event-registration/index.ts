@@ -28,6 +28,21 @@ serve(async (req) => {
 
     console.log('Processing registration for:', { eventId, email, userId });
 
+    // Fetch event details for email
+    const { data: eventData, error: eventError } = await supabase
+      .from('events')
+      .select('title, event_date')
+      .eq('id', eventId)
+      .single();
+
+    if (eventError) {
+      console.error('Error fetching event:', eventError);
+      return new Response(
+        JSON.stringify({ error: 'Event not found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
+
     // Check if user already registered by email OR user_id
     const { data: existingReg } = await supabase
       .from('event_registrations')
@@ -109,6 +124,26 @@ serve(async (req) => {
         email,
       });
     }
+
+    // Send confirmation email in background (non-blocking)
+    EdgeRuntime.waitUntil(
+      supabase.functions.invoke('send-event-registration-email', {
+        body: {
+          email,
+          firstName,
+          lastName,
+          eventTitle: eventData.title,
+          qrCode,
+          eventDate: eventData.event_date,
+        }
+      }).then(({ data: emailData, error: emailError }) => {
+        if (emailError) {
+          console.error('Email send failed:', emailError);
+        } else {
+          console.log('Confirmation email sent successfully:', emailData);
+        }
+      }).catch(err => console.error('Email send error:', err))
+    );
 
     return new Response(
       JSON.stringify({ 
