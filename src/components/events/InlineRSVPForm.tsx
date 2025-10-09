@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Mail, User, Loader2 } from 'lucide-react';
-import QRCodeDisplay from './QRCodeDisplay';
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Mail, User, Loader2 } from "lucide-react";
+import QRCodeDisplay from "./QRCodeDisplay";
 
 interface InlineRSVPFormProps {
   eventId: string;
@@ -17,9 +17,9 @@ interface InlineRSVPFormProps {
 const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
+    email: "",
+    firstName: "",
+    lastName: "",
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -39,18 +39,18 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
     try {
       // First, get user's email from profile or auth
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, email')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", user.id)
         .maybeSingle();
 
-      const userEmail = profile?.email || user.email || '';
+      const userEmail = profile?.email || user.email || "";
 
       // Check if already registered by EITHER user_id OR email
       const { data: existingReg } = await supabase
-        .from('event_registrations')
-        .select('id, qr_code, first_name, last_name, email')
-        .eq('event_id', eventId)
+        .from("event_registrations")
+        .select("id, qr_code, first_name, last_name, email")
+        .eq("event_id", eventId)
         .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
         .maybeSingle();
 
@@ -61,8 +61,8 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
         // Pre-populate form with existing registration data
         setFormData({
           email: existingReg.email || userEmail,
-          firstName: existingReg.first_name || profile?.first_name || '',
-          lastName: existingReg.last_name || profile?.last_name || '',
+          firstName: existingReg.first_name || profile?.first_name || "",
+          lastName: existingReg.last_name || profile?.last_name || "",
         });
         setLoading(false);
         return;
@@ -72,18 +72,18 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
       if (profile) {
         setFormData({
           email: userEmail,
-          firstName: profile.first_name || '',
-          lastName: profile.last_name || '',
+          firstName: profile.first_name || "",
+          lastName: profile.last_name || "",
         });
       } else {
         setFormData({
           email: userEmail,
-          firstName: '',
-          lastName: '',
+          firstName: "",
+          lastName: "",
         });
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
     }
@@ -91,16 +91,16 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
-      toast.error('Please log in to register');
+      toast.error("Please log in to register");
       return;
     }
 
     setSubmitting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('event-registration', {
+      const { data, error } = await supabase.functions.invoke("event-registration", {
         body: {
           eventId,
           email: formData.email,
@@ -114,21 +114,21 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
 
       setSuccess(true);
       setQrCode(data.qrCode);
-      
+
       // Check if user was already registered
       if (data.alreadyRegistered) {
         setIsAlreadyRegistered(true);
-        toast.info('You are already registered for this event');
+        toast.info("You are already registered for this event");
       } else {
-        toast.success('Registration confirmed!');
+        toast.success("Registration confirmed!");
       }
-      
+
       if (onSuccess) {
-        setTimeout(onSuccess, 2000);
+        setTimeout(onSuccess, 30000);
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
-      toast.error(error.message || 'Failed to register');
+      console.error("Registration error:", error);
+      toast.error(error.message || "Failed to register");
     } finally {
       setSubmitting(false);
     }
@@ -145,15 +145,13 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
   if (success && qrCode) {
     return (
       <div className="space-y-4">
-        <QRCodeDisplay 
+        <QRCodeDisplay
           qrCode={qrCode}
           eventTitle={eventTitle}
           userName={`${formData.firstName} ${formData.lastName}`}
         />
         {isAlreadyRegistered && (
-          <p className="text-sm text-muted-foreground text-center">
-            You're already registered for this event!
-          </p>
+          <p className="text-sm text-muted-foreground text-center">You're already registered for this event!</p>
         )}
       </div>
     );
@@ -210,7 +208,7 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
             Confirming Registration...
           </>
         ) : (
-          'Confirm Registration'
+          "Confirm Registration"
         )}
       </Button>
 
