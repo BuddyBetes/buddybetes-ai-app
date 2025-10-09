@@ -187,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "BuddyBetes Events <onboarding@resend.dev>",
+      from: "BuddyBetes Events <events@buddybetes.com>", // Update with your verified domain
       to: [email],
       subject: `Event Registration Confirmed - ${eventTitle}`,
       html,

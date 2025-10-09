@@ -125,25 +125,34 @@ serve(async (req) => {
       });
     }
 
-    // Send confirmation email in background (non-blocking)
-    EdgeRuntime.waitUntil(
-      supabase.functions.invoke('send-event-registration-email', {
-        body: {
-          email,
-          firstName,
-          lastName,
-          eventTitle: eventData.title,
-          qrCode,
-          eventDate: eventData.event_date,
+    // Send confirmation email (synchronous for debugging)
+    console.log('Attempting to send confirmation email...');
+    let emailError = null;
+    try {
+      const { data: emailData, error: emailErr } = await supabase.functions.invoke(
+        'send-event-registration-email',
+        {
+          body: {
+            email,
+            firstName,
+            lastName,
+            eventTitle: eventData.title,
+            qrCode,
+            eventDate: eventData.event_date,
+          }
         }
-      }).then(({ data: emailData, error: emailError }) => {
-        if (emailError) {
-          console.error('Email send failed:', emailError);
-        } else {
-          console.log('Confirmation email sent successfully:', emailData);
-        }
-      }).catch(err => console.error('Email send error:', err))
-    );
+      );
+
+      if (emailErr) {
+        console.error('Email send failed:', emailErr);
+        emailError = emailErr;
+      } else {
+        console.log('Confirmation email sent successfully:', emailData);
+      }
+    } catch (err) {
+      console.error('Email invocation error:', err);
+      emailError = err;
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -152,6 +161,8 @@ serve(async (req) => {
         qrCode: qrCode,
         isNewUser: !userId,
         userId: newUserId,
+        emailSent: !emailError,
+        emailError: emailError?.message || null,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
