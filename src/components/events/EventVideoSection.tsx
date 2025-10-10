@@ -22,10 +22,10 @@ const EventVideoSection = ({ videoUrl }: EventVideoSectionProps) => {
   };
 
   return (
-    <Card className="p-6 mb-6">
+    <Card className="p-4 sm:p-6 mb-6">
       <div className="flex items-center gap-2 mb-4">
-        <Video className="h-5 w-5 text-primary" />
-        <h2 className="text-xl font-bold">How to Enter the Raffle</h2>
+        <Video className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-bold">How to Enter the Raffle</h2>
       </div>
       
       <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">

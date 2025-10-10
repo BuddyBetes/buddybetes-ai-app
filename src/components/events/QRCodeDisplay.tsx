@@ -12,6 +12,24 @@ interface QRCodeDisplayProps {
 
 const QRCodeDisplay = ({ qrCode, eventTitle, userName }: QRCodeDisplayProps) => {
   const qrRef = useRef<HTMLDivElement>(null);
+  
+  // Responsive QR code size based on screen width
+  const getQRSize = () => {
+    if (typeof window === 'undefined') return 256;
+    const width = window.innerWidth;
+    if (width < 375) return 200;
+    if (width < 640) return 220;
+    if (width < 1024) return 240;
+    return 256;
+  };
+
+  const [qrSize, setQrSize] = React.useState(getQRSize());
+
+  React.useEffect(() => {
+    const handleResize = () => setQrSize(getQRSize());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleDownload = () => {
     const svg = qrRef.current?.querySelector('svg');
@@ -99,21 +117,22 @@ const QRCodeDisplay = ({ qrCode, eventTitle, userName }: QRCodeDisplayProps) => 
   };
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-      <div className="text-center space-y-6">
+    <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+      <div className="text-center space-y-4 sm:space-y-6">
         <div>
-          <h3 className="text-2xl font-bold mb-2">Your Event QR Code</h3>
-          <p className="text-muted-foreground">
+          <h3 className="text-xl sm:text-2xl font-bold mb-2">Your Event QR Code</h3>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Show this QR code at the event for check-in and raffle entry
           </p>
         </div>
 
-        <div ref={qrRef} className="flex justify-center bg-white p-6 rounded-lg inline-block mx-auto">
+        <div ref={qrRef} className="flex justify-center bg-white p-4 sm:p-6 rounded-lg inline-block mx-auto max-w-full">
           <QRCodeSVG 
             value={qrCode} 
-            size={256}
+            size={qrSize}
             level="H"
             includeMargin
+            className="max-w-full h-auto"
           />
         </div>
 
@@ -122,18 +141,18 @@ const QRCodeDisplay = ({ qrCode, eventTitle, userName }: QRCodeDisplayProps) => 
           <p className="text-xs text-muted-foreground">Code: {qrCode.slice(0, 8)}...</p>
         </div>
 
-        <div className="flex gap-3 justify-center">
-          <Button onClick={handleDownload} variant="default" className="gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+          <Button onClick={handleDownload} variant="default" className="gap-2 w-full sm:w-auto h-11 sm:h-10" size="lg">
             <Download className="h-4 w-4" />
             Download QR Code
           </Button>
-          <Button onClick={handlePrint} variant="outline" className="gap-2">
+          <Button onClick={handlePrint} variant="outline" className="gap-2 w-full sm:w-auto h-11 sm:h-10" size="lg">
             <Printer className="h-4 w-4" />
             Print
           </Button>
         </div>
 
-        <div className="bg-muted/50 rounded-lg p-4 text-sm">
+        <div className="bg-muted/50 rounded-lg p-3 sm:p-4 text-xs sm:text-sm">
           <p className="font-medium mb-2">💡 Important:</p>
           <ul className="text-left space-y-1 text-muted-foreground">
             <li>• Save or screenshot this QR code</li>

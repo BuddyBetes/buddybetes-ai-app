@@ -142,20 +142,20 @@ const Event = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-full sm:max-w-3xl md:max-w-5xl">
         <Button
           variant="ghost"
           onClick={() => navigate('/dashboard')}
-          className="mb-6"
+          className="mb-4 sm:mb-6 sticky top-16 z-10 bg-background/80 backdrop-blur-sm sm:relative sm:bg-transparent"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
         </Button>
 
-        <Card className="p-8 mb-6">
-          <h1 className="text-4xl font-bold mb-4">{event.title}</h1>
+        <Card className="p-4 sm:p-6 md:p-8 mb-6">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">{event.title}</h1>
           
-          <div className="flex flex-wrap gap-4 mb-6 text-muted-foreground">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 mb-6 text-muted-foreground">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               <span>
@@ -178,7 +178,7 @@ const Event = () => {
             )}
           </div>
 
-          <p className="text-lg mb-6 whitespace-pre-wrap">{event.description}</p>
+          <p className="text-base sm:text-lg mb-6 whitespace-pre-wrap">{event.description}</p>
 
           {event.id === STATIC_WEBINAR_ID ? (
             <Button
