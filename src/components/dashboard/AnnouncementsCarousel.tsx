@@ -152,45 +152,49 @@ const AnnouncementsCarousel = () => {
                   </div>
 
                   {/* Text content */}
-                  <div className="relative h-full flex items-end px-4 pb-4 sm:px-6 sm:pb-6 text-white">
-                    <div className="w-full max-w-2xl">
-                      <Badge className="mb-2 bg-white/20 text-xs font-semibold border border-white/40">
+                  <div className="relative h-full flex items-end px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6 text-white">
+                    <div className="w-full max-w-2xl space-y-2 sm:space-y-2.5">
+                      <Badge className="mb-1 bg-white/20 text-[10px] sm:text-xs font-semibold border border-white/40 inline-block">
                         {event.badge || "Upcoming Event"}
                       </Badge>
-                      <h3 className="text-xl sm:text-2xl font-bold mb-1 drop-shadow">{event.title}</h3>
-                      {event.subtitle && <p className="text-xs sm:text-sm mb-2 text-gray-200">{event.subtitle}</p>}
-                      <p className="text-xs sm:text-sm line-clamp-2 text-gray-300 mb-3">{event.description}</p>
-                      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 sm:gap-3">
-                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    onClick={() => {
-                      if (event.id === STATIC_WEBINAR_ID) {
-                        window.open(FACEBOOK_WEBINAR_URL, '_blank');
-                      } else {
-                        handleShowInterest(event);
-                      }
-                    }}
-                    className="bg-primary text-white hover:bg-primary/90 text-xs sm:text-sm h-9 sm:h-8 px-3 sm:px-4 flex-1 sm:flex-none min-w-[120px]"
-                  >
-                    {event.id === STATIC_WEBINAR_ID ? "Watch Now" : "Register Now"}
-                    <ArrowRight className="ml-1.5 sm:ml-2 h-3 w-3" />
-                  </Button>
-                        <Button
-                          onClick={() => setSelectedEvent(event)}
-                          variant="outline"
-                          className="bg-white/10 text-white border-white/40 hover:bg-white/20 text-xs sm:text-sm h-9 sm:h-8 px-3 sm:px-4 hidden xs:flex"
-                        >
-                          Learn More
-                        </Button>
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold leading-tight drop-shadow-lg">{event.title}</h3>
+                      {event.subtitle && <p className="text-xs sm:text-sm mb-1 text-gray-100 line-clamp-1">{event.subtitle}</p>}
+                      <p className="text-xs sm:text-sm line-clamp-2 text-gray-200 mb-2">{event.description}</p>
+                      
+                      <div className="flex flex-col gap-2">
+                        {/* Buttons row */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            onClick={() => {
+                              if (event.id === STATIC_WEBINAR_ID) {
+                                window.open(FACEBOOK_WEBINAR_URL, '_blank');
+                              } else {
+                                handleShowInterest(event);
+                              }
+                            }}
+                            className="bg-primary text-white hover:bg-primary/90 text-xs sm:text-sm h-10 sm:h-9 px-4 touch-manipulation flex-shrink-0"
+                          >
+                            {event.id === STATIC_WEBINAR_ID ? "Watch Now" : "Register Now"}
+                            <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            onClick={() => setSelectedEvent(event)}
+                            variant="outline"
+                            className="bg-white/10 text-white border-white/40 hover:bg-white/20 text-xs sm:text-sm h-10 sm:h-9 px-4 hidden sm:flex touch-manipulation"
+                          >
+                            Learn More
+                          </Button>
                         </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-200">
-                  <Calendar className="h-3 w-3" />
-                  <span>
-                    {event.id === STATIC_WEBINAR_ID 
-                      ? "Every Wednesday" 
-                      : format(new Date(event.event_date), "MMM d, yyyy")}
-                  </span>
-                </div>
+                        
+                        {/* Date row */}
+                        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-100 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span className="whitespace-nowrap">
+                            {event.id === STATIC_WEBINAR_ID 
+                              ? "Every Wednesday" 
+                              : format(new Date(event.event_date), "MMM d, yyyy")}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -208,36 +212,40 @@ const AnnouncementsCarousel = () => {
                 prevSlide();
                 setIsAutoPlaying(false);
               }}
-              className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 backdrop-blur-sm p-3 sm:p-2 rounded-full text-white shadow-md transition-all touch-manipulation"
+              className="absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 active:bg-black/80 backdrop-blur-sm p-2.5 sm:p-2 rounded-full text-white shadow-lg transition-all touch-manipulation z-10"
               aria-label="Previous slide"
             >
-              <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => {
                 nextSlide();
                 setIsAutoPlaying(false);
               }}
-              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 backdrop-blur-sm p-3 sm:p-2 rounded-full text-white shadow-md transition-all touch-manipulation"
+              className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 active:bg-black/80 backdrop-blur-sm p-2.5 sm:p-2 rounded-full text-white shadow-lg transition-all touch-manipulation z-10"
               aria-label="Next slide"
             >
-              <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+              <ChevronRight className="h-5 w-5" />
             </button>
           </>
         )}
 
         {/* Dots */}
         {events.length > 1 && (
-          <div className="flex justify-center gap-2 sm:gap-1.5 py-4 sm:py-3 bg-white/80 backdrop-blur-sm border-t border-gray-100">
+          <div className="flex justify-center gap-2.5 sm:gap-2 py-3.5 sm:py-3 bg-white/90 backdrop-blur-sm border-t border-gray-100">
             {events.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`transition-all touch-manipulation ${
-                  index === currentSlide ? "w-6 sm:w-5 bg-primary" : "w-2.5 sm:w-2 bg-gray-400 hover:bg-gray-600"
-                } h-2.5 sm:h-2 rounded-full`}
+                className={`transition-all touch-manipulation min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center ${
+                  index === currentSlide ? "p-1" : ""
+                }`}
                 aria-label={`Go to slide ${index + 1}`}
-              />
+              >
+                <div className={`${
+                  index === currentSlide ? "w-7 sm:w-6 bg-primary" : "w-2.5 bg-gray-400 hover:bg-gray-600"
+                } h-2.5 rounded-full transition-all`} />
+              </button>
             ))}
           </div>
         )}
@@ -246,18 +254,18 @@ const AnnouncementsCarousel = () => {
       {/* Event Modal */}
       {selectedEvent && !showRSVPForm && (
         <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50">
-          <Card className="max-w-[95vw] sm:max-w-lg md:max-w-2xl w-full m-0 sm:m-4 rounded-t-2xl sm:rounded-lg animate-slide-in-bottom sm:animate-scale-in overflow-hidden">
-            <CardContent className="p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-start mb-4">
+          <Card className="max-w-[92vw] sm:max-w-lg md:max-w-2xl w-full mx-2 sm:mx-4 rounded-t-3xl sm:rounded-xl animate-slide-in-bottom sm:animate-scale-in overflow-hidden max-h-[85vh]">
+            <CardContent className="p-3 sm:p-6 h-full overflow-y-auto overscroll-contain webkit-overflow-scrolling-touch">
+              <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 flex justify-between items-start mb-3 sm:mb-4 pb-3 border-b sm:border-0">
                 <Badge className="bg-primary/10 text-primary font-medium">{selectedEvent.badge || "Event"}</Badge>
                 <button
                   onClick={() => {
                     setSelectedEvent(null);
                     setIsAutoPlaying(true);
                   }}
-                  className="hover:bg-muted p-2 rounded-full transition"
+                  className="hover:bg-muted p-2.5 sm:p-2 rounded-full transition flex-shrink-0 touch-manipulation"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
                 </button>
               </div>
               <div
@@ -277,7 +285,7 @@ const AnnouncementsCarousel = () => {
                     : format(new Date(selectedEvent.event_date), "PPP p")}
                 </span>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full">
                 <Button
                   onClick={() => {
                     if (selectedEvent.id === STATIC_WEBINAR_ID) {
@@ -286,7 +294,7 @@ const AnnouncementsCarousel = () => {
                       handleShowInterest(selectedEvent);
                     }
                   }}
-                  className="bg-primary text-white hover:bg-primary/90 h-11 sm:h-10"
+                  className="bg-primary text-white hover:bg-primary/90 h-12 sm:h-10 w-full touch-manipulation"
                   size="lg"
                 >
                   {selectedEvent.id === STATIC_WEBINAR_ID ? "Watch Now" : "Register Now"}
@@ -298,7 +306,7 @@ const AnnouncementsCarousel = () => {
                     setSelectedEvent(null);
                     setIsAutoPlaying(true);
                   }}
-                  className="h-11 sm:h-10"
+                  className="h-12 sm:h-10 w-full touch-manipulation"
                   size="lg"
                 >
                   Close
@@ -312,19 +320,19 @@ const AnnouncementsCarousel = () => {
       {/* RSVP Form */}
       {showRSVPForm && selectedEvent && user && (
         <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50">
-          <Card className="max-w-[95vw] sm:max-w-lg w-full m-0 sm:m-4 rounded-t-2xl sm:rounded-lg animate-slide-in-bottom sm:animate-scale-in overflow-hidden">
-            <CardContent className="p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg sm:text-xl font-bold">Register for {selectedEvent.title}</h3>
+          <Card className="max-w-[92vw] sm:max-w-lg w-full mx-2 sm:mx-4 rounded-t-3xl sm:rounded-xl animate-slide-in-bottom sm:animate-scale-in overflow-hidden max-h-[85vh]">
+            <CardContent className="p-3 sm:p-6 h-full overflow-y-auto overscroll-contain webkit-overflow-scrolling-touch">
+              <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 flex justify-between items-start mb-3 sm:mb-4 pb-3 border-b sm:border-0">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold pr-2">Register for {selectedEvent.title}</h3>
                 <button
                   onClick={() => {
                     setShowRSVPForm(false);
                     setSelectedEvent(null);
                     setIsAutoPlaying(true);
                   }}
-                  className="hover:bg-muted p-2 rounded-full transition"
+                  className="hover:bg-muted p-2.5 sm:p-2 rounded-full transition flex-shrink-0 touch-manipulation"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
                 </button>
               </div>
               <InlineRSVPForm

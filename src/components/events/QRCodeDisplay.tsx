@@ -117,7 +117,7 @@ const QRCodeDisplay = ({ qrCode, eventTitle, userName }: QRCodeDisplayProps) => 
   };
 
   return (
-    <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+    <Card className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
       <div className="text-center space-y-4 sm:space-y-6">
         <div>
           <h3 className="text-xl sm:text-2xl font-bold mb-2">Your Event QR Code</h3>
@@ -126,7 +126,7 @@ const QRCodeDisplay = ({ qrCode, eventTitle, userName }: QRCodeDisplayProps) => 
           </p>
         </div>
 
-        <div ref={qrRef} className="flex justify-center bg-white p-4 sm:p-6 rounded-lg inline-block mx-auto max-w-full">
+        <div ref={qrRef} className="flex justify-center bg-white p-3 sm:p-4 md:p-6 rounded-lg mx-auto max-w-full">
           <QRCodeSVG 
             value={qrCode} 
             size={qrSize}
@@ -141,12 +141,12 @@ const QRCodeDisplay = ({ qrCode, eventTitle, userName }: QRCodeDisplayProps) => 
           <p className="text-xs text-muted-foreground">Code: {qrCode.slice(0, 8)}...</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
-          <Button onClick={handleDownload} variant="default" className="gap-2 w-full sm:w-auto h-11 sm:h-10" size="lg">
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center">
+          <Button onClick={handleDownload} variant="default" className="gap-2 w-full sm:w-auto h-12 sm:h-10 touch-manipulation" size="lg">
             <Download className="h-4 w-4" />
             Download QR Code
           </Button>
-          <Button onClick={handlePrint} variant="outline" className="gap-2 w-full sm:w-auto h-11 sm:h-10" size="lg">
+          <Button onClick={handlePrint} variant="outline" className="gap-2 w-full sm:w-auto h-12 sm:h-10 touch-manipulation" size="lg">
             <Printer className="h-4 w-4" />
             Print
           </Button>

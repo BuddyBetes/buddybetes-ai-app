@@ -158,9 +158,9 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-4">
       <div>
-        <Label htmlFor="email" className="flex items-center gap-2 text-base sm:text-sm">
+        <Label htmlFor="email" className="flex items-center gap-2 text-base sm:text-sm mb-1.5">
           <Mail className="h-4 w-4" />
           Email Address
         </Label>
@@ -171,12 +171,12 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           placeholder="your@email.com"
-          className="h-12 sm:h-10 text-base"
+          className="h-11 sm:h-10 text-[16px] touch-manipulation"
         />
       </div>
 
       <div>
-        <Label htmlFor="firstName" className="flex items-center gap-2 text-base sm:text-sm">
+        <Label htmlFor="firstName" className="flex items-center gap-2 text-base sm:text-sm mb-1.5">
           <User className="h-4 w-4" />
           First Name
         </Label>
@@ -187,12 +187,12 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
           value={formData.firstName}
           onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
           placeholder="John"
-          className="h-12 sm:h-10 text-base"
+          className="h-11 sm:h-10 text-[16px] touch-manipulation"
         />
       </div>
 
       <div>
-        <Label htmlFor="lastName" className="text-base sm:text-sm">Last Name</Label>
+        <Label htmlFor="lastName" className="text-base sm:text-sm mb-1.5">Last Name</Label>
         <Input
           id="lastName"
           type="text"
@@ -200,11 +200,11 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
           value={formData.lastName}
           onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
           placeholder="Doe"
-          className="h-12 sm:h-10 text-base"
+          className="h-11 sm:h-10 text-[16px] touch-manipulation"
         />
       </div>
 
-      <Button type="submit" disabled={submitting || success} className="w-full h-12 sm:h-11" size="lg">
+      <Button type="submit" disabled={submitting || success} className="w-full h-12 sm:h-11 touch-manipulation" size="lg">
         {submitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
