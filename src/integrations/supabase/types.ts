@@ -190,6 +190,7 @@ export type Database = {
       event_registrations: {
         Row: {
           checked_in: boolean
+          checked_in_at: string | null
           created_at: string
           email: string
           email_sent: boolean
@@ -203,6 +204,7 @@ export type Database = {
         }
         Insert: {
           checked_in?: boolean
+          checked_in_at?: string | null
           created_at?: string
           email: string
           email_sent?: boolean
@@ -216,6 +218,7 @@ export type Database = {
         }
         Update: {
           checked_in?: boolean
+          checked_in_at?: string | null
           created_at?: string
           email?: string
           email_sent?: boolean
@@ -243,7 +246,7 @@ export type Database = {
           color_gradient: string | null
           created_at: string
           description: string
-          event_date: string
+          event_date: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -259,7 +262,7 @@ export type Database = {
           color_gradient?: string | null
           created_at?: string
           description: string
-          event_date: string
+          event_date?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -275,7 +278,7 @@ export type Database = {
           color_gradient?: string | null
           created_at?: string
           description?: string
-          event_date?: string
+          event_date?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean

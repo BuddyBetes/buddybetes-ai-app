@@ -24,6 +24,7 @@ import Subscription from '@/pages/Subscription';
 import PaymentSuccess from '@/pages/PaymentSuccess';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Metrics from '@/pages/Metrics';
+import EventManagement from '@/pages/EventManagement';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -91,6 +92,10 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/admin"
         element={renderProtectedRoute(<AdminDashboard />)}
+      />
+      <Route
+        path="/admin/events"
+        element={renderProtectedRoute(<EventManagement />)}
       />
       <Route
         path="/onboarding"

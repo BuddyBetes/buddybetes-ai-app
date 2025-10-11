@@ -148,7 +148,7 @@ const AnnouncementsCarousel = () => {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url(${event.image_url})` }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/60 to-black/30"></div>
                   </div>
 
                   {/* Text content */}

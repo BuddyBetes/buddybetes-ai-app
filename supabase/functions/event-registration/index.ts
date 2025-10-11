@@ -148,6 +148,18 @@ serve(async (req) => {
         emailError = emailErr;
       } else {
         console.log('Confirmation email sent successfully:', emailData);
+        
+        // Update email_sent status in database
+        const { error: updateError } = await supabase
+          .from('event_registrations')
+          .update({ email_sent: true })
+          .eq('id', registration.id);
+        
+        if (updateError) {
+          console.error('Failed to update email_sent status:', updateError);
+        } else {
+          console.log('Email sent status updated in database');
+        }
       }
     } catch (err) {
       console.error('Email invocation error:', err);
