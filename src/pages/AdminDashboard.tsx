@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Eye, Check, X, Download, Search } from 'lucide-react';
+import { Shield, Eye, Check, X, Download, Search, Mail, Users, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,8 +34,10 @@ const AdminDashboard = () => {
   const [selectedReceipt, setSelectedReceipt] = useState<PaymentReceipt | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [emailStats, setEmailStats] = useState({ total: 0, failed: 0 });
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     checkAdminStatus();
@@ -43,6 +46,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (isAdmin) {
       fetchReceipts();
+      fetchEmailStats();
     }
   }, [isAdmin]);
 
@@ -70,6 +74,27 @@ const AdminDashboard = () => {
       setIsAdmin(!!data);
     } catch (error) {
       console.error('Error checking admin status:', error);
+    }
+  };
+
+  const fetchEmailStats = async () => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data, error } = await supabase
+        .from('email_logs')
+        .select('status')
+        .gte('sent_at', today.toISOString());
+
+      if (error) throw error;
+
+      const total = data?.length || 0;
+      const failed = data?.filter(log => log.status === 'failed').length || 0;
+
+      setEmailStats({ total, failed });
+    } catch (error) {
+      console.error('Error fetching email stats:', error);
     }
   };
 
@@ -199,6 +224,56 @@ const AdminDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600">Manage payment receipts and subscription verifications</p>
         </motion.div>
+
+        {/* Admin Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/emails')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Mail className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">Email Management</h3>
+                  <p className="text-sm text-gray-600">
+                    {emailStats.total} emails today
+                    {emailStats.failed > 0 && (
+                      <span className="text-red-600 ml-2">• {emailStats.failed} failed</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/roles')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Users className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">Role Management</h3>
+                  <p className="text-sm text-gray-600">Manage user roles</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/metrics')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Settings className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">Analytics</h3>
+                  <p className="text-sm text-gray-600">View app metrics</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Search and Filters */}
         <Card>

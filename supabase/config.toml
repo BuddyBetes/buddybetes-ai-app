@@ -3,3 +3,14 @@ project_id = "zjqiikollqinafveesvo"
 [functions.analyze-food-image]
 [functions.glucometer-ocr]
 [functions.send-event-registration-email]
+[functions.send-email-confirmation]
+verify_jwt = false
+[functions.send-password-reset]
+verify_jwt = false
+[functions.send-payment-receipt]
+verify_jwt = false
+[functions.send-payment-verified]
+verify_jwt = false
+[functions.test-email-templates]
+[functions.invoke-payment-email]
+verify_jwt = false
