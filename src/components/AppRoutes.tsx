@@ -93,23 +93,45 @@ const AppRoutes: React.FC = () => {
       />
       <Route
         path="/admin"
-        element={renderProtectedRoute(<AdminDashboard />)}
+        element={
+          <AdminRoute>
+            <GlucoseUnitProvider>
+              <SubscriptionProvider>
+                <PageTransition>
+                  <AdminDashboard />
+                </PageTransition>
+              </SubscriptionProvider>
+            </GlucoseUnitProvider>
+          </AdminRoute>
+        }
       />
       <Route
         path="/admin/events"
-        element={renderProtectedRoute(
+        element={
           <AdminRoute>
-            <EventDashboard />
+            <GlucoseUnitProvider>
+              <SubscriptionProvider>
+                <PageTransition>
+                  <EventDashboard />
+                </PageTransition>
+              </SubscriptionProvider>
+            </GlucoseUnitProvider>
           </AdminRoute>
-        )}
+        }
       />
       <Route
         path="/admin/events/scan/:eventId"
-        element={renderProtectedRoute(
+        element={
           <AdminRoute>
-            <EventScannerView />
+            <GlucoseUnitProvider>
+              <SubscriptionProvider>
+                <PageTransition>
+                  <EventScannerView />
+                </PageTransition>
+              </SubscriptionProvider>
+            </GlucoseUnitProvider>
           </AdminRoute>
-        )}
+        }
       />
       <Route
         path="/onboarding"
