@@ -38,21 +38,21 @@ const Profile = () => {
         ) : isAdmin ? (
           <button
             onClick={() => navigate('/admin')}
-            className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 hover:scale-[1.02] transition-transform"
+            className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 sm:p-4 hover:scale-[1.02] transition-transform active:scale-[0.98] touch-manipulation min-h-[60px] sm:min-h-[80px]"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <Shield className="h-5 w-5 text-blue-600" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
                 <div className="text-left">
-                  <h3 className="font-medium text-blue-900">Admin Dashboard</h3>
-                  <p className="text-sm text-blue-700">
+                  <h3 className="font-medium text-sm sm:text-base text-blue-900">Admin Dashboard</h3>
+                  <p className="text-xs sm:text-sm text-blue-700 hidden xs:block sm:block">
                     Manage events, users, and system settings
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-blue-600" />
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
             </div>
           </button>
         ) : null}
