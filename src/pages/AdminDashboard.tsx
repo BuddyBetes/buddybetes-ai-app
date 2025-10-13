@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Eye, Check, X, Download, Search, Mail, Users, Settings } from 'lucide-react';
+import { Shield, Eye, Check, X, Download, Search, Mail, Users, Settings, QrCode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import AppHeader from '@/components/AppHeader';
@@ -226,7 +226,7 @@ const AdminDashboard = () => {
         </motion.div>
 
         {/* Admin Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/emails')}>
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
@@ -269,6 +269,20 @@ const AdminDashboard = () => {
                 <div className="flex-1">
                   <h3 className="font-semibold text-lg">Analytics</h3>
                   <p className="text-sm text-gray-600">View app metrics</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/event-scanner')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <QrCode className="h-6 w-6 text-orange-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">Event Scanner</h3>
+                  <p className="text-sm text-gray-600">Check in attendees</p>
                 </div>
               </div>
             </CardContent>

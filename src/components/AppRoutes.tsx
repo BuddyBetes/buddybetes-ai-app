@@ -25,6 +25,8 @@ import PaymentSuccess from '@/pages/PaymentSuccess';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Metrics from '@/pages/Metrics';
 import EventManagement from '@/pages/EventManagement';
+import EventScanner from '@/pages/admin/EventScanner';
+import EventScannerView from '@/pages/admin/EventScannerView';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -96,6 +98,14 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/admin/events"
         element={renderProtectedRoute(<EventManagement />)}
+      />
+      <Route
+        path="/admin/event-scanner"
+        element={renderProtectedRoute(<EventScanner />)}
+      />
+      <Route
+        path="/admin/event-scanner/:eventId"
+        element={renderProtectedRoute(<EventScannerView />)}
       />
       <Route
         path="/onboarding"
