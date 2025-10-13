@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import QRScanner from '@/components/events/QRScanner';
 import LiveCheckInStats from '@/components/admin/LiveCheckInStats';
+import Layout from '@/components/Layout';
+import AppHeader from '@/components/AppHeader';
 import { format } from 'date-fns';
 
 interface Event {
@@ -35,14 +37,13 @@ const EventScannerView = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    checkAdminAndLoadData();
+    loadEventData();
   }, [eventId]);
 
   useEffect(() => {
-    if (!eventId || !isAdmin) return;
+    if (!eventId) return;
 
     // Subscribe to realtime updates for attendee list
     const channel = supabase
@@ -64,53 +65,7 @@ const EventScannerView = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [eventId, isAdmin]);
-
-  const checkAdminAndLoadData = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: 'Authentication Required',
-          description: 'Please sign in to access this page',
-          variant: 'destructive',
-        });
-        navigate('/signin');
-        return;
-      }
-
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (roleError) throw roleError;
-
-      if (!roleData) {
-        toast({
-          title: 'Access Denied',
-          description: 'Admin privileges required',
-          variant: 'destructive',
-        });
-        navigate('/dashboard');
-        return;
-      }
-
-      setIsAdmin(true);
-      await loadEventData();
-    } catch (error: any) {
-      console.error('Error checking admin status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to verify admin status',
-        variant: 'destructive',
-      });
-      navigate('/dashboard');
-    }
-  };
+  }, [eventId]);
 
   const loadEventData = async () => {
     if (!eventId) return;
@@ -132,7 +87,7 @@ const EventScannerView = () => {
           description: 'The requested event could not be found',
           variant: 'destructive',
         });
-        navigate('/admin/event-scanner');
+        navigate('/admin/events');
         return;
       }
 
@@ -168,26 +123,31 @@ const EventScannerView = () => {
     }
   };
 
-  if (!isAdmin || loading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <Layout>
+        <AppHeader />
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
     );
   }
 
   if (!event) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Button
-        variant="ghost"
-        onClick={() => navigate('/admin/event-scanner')}
-        className="mb-4"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Events
-      </Button>
+    <Layout>
+      <AppHeader />
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/admin/events')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Events
+        </Button>
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
@@ -262,6 +222,7 @@ const EventScannerView = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </Layout>
   );
 };
 

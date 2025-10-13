@@ -274,15 +274,15 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/event-scanner')}>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/events')}>
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <div className="p-3 bg-orange-100 rounded-lg">
                   <QrCode className="h-6 w-6 text-orange-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">Event Scanner</h3>
-                  <p className="text-sm text-gray-600">Check in attendees</p>
+                  <h3 className="font-semibold text-lg">Event Management</h3>
+                  <p className="text-sm text-gray-600">Manage events & scan QR codes</p>
                 </div>
               </div>
             </CardContent>

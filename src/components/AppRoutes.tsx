@@ -24,9 +24,9 @@ import Subscription from '@/pages/Subscription';
 import PaymentSuccess from '@/pages/PaymentSuccess';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Metrics from '@/pages/Metrics';
-import EventManagement from '@/pages/EventManagement';
-import EventScanner from '@/pages/admin/EventScanner';
+import EventDashboard from '@/pages/admin/EventDashboard';
 import EventScannerView from '@/pages/admin/EventScannerView';
+import { AdminRoute } from '@/components/AdminRoute';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -97,15 +97,19 @@ const AppRoutes: React.FC = () => {
       />
       <Route
         path="/admin/events"
-        element={renderProtectedRoute(<EventManagement />)}
+        element={renderProtectedRoute(
+          <AdminRoute>
+            <EventDashboard />
+          </AdminRoute>
+        )}
       />
       <Route
-        path="/admin/event-scanner"
-        element={renderProtectedRoute(<EventScanner />)}
-      />
-      <Route
-        path="/admin/event-scanner/:eventId"
-        element={renderProtectedRoute(<EventScannerView />)}
+        path="/admin/events/scan/:eventId"
+        element={renderProtectedRoute(
+          <AdminRoute>
+            <EventScannerView />
+          </AdminRoute>
+        )}
       />
       <Route
         path="/onboarding"
