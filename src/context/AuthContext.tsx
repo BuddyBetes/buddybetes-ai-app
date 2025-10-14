@@ -26,10 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Handle auth operations
   const { signIn, signUp, signOut: authSignOut } = useAuthOperations();
 
-  // Wrap sign out to clear onboarding state
+  // Wrap sign out without clearing onboarding state (it's user data, not session data)
   const signOut = async () => {
     await authSignOut();
-    setHasCompletedOnboarding(false);
   };
 
   return (

@@ -23,7 +23,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate('/signin');
   };
 
   return (

@@ -15,6 +15,21 @@ export function useOnboardingStatus(userId: string | undefined, isPasswordRecove
 
   const checkOnboardingStatus = async (userId: string) => {
     try {
+      // Check if user is admin first - admins don't need to complete onboarding
+      const { data: isAdmin, error: adminError } = await supabase.rpc('is_admin', {
+        _user_id: userId,
+      });
+      
+      if (adminError) {
+        console.error('Error checking admin status:', adminError);
+      } else if (isAdmin) {
+        // Admins skip onboarding requirement
+        console.log('User is admin - skipping onboarding requirement');
+        setHasCompletedOnboarding(true);
+        return;
+      }
+      
+      // For non-admin users, check health_data onboarding status
       const { data, error } = await supabase
         .from('health_data')
         .select('completed_onboarding')

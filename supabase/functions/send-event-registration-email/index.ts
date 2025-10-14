@@ -33,14 +33,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Generating QR code image for:", qrCode);
     
-    // Generate QR code as base64 image
-    const qrCodeDataUrl = await QRCode.toDataURL(qrCode, {
+    // Generate QR code as Buffer for email attachment
+    const qrCodeBuffer = await QRCode.toBuffer(qrCode, {
       width: 300,
       margin: 2,
       color: {
         dark: "#000000",
         light: "#FFFFFF",
       },
+      type: 'png',
     });
 
     // Format event date if available
@@ -58,7 +59,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Build email content using shared components
     const qrCodeSection = `
       <div style="text-align: center; margin: 30px 0;">
-        <img src="${qrCodeDataUrl}" alt="Event QR Code" style="max-width: 300px; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+        <img src="cid:qrcode" alt="Event QR Code" style="max-width: 300px; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
         <p style="${emailStyles.text}">Present this QR code at the event for quick check-in</p>
       </div>
     `;
@@ -104,6 +105,13 @@ const handler = async (req: Request): Promise<Response> => {
       to: [email],
       subject: `Event Registration Confirmed - ${eventTitle}`,
       html: htmlContent,
+      attachments: [
+        {
+          filename: 'qrcode.png',
+          content: qrCodeBuffer,
+          cid: 'qrcode',
+        },
+      ],
     });
 
     console.log("Email sent successfully:", emailResponse);

@@ -32,6 +32,11 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
 
   const startScanning = async () => {
     try {
+      setIsScanning(true);
+      
+      // Small delay to ensure DOM updates before initializing scanner
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const scanner = new Html5Qrcode('qr-reader');
       scannerRef.current = scanner;
 
@@ -44,13 +49,22 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
         handleScanSuccess,
         handleScanError
       );
-
-      setIsScanning(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting scanner:', error);
+      setIsScanning(false);
+      
+      let errorMessage = 'Could not access camera. Please check permissions.';
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = 'No camera found on this device.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage = 'Camera is already in use by another application.';
+      }
+      
       toast({
         title: 'Camera Error',
-        description: 'Could not access camera. Please check permissions.',
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -147,14 +161,16 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
           <div className="relative">
             <div
               id="qr-reader"
-              className={`w-full rounded-lg overflow-hidden ${isScanning ? '' : 'hidden'}`}
+              className="w-full rounded-lg overflow-hidden min-h-[320px]"
+              style={{ display: isScanning ? 'block' : 'none' }}
             />
             
             {!isScanning && (
-              <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
+              <div className="flex items-center justify-center h-80 bg-muted rounded-lg">
                 <div className="text-center space-y-3">
                   <Camera className="h-12 w-12 mx-auto text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">Camera not active</p>
+                  <p className="text-xs text-muted-foreground">Click "Start Scanning" to activate camera</p>
                 </div>
               </div>
             )}
