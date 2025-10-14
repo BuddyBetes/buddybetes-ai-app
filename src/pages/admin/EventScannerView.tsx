@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import AdminLayout from '@/components/admin/AdminLayout';
+
 import QRScanner from '@/components/events/QRScanner';
 import LiveCheckInStats from '@/components/admin/LiveCheckInStats';
 import { Button } from '@/components/ui/button';
@@ -124,99 +124,95 @@ const EventScannerView = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (!event) return null;
 
   return (
-    <AdminLayout>
-      <div className="space-y-6 h-full flex flex-col">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/admin/events')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{event.title}</h1>
-            {event.event_date && (
-              <p className="text-muted-foreground text-sm">{format(new Date(event.event_date), 'PPP p')}</p>
-            )}
-            {event.location && (
-              <p className="text-muted-foreground text-sm">{event.location}</p>
-            )}
-          </div>
+    <div className="space-y-6 h-full flex flex-col">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/admin/events')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">{event.title}</h1>
+          {event.event_date && (
+            <p className="text-muted-foreground text-sm">{format(new Date(event.event_date), 'PPP p')}</p>
+          )}
+          {event.location && (
+            <p className="text-muted-foreground text-sm">{event.location}</p>
+          )}
         </div>
-
-        <LiveCheckInStats eventId={eventId!} />
-
-        <Tabs defaultValue="scanner" className="flex-1">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="scanner">Scanner</TabsTrigger>
-            <TabsTrigger value="attendees">Attendees ({attendees.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="scanner">
-            <QRScanner eventId={eventId} onScanSuccess={loadAttendees} />
-          </TabsContent>
-
-          <TabsContent value="attendees">
-            <Card>
-              <CardHeader>
-                <CardTitle>Attendee List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {attendees.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No registrations yet
-                  </p>
-                ) : (
-                  <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                    {attendees.map((attendee) => (
-                      <div
-                        key={attendee.id}
-                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {attendee.first_name} {attendee.last_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{attendee.email}</p>
-                          {attendee.checked_in && attendee.checked_in_at && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Checked in at {format(new Date(attendee.checked_in_at), 'p')}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={attendee.registration_type === 'in_person' ? 'default' : 'secondary'}>
-                            {attendee.registration_type}
-                          </Badge>
-                          {attendee.checked_in ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
-    </AdminLayout>
+
+      <LiveCheckInStats eventId={eventId!} />
+
+      <Tabs defaultValue="scanner" className="flex-1">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="scanner">Scanner</TabsTrigger>
+          <TabsTrigger value="attendees">Attendees ({attendees.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="scanner">
+          <QRScanner eventId={eventId} onScanSuccess={loadAttendees} />
+        </TabsContent>
+
+        <TabsContent value="attendees">
+          <Card>
+            <CardHeader>
+              <CardTitle>Attendee List</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attendees.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No registrations yet
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                  {attendees.map((attendee) => (
+                    <div
+                      key={attendee.id}
+                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {attendee.first_name} {attendee.last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{attendee.email}</p>
+                        {attendee.checked_in && attendee.checked_in_at && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Checked in at {format(new Date(attendee.checked_in_at), 'p')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={attendee.registration_type === 'in_person' ? 'default' : 'secondary'}>
+                          {attendee.registration_type}
+                        </Badge>
+                        {attendee.checked_in ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

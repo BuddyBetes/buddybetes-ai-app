@@ -189,27 +189,41 @@ const Event = () => {
               Watch Now on Facebook
             </Button>
           ) : (
-            user && !isRegistered && (
-              <Button
-                onClick={handleQuickRegister}
-                disabled={registering}
-                size="lg"
-                className="w-full md:w-auto"
-              >
-                {registering ? 'Registering...' : 'Confirm Attendance & Get QR Code'}
-              </Button>
-            )
+            <>
+              {user && !isRegistered && (
+                <Button
+                  onClick={handleQuickRegister}
+                  disabled={registering}
+                  size="lg"
+                  className="w-full md:w-auto"
+                >
+                  {registering ? 'Registering...' : 'Register Now & Get QR Code'}
+                </Button>
+              )}
+
+              {user && isRegistered && (
+                <Button
+                  onClick={() => document.getElementById('qr-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  size="lg"
+                  className="w-full md:w-auto"
+                >
+                  View My QR Code
+                </Button>
+              )}
+            </>
           )}
         </Card>
 
         {event.video_url && <EventVideoSection videoUrl={event.video_url} />}
 
         {user && isRegistered && userQrCode && (
-          <QRCodeDisplay 
-            qrCode={userQrCode}
-            eventTitle={event.title}
-            userName="Your Name"
-          />
+          <div id="qr-section">
+            <QRCodeDisplay 
+              qrCode={userQrCode}
+              eventTitle={event.title}
+              userName="Your Name"
+            />
+          </div>
         )}
 
         {!user && <EventRSVPForm eventId={event.id} />}

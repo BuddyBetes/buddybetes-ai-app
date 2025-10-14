@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import AdminLayout from '@/components/admin/AdminLayout';
+
 import ReceiptViewer from '@/components/admin/ReceiptViewer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -123,109 +123,107 @@ const PaymentReceipts = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Payment Receipts</h1>
-          <p className="text-muted-foreground">Review and approve payment receipts</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by email or reference..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">Loading receipts...</div>
-        ) : (
-          <div className="grid gap-4 grid-cols-1">
-            {filteredReceipts.map((receipt) => (
-              <Card key={receipt.id}>
-                <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                      <CardTitle className="text-lg">{receipt.user_email}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(receipt.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    {getStatusBadge(receipt.verification_status)}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Amount</p>
-                      <p className="font-medium">₱{receipt.amount}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Method</p>
-                      <p className="font-medium">{receipt.payment_method}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-muted-foreground">Reference</p>
-                      <p className="font-medium">{receipt.reference_number || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedReceipt(receipt)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    {receipt.verification_status === 'pending' && (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() => updateReceiptStatus(receipt.id, 'approved')}
-                        >
-                          <Check className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => {
-                            const reason = prompt('Rejection reason:');
-                            if (reason) updateReceiptStatus(receipt.id, 'rejected', reason);
-                          }}
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {filteredReceipts.length === 0 && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  No receipts found
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {selectedReceipt && (
-          <ReceiptViewer
-            receipt={selectedReceipt}
-            onClose={() => setSelectedReceipt(null)}
-            onStatusUpdate={(receiptId, status, reason) => updateReceiptStatus(receiptId, status, reason)}
-          />
-        )}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Payment Receipts</h1>
+        <p className="text-muted-foreground">Review and approve payment receipts</p>
       </div>
-    </AdminLayout>
+
+      <div className="flex items-center gap-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by email or reference..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">Loading receipts...</div>
+      ) : (
+        <div className="grid gap-4 grid-cols-1">
+          {filteredReceipts.map((receipt) => (
+            <Card key={receipt.id}>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-lg">{receipt.user_email}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(receipt.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  {getStatusBadge(receipt.verification_status)}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Amount</p>
+                    <p className="font-medium">₱{receipt.amount}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Method</p>
+                    <p className="font-medium">{receipt.payment_method}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Reference</p>
+                    <p className="font-medium">{receipt.reference_number || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedReceipt(receipt)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View
+                  </Button>
+                  {receipt.verification_status === 'pending' && (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => updateReceiptStatus(receipt.id, 'approved')}
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          const reason = prompt('Rejection reason:');
+                          if (reason) updateReceiptStatus(receipt.id, 'rejected', reason);
+                        }}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {filteredReceipts.length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No receipts found
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {selectedReceipt && (
+        <ReceiptViewer
+          receipt={selectedReceipt}
+          onClose={() => setSelectedReceipt(null)}
+          onStatusUpdate={(receiptId, status, reason) => updateReceiptStatus(receiptId, status, reason)}
+        />
+      )}
+    </div>
   );
 };
 

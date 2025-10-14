@@ -22,6 +22,31 @@ const EventRSVPForm = ({ eventId }: EventRSVPFormProps) => {
   const [success, setSuccess] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [checking, setChecking] = useState(false);
+
+  const checkExistingRegistration = async (email: string) => {
+    if (!email) return;
+    
+    setChecking(true);
+    try {
+      const { data, error } = await supabase
+        .from('event_registrations')
+        .select('qr_code')
+        .eq('event_id', eventId)
+        .eq('email', email)
+        .maybeSingle();
+
+      if (data) {
+        setAlreadyRegistered(true);
+        setQrCode(data.qr_code);
+      }
+    } catch (error) {
+      console.error('Error checking registration:', error);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +78,24 @@ const EventRSVPForm = ({ eventId }: EventRSVPFormProps) => {
       setLoading(false);
     }
   };
+
+  if (alreadyRegistered && qrCode) {
+    return (
+      <Card className="p-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold mb-2">You're Already Registered! 🎉</h2>
+          <p className="text-muted-foreground">
+            You've already registered for this event. Check your email for your registration confirmation, or view your QR code below.
+          </p>
+        </div>
+        <QRCodeDisplay 
+          qrCode={qrCode}
+          eventTitle="BuddyBetes Event"
+          userName={formData.email || 'Attendee'}
+        />
+      </Card>
+    );
+  }
 
   if (success && qrCode) {
     return (
@@ -106,7 +149,9 @@ const EventRSVPForm = ({ eventId }: EventRSVPFormProps) => {
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onBlur={(e) => checkExistingRegistration(e.target.value)}
             placeholder="your@email.com"
+            disabled={checking}
           />
         </div>
 

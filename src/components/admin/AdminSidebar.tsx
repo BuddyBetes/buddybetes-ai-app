@@ -4,10 +4,8 @@ import {
   LayoutDashboard, 
   Receipt, 
   Mail, 
-  Users, 
   Calendar,
   BarChart3,
-  Settings,
   Menu,
   X
 } from 'lucide-react';
@@ -17,12 +15,10 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const navigationItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Payment Receipts', href: '/admin/payments', icon: Receipt },
+  { name: 'Events', href: '/admin/events', icon: Calendar },
+  { name: 'Payment Receipts', href: '/admin/receipts', icon: Receipt },
   { name: 'Email Management', href: '/admin/emails', icon: Mail },
-  { name: 'Role Management', href: '/admin/roles', icon: Users },
-  { name: 'Event Management', href: '/admin/events', icon: Calendar },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {

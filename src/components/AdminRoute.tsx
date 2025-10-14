@@ -21,6 +21,7 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
 
   const checkAdminStatus = async () => {
     if (!isAuthenticated || !user) {
+      setIsAdmin(false);
       setLoading(false);
       return;
     }
@@ -33,29 +34,17 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
 
       if (error) throw error;
 
-      setIsAdmin(data);
-
-      if (!data) {
-        toast({
-          title: 'Access Denied',
-          description: 'You do not have admin privileges',
-          variant: 'destructive',
-        });
-      }
+      setIsAdmin(data === true);
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
-      toast({
-        title: 'Error',
-        description: 'Failed to verify admin status',
-        variant: 'destructive',
-      });
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  // Show loading while checking admin status
+  if (loading || isAdmin === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -63,11 +52,13 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
     );
   }
 
+  // Redirect to admin login if not authenticated
   if (!isAuthenticated || !user) {
     return <Navigate to="/admin" replace />;
   }
 
-  if (!isAdmin) {
+  // Immediately redirect non-admin users without rendering children
+  if (isAdmin === false) {
     toast({
       title: 'Access Denied',
       description: 'You do not have admin privileges',
@@ -76,5 +67,6 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // Only render children if user is confirmed admin
   return <>{children}</>;
 };

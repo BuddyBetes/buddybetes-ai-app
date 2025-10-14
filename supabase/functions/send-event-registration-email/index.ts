@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
-import QRCode from "npm:qrcode@1.5.3";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { createBaseTemplate } from '../_shared/email-templates/base-template.ts';
 import { createInfoBox, createDivider } from '../_shared/email-templates/components.ts';
@@ -29,30 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, firstName, lastName, eventTitle, qrCode, eventDate, userId }: EmailRequest = await req.json();
-
-    console.log("Generating QR code image for:", qrCode);
-    
-    // Generate QR code as Buffer for email attachment
-    const qrCodeBuffer = await QRCode.toBuffer(qrCode, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: "#000000",
-        light: "#FFFFFF",
-      },
-      type: 'png',
-    });
-
-    // Also generate data URL for inline embedding fallback
-    const qrCodeDataUrl = await QRCode.toDataURL(qrCode, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: "#000000",
-        light: "#FFFFFF",
-      },
-    });
+    const { email, firstName, lastName, eventTitle, eventDate, userId }: EmailRequest = await req.json();
 
     // Format event date if available
     const formattedDate = eventDate 
@@ -65,18 +41,6 @@ const handler = async (req: Request): Promise<Response> => {
           minute: "2-digit",
         })
       : "To be announced";
-
-    // Build email content using shared components
-    // Use both CID attachment (works in most desktop clients) and data URL fallback (for mobile)
-    const qrCodeSection = `
-      <div style="text-align: center; margin: 30px 0;">
-        <picture>
-          <source srcset="cid:qrcode" type="image/png" />
-          <img src="${qrCodeDataUrl}" alt="Event QR Code" style="max-width: 300px; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); display: block; margin: 0 auto;" />
-        </picture>
-        <p style="${emailStyles.text}; margin-top: 16px;">Present this QR code at the event for quick check-in</p>
-      </div>
-    `;
 
     const eventDetails = `
       <div style="margin: 20px 0;">
@@ -93,13 +57,21 @@ const handler = async (req: Request): Promise<Response> => {
       
       ${createDivider()}
       
-      <h2 style="font-size: 20px; font-weight: bold; color: #333; margin: 30px 0 20px 0;">Your Check-in QR Code</h2>
-      ${qrCodeSection}
+      <div style="text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
+        <h2 style="font-size: 24px; font-weight: bold; color: #ffffff; margin: 0 0 16px 0;">Access Your QR Code</h2>
+        <p style="color: #ffffff; font-size: 16px; margin: 0 0 24px 0;">
+          Your check-in QR code is ready and waiting for you in your BuddyBetes account.
+        </p>
+        <a href="https://app.buddybetes.com/dashboard" 
+           style="display: inline-block; padding: 14px 32px; background: #ffffff; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);">
+          View QR Code in App →
+        </a>
+      </div>
       
       ${createDivider()}
       
       <p style="${emailStyles.text}">
-        <strong>Important:</strong> Save this email or take a screenshot of your QR code. You'll need it to check in at the event.
+        <strong>Important:</strong> Login to your BuddyBetes account before the event to access your QR code. You'll need it to check in at the event.
       </p>
       
       <p style="${emailStyles.text}">
@@ -119,13 +91,6 @@ const handler = async (req: Request): Promise<Response> => {
       to: [email],
       subject: `Event Registration Confirmed - ${eventTitle}`,
       html: htmlContent,
-      attachments: [
-        {
-          filename: 'qrcode.png',
-          content: qrCodeBuffer,
-          cid: 'qrcode',
-        },
-      ],
     });
 
     console.log("Email sent successfully:", emailResponse);
