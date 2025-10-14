@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import AppHeader from '@/components/AppHeader';
 import ProfileHeader from '@/components/profile/ProfileHeader';
@@ -20,10 +20,18 @@ const Profile = () => {
   const { subscription, hasActiveSubscription } = useSubscription();
   const { isAdmin, loading: adminLoading } = useAdminStatus();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/signin');
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      navigate('/signin');
+    } catch (error) {
+      navigate('/signin');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -116,9 +124,10 @@ const Profile = () => {
           onClick={handleLogout}
           variant="destructive"
           className="w-full h-12 text-white"
+          disabled={isLoggingOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          Log Out
+          {isLoggingOut ? 'Logging out...' : 'Log Out'}
         </Button>
       </div>
     </Layout>

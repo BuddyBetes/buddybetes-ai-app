@@ -41,7 +41,22 @@ export function useAuthOperations() {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Set a timeout to force logout if Supabase doesn't respond
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Logout timeout')), 5000)
+      );
+      
+      await Promise.race([
+        supabase.auth.signOut(),
+        timeoutPromise
+      ]);
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Force clear local session even if signOut fails
+      localStorage.removeItem('sb-zjqiikollqinafveesvo-auth-token');
+      window.location.href = '/signin';
+    }
   };
 
   return {

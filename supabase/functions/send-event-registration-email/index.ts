@@ -44,6 +44,16 @@ const handler = async (req: Request): Promise<Response> => {
       type: 'png',
     });
 
+    // Also generate data URL for inline embedding fallback
+    const qrCodeDataUrl = await QRCode.toDataURL(qrCode, {
+      width: 300,
+      margin: 2,
+      color: {
+        dark: "#000000",
+        light: "#FFFFFF",
+      },
+    });
+
     // Format event date if available
     const formattedDate = eventDate 
       ? new Date(eventDate).toLocaleDateString("en-US", {
@@ -57,10 +67,14 @@ const handler = async (req: Request): Promise<Response> => {
       : "To be announced";
 
     // Build email content using shared components
+    // Use both CID attachment (works in most desktop clients) and data URL fallback (for mobile)
     const qrCodeSection = `
       <div style="text-align: center; margin: 30px 0;">
-        <img src="cid:qrcode" alt="Event QR Code" style="max-width: 300px; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
-        <p style="${emailStyles.text}">Present this QR code at the event for quick check-in</p>
+        <picture>
+          <source srcset="cid:qrcode" type="image/png" />
+          <img src="${qrCodeDataUrl}" alt="Event QR Code" style="max-width: 300px; width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); display: block; margin: 0 auto;" />
+        </picture>
+        <p style="${emailStyles.text}; margin-top: 16px;">Present this QR code at the event for quick check-in</p>
       </div>
     `;
 

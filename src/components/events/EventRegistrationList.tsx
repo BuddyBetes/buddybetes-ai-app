@@ -134,44 +134,45 @@ const EventRegistrationList: React.FC<EventRegistrationListProps> = ({ eventId }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Event Registrations</CardTitle>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-xs text-muted-foreground">Total</div>
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-lg sm:text-xl">Event Registrations</CardTitle>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mt-4">
+          <div className="text-center p-2.5 sm:p-3 bg-muted rounded-lg">
+            <div className="text-xl sm:text-2xl font-bold">{stats.total}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Total</div>
           </div>
-          <div className="text-center p-3 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{stats.checkedIn}</div>
-            <div className="text-xs text-muted-foreground">Checked In</div>
+          <div className="text-center p-2.5 sm:p-3 bg-green-50 rounded-lg">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.checkedIn}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Checked In</div>
           </div>
-          <div className="text-center p-3 bg-orange-50 rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">{stats.notCheckedIn}</div>
-            <div className="text-xs text-muted-foreground">Pending</div>
+          <div className="text-center p-2.5 sm:p-3 bg-orange-50 rounded-lg">
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{stats.notCheckedIn}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Pending</div>
           </div>
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{stats.emailSent}</div>
-            <div className="text-xs text-muted-foreground">Email Sent</div>
+          <div className="text-center p-2.5 sm:p-3 bg-blue-50 rounded-lg">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.emailSent}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Email Sent</div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
+              className="pl-9 h-11 sm:h-10 text-[16px] sm:text-sm"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap sm:flex-nowrap">
             <Button
               variant={filter === 'all' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('all')}
+              className="flex-1 sm:flex-none h-11 sm:h-9 touch-manipulation text-sm"
             >
               All
             </Button>
@@ -179,6 +180,7 @@ const EventRegistrationList: React.FC<EventRegistrationListProps> = ({ eventId }
               variant={filter === 'checked-in' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('checked-in')}
+              className="flex-1 sm:flex-none h-11 sm:h-9 touch-manipulation text-sm"
             >
               Checked In
             </Button>
@@ -186,6 +188,7 @@ const EventRegistrationList: React.FC<EventRegistrationListProps> = ({ eventId }
               variant={filter === 'not-checked-in' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('not-checked-in')}
+              className="flex-1 sm:flex-none h-11 sm:h-9 touch-manipulation text-sm"
             >
               Pending
             </Button>
@@ -193,41 +196,41 @@ const EventRegistrationList: React.FC<EventRegistrationListProps> = ({ eventId }
         </div>
 
         {/* Registration List */}
-        <div className="space-y-2 max-h-[500px] overflow-y-auto">
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto">
           {filteredRegistrations.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-sm sm:text-base text-muted-foreground">
               No registrations found
             </div>
           ) : (
             filteredRegistrations.map((reg) => (
               <div
                 key={reg.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition gap-2 sm:gap-0"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium truncate">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <p className="font-medium text-sm sm:text-base truncate">
                       {reg.first_name} {reg.last_name}
                     </p>
                     {reg.checked_in && (
-                      <Badge variant="default" className="bg-green-600">
+                      <Badge variant="default" className="bg-green-600 flex-shrink-0">
                         <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Checked In
+                        <span className="text-xs">Checked In</span>
                       </Badge>
                     )}
                     {reg.email_sent ? (
-                      <span title="Email sent">
+                      <span title="Email sent" className="flex-shrink-0">
                         <Mail className="h-4 w-4 text-blue-600" />
                       </span>
                     ) : (
-                      <span title="Email not sent">
+                      <span title="Email not sent" className="flex-shrink-0">
                         <MailX className="h-4 w-4 text-gray-400" />
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">{reg.email}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">{reg.email}</p>
                   {reg.checked_in_at && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                       Checked in: {format(new Date(reg.checked_in_at), 'MMM d, yyyy h:mm a')}
                     </p>
                   )}
@@ -237,7 +240,7 @@ const EventRegistrationList: React.FC<EventRegistrationListProps> = ({ eventId }
                     size="sm"
                     variant="outline"
                     onClick={() => handleManualCheckIn(reg.id)}
-                    className="ml-3 flex-shrink-0"
+                    className="w-full sm:w-auto sm:ml-3 flex-shrink-0 h-10 sm:h-9 touch-manipulation"
                   >
                     Check In
                   </Button>

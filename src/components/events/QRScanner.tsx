@@ -16,6 +16,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [lastScannedCode, setLastScannedCode] = useState<string>('');
   const [lastResult, setLastResult] = useState<{
     success: boolean;
     message: string;
@@ -78,9 +80,10 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
   };
 
   const handleScanSuccess = async (decodedText: string) => {
-    if (processing) return;
+    if (processing || lastScannedCode === decodedText) return;
 
     setProcessing(true);
+    setLastScannedCode(decodedText);
     console.log('QR Code scanned:', decodedText);
 
     try {
@@ -100,27 +103,33 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
           title: 'Already Checked In',
           description: `${data.attendee.firstName} ${data.attendee.lastName} was checked in at ${new Date(data.attendee.checkedInAt).toLocaleTimeString()}`,
         });
+        
+        // Reset after failed scan
+        setTimeout(() => {
+          setProcessing(false);
+          setLastScannedCode('');
+          setLastResult(null);
+        }, 2000);
       } else {
+        // Stop scanner on successful check-in
+        await stopScanning();
+        setShowSuccess(true);
+        
         setLastResult({
           success: true,
           message: `${data.attendee.firstName} ${data.attendee.lastName} checked in successfully!`,
           attendee: data.attendee,
         });
         toast({
-          title: 'Check-in Successful',
+          title: 'Check-in Successful! ✅',
           description: `${data.attendee.firstName} ${data.attendee.lastName} has been checked in`,
+          duration: 5000,
         });
         
         if (onScanSuccess) {
           onScanSuccess(data);
         }
       }
-
-      // Clear result after 3 seconds
-      setTimeout(() => {
-        setLastResult(null);
-        setProcessing(false);
-      }, 3000);
     } catch (error: any) {
       console.error('Check-in error:', error);
       setLastResult({
@@ -132,11 +141,21 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
         description: error.message || 'Invalid QR code',
         variant: 'destructive',
       });
+      
       setTimeout(() => {
-        setLastResult(null);
         setProcessing(false);
-      }, 3000);
+        setLastScannedCode('');
+        setLastResult(null);
+      }, 2000);
     }
+  };
+
+  const resetScanner = () => {
+    setShowSuccess(false);
+    setLastResult(null);
+    setProcessing(false);
+    setLastScannedCode('');
+    startScanning();
   };
 
   const handleScanError = (error: string) => {
@@ -151,89 +170,113 @@ const QRScanner: React.FC<QRScannerProps> = ({ eventId, onScanSuccess }) => {
       <CardContent className="p-4 sm:p-6">
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">QR Code Scanner</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-base sm:text-lg font-semibold mb-2">QR Code Scanner</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Scan attendee QR codes to check them in
             </p>
           </div>
 
-          {/* Scanner View */}
-          <div className="relative">
-            <div
-              id="qr-reader"
-              className="w-full rounded-lg overflow-hidden min-h-[320px]"
-              style={{ display: isScanning ? 'block' : 'none' }}
-            />
-            
-            {!isScanning && (
-              <div className="flex items-center justify-center h-80 bg-muted rounded-lg">
-                <div className="text-center space-y-3">
-                  <Camera className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Camera not active</p>
-                  <p className="text-xs text-muted-foreground">Click "Start Scanning" to activate camera</p>
-                </div>
-              </div>
-            )}
-
-            {/* Processing Overlay */}
-            {processing && (
-              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            )}
-          </div>
-
-          {/* Scan Result */}
-          {lastResult && (
-            <div
-              className={`p-4 rounded-lg ${
-                lastResult.success
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                {lastResult.success ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <p
-                    className={`font-medium ${
-                      lastResult.success ? 'text-green-900' : 'text-red-900'
-                    }`}
-                  >
-                    {lastResult.message}
-                  </p>
-                  {lastResult.attendee && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {lastResult.attendee.email}
+          {/* Success Screen */}
+          {showSuccess && lastResult?.success ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center h-64 sm:h-80 bg-green-50 rounded-lg border-2 border-green-200">
+                <div className="text-center space-y-4 p-4">
+                  <CheckCircle2 className="h-16 w-16 sm:h-20 sm:w-20 mx-auto text-green-600" />
+                  <div>
+                    <p className="text-lg sm:text-xl font-bold text-green-900 mb-2">
+                      Check-in Successful!
                     </p>
-                  )}
+                    <p className="text-base sm:text-lg font-medium text-green-700">
+                      {lastResult.message}
+                    </p>
+                    {lastResult.attendee && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {lastResult.attendee.email}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Controls */}
-          <div className="flex gap-3">
-            {!isScanning ? (
-              <Button onClick={startScanning} className="flex-1 touch-manipulation" size="lg">
-                <Camera className="mr-2 h-4 w-4" />
-                Start Scanning
-              </Button>
-            ) : (
-              <Button
-                onClick={stopScanning}
-                variant="destructive"
-                className="flex-1 touch-manipulation"
+              <Button 
+                onClick={resetScanner} 
+                className="w-full h-12 sm:h-11 touch-manipulation text-base" 
                 size="lg"
               >
-                Stop Scanning
+                <Camera className="mr-2 h-4 w-4" />
+                Scan Next Attendee
               </Button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              {/* Scanner View */}
+              <div className="relative">
+                <div
+                  id="qr-reader"
+                  className="w-full rounded-lg overflow-hidden min-h-[280px] sm:min-h-[320px]"
+                  style={{ display: isScanning ? 'block' : 'none' }}
+                />
+                
+                {!isScanning && (
+                  <div className="flex items-center justify-center h-64 sm:h-80 bg-muted rounded-lg">
+                    <div className="text-center space-y-3 p-4">
+                      <Camera className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground" />
+                      <p className="text-sm sm:text-base text-muted-foreground">Camera not active</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Click "Start Scanning" to activate camera</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Processing Overlay */}
+                {processing && (
+                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                )}
+              </div>
+
+              {/* Scan Result */}
+              {lastResult && !lastResult.success && (
+                <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                  <div className="flex items-start gap-3">
+                    <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm sm:text-base text-red-900">
+                        {lastResult.message}
+                      </p>
+                      {lastResult.attendee && (
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                          {lastResult.attendee.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Controls */}
+              <div className="flex gap-2 sm:gap-3">
+                {!isScanning ? (
+                  <Button 
+                    onClick={startScanning} 
+                    className="flex-1 h-12 sm:h-11 touch-manipulation text-base" 
+                    size="lg"
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    Start Scanning
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={stopScanning}
+                    variant="destructive"
+                    className="flex-1 h-12 sm:h-11 touch-manipulation text-base"
+                    size="lg"
+                  >
+                    Stop Scanning
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

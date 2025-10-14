@@ -156,7 +156,7 @@ const AnnouncementsCarousel = () => {
                     }}
                   >
                     <div
-                      className={`absolute inset-0 bg-gradient-to-r ${event.color_gradient || 'from-blue-600/90 via-purple-600/90 to-pink-600/90'} opacity-90`}
+                      className={`absolute inset-0 bg-gradient-to-r ${event.color_gradient || 'from-[#208687]/90 via-teal-500/90 to-cyan-600/90'} opacity-90`}
                     ></div>
                   </div>
 

@@ -139,19 +139,20 @@ const EventScannerView = () => {
   return (
     <Layout>
       <AppHeader />
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-6xl">
         <Button
           variant="ghost"
           onClick={() => navigate('/admin/events')}
-          className="mb-4"
+          className="mb-4 h-11 sm:h-10 touch-manipulation"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Events
+          <span className="hidden sm:inline">Back to Events</span>
+          <span className="sm:hidden">Back</span>
         </Button>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
-        <div className="text-muted-foreground space-y-1">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{event.title}</h1>
+        <div className="text-muted-foreground space-y-1 text-sm sm:text-base">
           {event.event_date && (
             <p>{format(new Date(event.event_date), 'PPP p')}</p>
           )}
@@ -159,42 +160,45 @@ const EventScannerView = () => {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <LiveCheckInStats eventId={eventId!} />
       </div>
 
       <Tabs defaultValue="scanner" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="scanner">Scanner</TabsTrigger>
-          <TabsTrigger value="attendees">Attendees ({attendees.length})</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 h-11 sm:h-10">
+          <TabsTrigger value="scanner" className="text-sm sm:text-base">Scanner</TabsTrigger>
+          <TabsTrigger value="attendees" className="text-sm sm:text-base">
+            <span className="hidden sm:inline">Attendees ({attendees.length})</span>
+            <span className="sm:hidden">List ({attendees.length})</span>
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="scanner" className="mt-6">
+        <TabsContent value="scanner" className="mt-4 sm:mt-6">
           <QRScanner eventId={eventId} onScanSuccess={loadAttendees} />
         </TabsContent>
 
-        <TabsContent value="attendees" className="mt-6">
+        <TabsContent value="attendees" className="mt-4 sm:mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Attendee List</CardTitle>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Attendee List</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0">
               {attendees.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-muted-foreground py-8 text-sm sm:text-base">
                   No registrations yet
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                   {attendees.map((attendee) => (
                     <div
                       key={attendee.id}
-                      className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-2 sm:gap-0"
                     >
-                      <div className="flex-1">
-                        <p className="font-medium">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm sm:text-base truncate">
                           {attendee.first_name} {attendee.last_name}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
                           {attendee.email}
                         </p>
                         {attendee.checked_in && attendee.checked_in_at && (

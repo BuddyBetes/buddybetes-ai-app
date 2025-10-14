@@ -67,9 +67,18 @@ const ProfileMenu = () => {
     navigate(path);
   };
 
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/signin');
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+      navigate('/signin');
+    } catch (error) {
+      navigate('/signin');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (

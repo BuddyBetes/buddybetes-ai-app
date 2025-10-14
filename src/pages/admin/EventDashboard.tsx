@@ -28,6 +28,27 @@ const EventDashboard = () => {
 
   useEffect(() => {
     loadEvents();
+
+    // Subscribe to realtime updates for event registrations
+    const channel = supabase
+      .channel('event-registrations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'event_registrations'
+        },
+        () => {
+          console.log('Registration updated, reloading events...');
+          loadEvents();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadEvents = async () => {
