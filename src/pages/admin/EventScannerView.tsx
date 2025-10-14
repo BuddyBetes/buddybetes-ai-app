@@ -1,17 +1,16 @@
-import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import AdminLayout from '@/components/admin/AdminLayout';
+import QRScanner from '@/components/events/QRScanner';
+import LiveCheckInStats from '@/components/admin/LiveCheckInStats';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Loader2, CheckCircle2, XCircle } from 'lucide-react';
-import QRScanner from '@/components/events/QRScanner';
-import LiveCheckInStats from '@/components/admin/LiveCheckInStats';
-import Layout from '@/components/Layout';
-import AppHeader from '@/components/AppHeader';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface Event {
   id: string;
@@ -125,108 +124,99 @@ const EventScannerView = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <AppHeader />
-        <div className="flex items-center justify-center min-h-screen">
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </AdminLayout>
     );
   }
 
   if (!event) return null;
 
   return (
-    <Layout>
-      <AppHeader />
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8 max-w-6xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/admin/events')}
-          className="mb-4 h-11 sm:h-10 touch-manipulation"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Back to Events</span>
-          <span className="sm:hidden">Back</span>
-        </Button>
-
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{event.title}</h1>
-        <div className="text-muted-foreground space-y-1 text-sm sm:text-base">
-          {event.event_date && (
-            <p>{format(new Date(event.event_date), 'PPP p')}</p>
-          )}
-          {event.location && <p>{event.location}</p>}
+    <AdminLayout>
+      <div className="space-y-6 h-full flex flex-col">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/admin/events')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{event.title}</h1>
+            {event.event_date && (
+              <p className="text-muted-foreground text-sm">{format(new Date(event.event_date), 'PPP p')}</p>
+            )}
+            {event.location && (
+              <p className="text-muted-foreground text-sm">{event.location}</p>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="mb-4 sm:mb-6">
         <LiveCheckInStats eventId={eventId!} />
-      </div>
 
-      <Tabs defaultValue="scanner" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-11 sm:h-10">
-          <TabsTrigger value="scanner" className="text-sm sm:text-base">Scanner</TabsTrigger>
-          <TabsTrigger value="attendees" className="text-sm sm:text-base">
-            <span className="hidden sm:inline">Attendees ({attendees.length})</span>
-            <span className="sm:hidden">List ({attendees.length})</span>
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="scanner" className="flex-1">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="scanner">Scanner</TabsTrigger>
+            <TabsTrigger value="attendees">Attendees ({attendees.length})</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="scanner" className="mt-4 sm:mt-6">
-          <QRScanner eventId={eventId} onScanSuccess={loadAttendees} />
-        </TabsContent>
+          <TabsContent value="scanner">
+            <QRScanner eventId={eventId} onScanSuccess={loadAttendees} />
+          </TabsContent>
 
-        <TabsContent value="attendees" className="mt-4 sm:mt-6">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-lg sm:text-xl">Attendee List</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              {attendees.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8 text-sm sm:text-base">
-                  No registrations yet
-                </p>
-              ) : (
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                  {attendees.map((attendee) => (
-                    <div
-                      key={attendee.id}
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-2 sm:gap-0"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm sm:text-base truncate">
-                          {attendee.first_name} {attendee.last_name}
-                        </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                          {attendee.email}
-                        </p>
-                        {attendee.checked_in && attendee.checked_in_at && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Checked in at {format(new Date(attendee.checked_in_at), 'p')}
+          <TabsContent value="attendees">
+            <Card>
+              <CardHeader>
+                <CardTitle>Attendee List</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {attendees.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No registrations yet
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                    {attendees.map((attendee) => (
+                      <div
+                        key={attendee.id}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium">
+                            {attendee.first_name} {attendee.last_name}
                           </p>
-                        )}
+                          <p className="text-sm text-muted-foreground">{attendee.email}</p>
+                          {attendee.checked_in && attendee.checked_in_at && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Checked in at {format(new Date(attendee.checked_in_at), 'p')}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={attendee.registration_type === 'in_person' ? 'default' : 'secondary'}>
+                            {attendee.registration_type}
+                          </Badge>
+                          {attendee.checked_in ? (
+                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={attendee.registration_type === 'in_person' ? 'default' : 'secondary'}>
-                          {attendee.registration_type}
-                        </Badge>
-                        {attendee.checked_in ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-    </Layout>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </AdminLayout>
   );
 };
 

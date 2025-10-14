@@ -17,15 +17,21 @@ import EmailConfirmed from '@/pages/auth/EmailConfirmed';
 import Profile from '@/pages/Profile';
 import Assistant from '@/pages/Assistant';
 import Event from '@/pages/Event';
-
 import Settings from '@/pages/settings/Settings';
 import Terms from '@/pages/Terms';
 import Subscription from '@/pages/Subscription';
 import PaymentSuccess from '@/pages/PaymentSuccess';
-import AdminDashboard from '@/pages/AdminDashboard';
-import Metrics from '@/pages/Metrics';
+
+// Admin imports
+import AdminLogin from '@/pages/admin/AdminLogin';
+import AdminDashboardHome from '@/pages/admin/AdminDashboardHome';
+import PaymentReceipts from '@/pages/admin/PaymentReceipts';
+import EmailManagement from '@/pages/admin/EmailManagement';
+import RoleManagement from '@/pages/admin/RoleManagement';
 import EventDashboard from '@/pages/admin/EventDashboard';
 import EventScannerView from '@/pages/admin/EventScannerView';
+import Analytics from '@/pages/admin/Analytics';
+import AdminSettings from '@/pages/admin/Settings';
 import { AdminRoute } from '@/components/AdminRoute';
 
 // Route guards
@@ -66,7 +72,18 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route path="/terms" element={<Terms />} />
-      <Route path="/metrics" element={<Metrics />} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardHome /></AdminRoute>} />
+      <Route path="/admin/payments" element={<AdminRoute><PaymentReceipts /></AdminRoute>} />
+      <Route path="/admin/emails" element={<AdminRoute><EmailManagement /></AdminRoute>} />
+      <Route path="/admin/roles" element={<AdminRoute><RoleManagement /></AdminRoute>} />
+      <Route path="/admin/events" element={<AdminRoute><EventDashboard /></AdminRoute>} />
+      <Route path="/admin/events/scan/:eventId" element={<AdminRoute><EventScannerView /></AdminRoute>} />
+      <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
+      <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
       <Route
         path="/dashboard"
         element={renderProtectedRoute(<Dashboard />)}
@@ -90,48 +107,6 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/payment-success"
         element={renderProtectedRoute(<PaymentSuccess />)}
-      />
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <GlucoseUnitProvider>
-              <SubscriptionProvider>
-                <PageTransition>
-                  <AdminDashboard />
-                </PageTransition>
-              </SubscriptionProvider>
-            </GlucoseUnitProvider>
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/events"
-        element={
-          <AdminRoute>
-            <GlucoseUnitProvider>
-              <SubscriptionProvider>
-                <PageTransition>
-                  <EventDashboard />
-                </PageTransition>
-              </SubscriptionProvider>
-            </GlucoseUnitProvider>
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/events/scan/:eventId"
-        element={
-          <AdminRoute>
-            <GlucoseUnitProvider>
-              <SubscriptionProvider>
-                <PageTransition>
-                  <EventScannerView />
-                </PageTransition>
-              </SubscriptionProvider>
-            </GlucoseUnitProvider>
-          </AdminRoute>
-        }
       />
       <Route
         path="/onboarding"

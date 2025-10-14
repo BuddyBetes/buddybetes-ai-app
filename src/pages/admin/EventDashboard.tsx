@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
+import AdminLayout from '@/components/admin/AdminLayout';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Calendar, MapPin, Users, QrCode, Loader2 } from 'lucide-react';
-import { format, isPast, isFuture, isToday } from 'date-fns';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import Layout from '@/components/Layout';
-import AppHeader from '@/components/AppHeader';
+import { Calendar, MapPin, Users, QrCode, Loader2 } from 'lucide-react';
+import { format, isPast, isFuture, isToday } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface Event {
   id: string;
@@ -119,23 +118,11 @@ const EventDashboard = () => {
   };
 
   return (
-    <Layout>
-      <AppHeader />
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/admin')}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Admin Dashboard
-        </Button>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Event Management</h1>
-          <p className="text-muted-foreground">
-            Manage events and scan QR codes for check-ins
-          </p>
+    <AdminLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Event Management</h1>
+          <p className="text-muted-foreground">Manage and monitor event registrations</p>
         </div>
 
         {loading ? (
@@ -220,7 +207,7 @@ const EventDashboard = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </AdminLayout>
   );
 };
 

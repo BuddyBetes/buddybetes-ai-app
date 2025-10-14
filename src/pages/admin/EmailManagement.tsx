@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import Layout from '@/components/Layout';
-import AppHeader from '@/components/AppHeader';
+import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,10 +42,12 @@ const EmailManagement = () => {
   };
 
   return (
-    <Layout>
-      <AppHeader />
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Email Management</h1>
+    <AdminLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Email Management</h1>
+          <p className="text-muted-foreground">Manage email templates and view logs</p>
+        </div>
         
         <Card className="mb-6">
           <CardHeader>
@@ -99,7 +100,7 @@ const EmailManagement = () => {
           </CardContent>
         </Card>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 };
 

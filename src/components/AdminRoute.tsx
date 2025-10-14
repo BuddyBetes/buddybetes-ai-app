@@ -64,10 +64,15 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
   }
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   if (!isAdmin) {
+    toast({
+      title: 'Access Denied',
+      description: 'You do not have admin privileges',
+      variant: 'destructive',
+    });
     return <Navigate to="/dashboard" replace />;
   }
 
