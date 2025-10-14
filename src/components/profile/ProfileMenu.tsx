@@ -73,9 +73,9 @@ const ProfileMenu = () => {
     try {
       setIsLoggingOut(true);
       await signOut();
-      navigate('/signin');
+      navigate('/');
     } catch (error) {
-      navigate('/signin');
+      navigate('/');
     } finally {
       setIsLoggingOut(false);
     }

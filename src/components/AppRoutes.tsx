@@ -23,7 +23,7 @@ import Subscription from '@/pages/Subscription';
 import PaymentSuccess from '@/pages/PaymentSuccess';
 
 // Admin imports
-import AdminLogin from '@/pages/admin/AdminLogin';
+import AdminAuth from '@/pages/admin/AdminAuth';
 import AdminDashboardHome from '@/pages/admin/AdminDashboardHome';
 import PaymentReceipts from '@/pages/admin/PaymentReceipts';
 import EmailManagement from '@/pages/admin/EmailManagement';
@@ -32,6 +32,7 @@ import EventDashboard from '@/pages/admin/EventDashboard';
 import EventScannerView from '@/pages/admin/EventScannerView';
 import Analytics from '@/pages/admin/Analytics';
 import AdminSettings from '@/pages/admin/Settings';
+import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminRoute } from '@/components/AdminRoute';
 
 // Route guards
@@ -74,16 +75,15 @@ const AppRoutes: React.FC = () => {
       <Route path="/terms" element={<Terms />} />
       
       {/* Admin Routes */}
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardHome /></AdminRoute>} />
-      <Route path="/admin/payments" element={<AdminRoute><PaymentReceipts /></AdminRoute>} />
-      <Route path="/admin/emails" element={<AdminRoute><EmailManagement /></AdminRoute>} />
-      <Route path="/admin/roles" element={<AdminRoute><RoleManagement /></AdminRoute>} />
-      <Route path="/admin/events" element={<AdminRoute><EventDashboard /></AdminRoute>} />
-      <Route path="/admin/events/scan/:eventId" element={<AdminRoute><EventScannerView /></AdminRoute>} />
-      <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
-      <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+      <Route path="/admin" element={<AdminAuth />} />
+      <Route path="/admin/dashboard" element={<AdminRoute><AdminLayout><AdminDashboardHome /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/payments" element={<AdminRoute><AdminLayout><PaymentReceipts /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/emails" element={<AdminRoute><AdminLayout><EmailManagement /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/roles" element={<AdminRoute><AdminLayout><RoleManagement /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/analytics" element={<AdminRoute><AdminLayout><Analytics /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/events" element={<AdminRoute><AdminLayout><EventDashboard /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/events/scan/:eventId" element={<AdminRoute><AdminLayout><EventScannerView /></AdminLayout></AdminRoute>} />
       <Route
         path="/dashboard"
         element={renderProtectedRoute(<Dashboard />)}

@@ -7,18 +7,15 @@ import AIPreferences from '@/components/profile/AIPreferences';
 import HealthData from '@/components/profile/HealthData';
 import PDFExport from '@/components/profile/PDFExport';
 import { Button } from '@/components/ui/button';
-import { LogOut, Crown, Shield, ChevronRight } from 'lucide-react';
+import { LogOut, Crown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { useAdminStatus } from '@/hooks/useAdminStatus';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const Profile = () => {
   const { signOut } = useAuth();
   const { subscription, hasActiveSubscription } = useSubscription();
-  const { isAdmin, loading: adminLoading } = useAdminStatus();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -26,9 +23,9 @@ const Profile = () => {
     try {
       setIsLoggingOut(true);
       await signOut();
-      navigate('/signin');
+      navigate('/');
     } catch (error) {
-      navigate('/signin');
+      navigate('/');
     } finally {
       setIsLoggingOut(false);
     }
@@ -39,31 +36,6 @@ const Profile = () => {
       <AppHeader />
       <div className="space-y-6 pb-28">
         <ProfileHeader />
-        
-        {/* Admin Dashboard Access */}
-        {adminLoading ? (
-          <Skeleton className="h-20 w-full rounded-xl" />
-        ) : isAdmin ? (
-          <button
-            onClick={() => navigate('/admin')}
-            className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 sm:p-4 hover:scale-[1.02] transition-transform active:scale-[0.98] touch-manipulation min-h-[60px] sm:min-h-[80px]"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
-                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-medium text-sm sm:text-base text-blue-900">Admin Dashboard</h3>
-                  <p className="text-xs sm:text-sm text-blue-700 hidden xs:block sm:block">
-                    Manage events, users, and system settings
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
-            </div>
-          </button>
-        ) : null}
         
         {/* Subscription Status */}
         {!hasActiveSubscription && (

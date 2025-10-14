@@ -78,15 +78,35 @@ const Onboarding = () => {
     setLoading(true);
     
     try {
-      // Update profile information
-      await supabase
+      // Check if profile exists (defensive programming in case trigger failed)
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .update({
-          first_name: personalInfo.firstName,
-          last_name: personalInfo.lastName,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (!existingProfile) {
+        // Profile doesn't exist, insert it
+        await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            first_name: personalInfo.firstName,
+            last_name: personalInfo.lastName,
+            created_at: new Date().toISOString(),
+          });
+      } else {
+        // Profile exists, update it
+        await supabase
+          .from('profiles')
+          .update({
+            first_name: personalInfo.firstName,
+            last_name: personalInfo.lastName,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+      }
       
       // First check if health_data entry already exists
       const { data: existingData } = await supabase
