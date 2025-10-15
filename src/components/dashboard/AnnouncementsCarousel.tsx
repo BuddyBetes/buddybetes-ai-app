@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MapPin, Bell } from "lucide-react";
+import { Calendar, MapPin, Bell, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import InlineRSVPForm from "@/components/events/InlineRSVPForm";
 import { Badge } from "@/components/ui/badge";
@@ -33,70 +33,119 @@ const AnnouncementsCarousel = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [existingRegistration, setExistingRegistration] = useState<any>(null);
-  const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
+  const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
+  const [checkingRegistration, setCheckingRegistration] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  // ---------------------------
+  // Load Active Events
+  // ---------------------------
+  const loadEvents = async () => {
     setLoadingEvents(true);
     try {
       const { data, error } = await supabase
         .from("events")
-        .select("id, title, description, date, image_url")
-        .order("date", { ascending: true });
+        .select("*")
+        .eq("is_active", true)
+        .order("event_date", { ascending: true });
 
       if (error) throw error;
       setEvents(data || []);
-    } catch (err) {
-      console.error("Error fetching events:", err);
+    } catch (error) {
+      console.error("Error loading events:", error);
     } finally {
       setLoadingEvents(false);
     }
   };
 
-  const handleEventClick = async (event: Event) => {
-    if (!user) return;
+  useEffect(() => {
+    loadEvents();
+  }, []);
 
-    setIsCheckingRegistration(true);
-    setSelectedEvent(null);
-    setExistingRegistration(null);
+  // ---------------------------
+  // Check if user already registered for the event
+  // ---------------------------
+  const checkExistingRegistration = async (eventId: string): Promise<Registration | null> => {
+    if (!user) return null;
+    setCheckingRegistration(true);
 
     try {
-      // ✅ Check if user already registered for this event
-      const { data, error } = await supabase
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const userEmail = profile?.email || user.email || "";
+
+      const { data: reg, error } = await supabase
         .from("event_registrations")
-        .select("*")
-        .eq("event_id", event.id)
-        .eq("user_id", user.id)
+        .select("id, qr_code, first_name, last_name, email")
+        .eq("event_id", eventId)
+        .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
         .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
 
-      if (data) {
-        setExistingRegistration(data);
-      } else {
-        setExistingRegistration(null);
-      }
-
-      // ✅ Only open modal after check completes
-      setSelectedEvent(event);
-    } catch (err) {
-      console.error("Error checking registration:", err);
+      setExistingRegistration(reg || null);
+      return reg || null;
+    } catch (error) {
+      console.error("Error checking registration:", error);
+      setExistingRegistration(null);
+      return null;
     } finally {
-      setIsCheckingRegistration(false);
+      setCheckingRegistration(false);
     }
   };
 
-  const handleRSVPSuccess = () => {
-    // Re-fetch registration entry after successful RSVP
-    if (selectedEvent && user) {
-      handleEventClick(selectedEvent);
+  // ---------------------------
+  // When "Register Now" button is clicked
+  // ---------------------------
+  const handleRegisterClick = async (event: Event) => {
+    if (event.webinar_video_url) {
+      window.open(event.webinar_video_url, "_blank");
+      return;
+    }
+
+    if (!user) {
+      alert("Please log in to register for this event.");
+      return;
+    }
+
+    setSelectedEvent(null); // Clear previous state first
+    setExistingRegistration(null);
+    setCheckingRegistration(true);
+
+    // ✅ Perform registration check BEFORE opening modal
+    const reg = await checkExistingRegistration(event.id);
+
+    setSelectedEvent(event);
+    setCheckingRegistration(false);
+
+    // ✅ Modal opens now with accurate content
+  };
+
+  const handleLearnMoreClick = (event: Event) => {
+    if (event.webinar_video_url) {
+      window.open(event.webinar_video_url, "_blank");
     }
   };
+
+  const handleRSVPSuccess = async () => {
+    if (selectedEvent) {
+      // ✅ Re-check registration immediately after successful RSVP
+      const reg = await checkExistingRegistration(selectedEvent.id);
+      setExistingRegistration(reg);
+    }
+  };
+
+  if (loadingEvents) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (events.length === 0) return null;
 
@@ -130,8 +179,22 @@ const AnnouncementsCarousel = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Button onClick={() => handleRegisterClick(event)} className="w-full h-14 text-base" size="lg">
-                    {event.webinar_video_url ? "Watch Now" : "Register Now"}
+                  <Button
+                    onClick={() => handleRegisterClick(event)}
+                    className="w-full h-14 text-base"
+                    size="lg"
+                    disabled={checkingRegistration}
+                  >
+                    {checkingRegistration ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Checking...
+                      </>
+                    ) : event.webinar_video_url ? (
+                      "Watch Now"
+                    ) : (
+                      "Register Now"
+                    )}
                   </Button>
 
                   {event.webinar_video_url && (
@@ -166,8 +229,8 @@ const AnnouncementsCarousel = () => {
         ))}
       </div>
 
-      {/* Modal */}
-      <Dialog open={showRSVPModal} onOpenChange={setShowRSVPModal}>
+      {/* RSVP / QR Modal */}
+      <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{existingRegistration ? "Your Event QR Code" : "Event Registration"}</DialogTitle>
@@ -177,6 +240,7 @@ const AnnouncementsCarousel = () => {
           <div className="mt-4">
             {checkingRegistration ? (
               <div className="flex justify-center items-center py-8 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 Checking registration...
               </div>
             ) : selectedEvent && existingRegistration ? (
@@ -189,7 +253,6 @@ const AnnouncementsCarousel = () => {
               <InlineRSVPForm
                 eventId={selectedEvent.id}
                 eventTitle={selectedEvent.title}
-                existingRegistration={existingRegistration} // 👈 NEW PROP
                 onSuccess={handleRSVPSuccess}
               />
             ) : null}
