@@ -19,20 +19,26 @@ const FeatureUsageChart: React.FC<FeatureUsageChartProps> = ({ data }) => {
         <CardTitle>Top Features (Last 30 Days)</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="feature" 
-              angle={-45}
-              textAnchor="end"
-              height={80}
-            />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="usage_count" fill="#3b82f6" />
-          </BarChart>
-        </ResponsiveContainer>
+        {data.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            <p>No feature usage data available for the last 30 days</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="feature" 
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="usage_count" fill="hsl(var(--primary))" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );

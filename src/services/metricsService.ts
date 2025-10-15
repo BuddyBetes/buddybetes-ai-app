@@ -182,23 +182,40 @@ export const fetchEngagementData = async (selectedDateString?: string): Promise<
 };
 
 export const fetchFeatureUsage = async (): Promise<FeatureUsage[]> => {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  
   const { data, error } = await supabase
     .from('user_activity_logs')
     .select('action_target')
     .eq('action_type', 'feature_click')
-    .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+    .gte('timestamp', thirtyDaysAgo.toISOString());
 
-  if (!error && data) {
-    const featureCount: { [key: string]: number } = {};
-    
-    data.forEach(log => {
-      featureCount[log.action_target] = (featureCount[log.action_target] || 0) + 1;
-    });
-
-    return Object.entries(featureCount)
-      .map(([feature, count]) => ({ feature, usage_count: count }))
-      .sort((a, b) => b.usage_count - a.usage_count)
-      .slice(0, 10);
+  if (error || !data || data.length === 0) {
+    console.log('No feature usage data found');
+    return [];
   }
-  return [];
+
+  const featureCount: { [key: string]: number } = {};
+  data.forEach(log => {
+    if (log.action_target) {
+      featureCount[log.action_target] = (featureCount[log.action_target] || 0) + 1;
+    }
+  });
+
+  return Object.entries(featureCount)
+    .map(([feature, count]) => ({ 
+      feature: feature.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '), 
+      usage_count: count 
+    }))
+    .sort((a, b) => b.usage_count - a.usage_count)
+    .slice(0, 10);
+};
+
+export const fetchMonthlyActiveUsers = async () => {
+  const { data, error } = await supabase.rpc('get_monthly_active_users');
+  if (error) {
+    console.error('Error fetching monthly active users:', error);
+    return [];
+  }
+  return data || [];
 };

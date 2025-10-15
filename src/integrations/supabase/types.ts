@@ -822,6 +822,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_monthly_active_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          growth_percentage: number
+          month: string
+          total_users: number
+        }[]
+      }
       has_active_subscription: {
         Args: { _user_id: string }
         Returns: boolean

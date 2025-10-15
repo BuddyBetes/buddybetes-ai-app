@@ -118,12 +118,16 @@ const EventDashboard = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Event Management</h1>
           <p className="text-muted-foreground">Manage and monitor event registrations</p>
         </div>
+        <Button onClick={() => navigate('/admin/events')}>
+          Create Event
+        </Button>
+      </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -206,8 +210,7 @@ const EventDashboard = () => {
             })}
           </div>
         )}
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 
