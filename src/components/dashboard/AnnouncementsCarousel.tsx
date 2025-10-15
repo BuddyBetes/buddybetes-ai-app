@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MapPin, Bell } from "lucide-react";
+import { Calendar, MapPin, Bell, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import InlineRSVPForm from "@/components/events/InlineRSVPForm";
+import QRCodeDisplay from "@/components/events/QRCodeDisplay";
 import { Badge } from "@/components/ui/badge";
 
 interface Event {
