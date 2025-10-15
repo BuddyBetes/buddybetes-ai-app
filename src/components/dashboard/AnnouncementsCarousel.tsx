@@ -33,92 +33,69 @@ const AnnouncementsCarousel = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [showRSVPModal, setShowRSVPModal] = useState(false);
-  const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
-  const [checkingRegistration, setCheckingRegistration] = useState(false);
+  const [existingRegistration, setExistingRegistration] = useState<any>(null);
+  const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
-  // ---------------------------
-  // Load Active Events
-  // ---------------------------
-  const loadEvents = async () => {
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    setLoadingEvents(true);
     try {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
-        .eq("is_active", true)
-        .order("event_date", { ascending: true });
+        .select("id, title, description, date, image_url")
+        .order("date", { ascending: true });
 
       if (error) throw error;
       setEvents(data || []);
-    } catch (error) {
-      console.error("Error loading events:", error);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+    } finally {
+      setLoadingEvents(false);
     }
   };
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
+  const handleEventClick = async (event: Event) => {
+    if (!user) return;
 
-  // ---------------------------
-  // Check if user already registered for the event
-  // ---------------------------
-  const checkExistingRegistration = async (eventId: string) => {
-    if (!user) return null;
-    setCheckingRegistration(true);
+    setIsCheckingRegistration(true);
+    setSelectedEvent(null);
+    setExistingRegistration(null);
 
     try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, email")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const userEmail = profile?.email || user.email || "";
-
-      const { data: reg } = await supabase
+      // ✅ Check if user already registered for this event
+      const { data, error } = await supabase
         .from("event_registrations")
-        .select("id, qr_code, first_name, last_name, email")
-        .eq("event_id", eventId)
-        .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      setExistingRegistration(reg || null);
-      return reg || null;
-    } catch (error) {
-      console.error("Error checking registration:", error);
-      setExistingRegistration(null);
-      return null;
+      if (error && error.code !== "PGRST116") throw error;
+
+      if (data) {
+        setExistingRegistration(data);
+      } else {
+        setExistingRegistration(null);
+      }
+
+      // ✅ Only open modal after check completes
+      setSelectedEvent(event);
+    } catch (err) {
+      console.error("Error checking registration:", err);
     } finally {
-      setCheckingRegistration(false);
-    }
-  };
-
-  // ---------------------------
-  // When "Register Now" button is clicked
-  // ---------------------------
-  const handleRegisterClick = async (event: Event) => {
-    // For webinars → open video directly
-    if (event.webinar_video_url) {
-      window.open(event.webinar_video_url, "_blank");
-      return;
-    }
-
-    // Start modal only after registration check
-    setSelectedEvent(event);
-    setShowRSVPModal(true);
-    await checkExistingRegistration(event.id);
-  };
-
-  const handleLearnMoreClick = (event: Event) => {
-    if (event.webinar_video_url) {
-      window.open(event.webinar_video_url, "_blank");
+      setIsCheckingRegistration(false);
     }
   };
 
   const handleRSVPSuccess = () => {
-    setShowRSVPModal(false);
-    setSelectedEvent(null);
-    setExistingRegistration(null);
+    // Re-fetch registration entry after successful RSVP
+    if (selectedEvent && user) {
+      handleEventClick(selectedEvent);
+    }
   };
 
   if (events.length === 0) return null;
