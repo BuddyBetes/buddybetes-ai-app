@@ -66,46 +66,54 @@ const EventDashboard = () => {
   }, []);
 
   const loadEvents = async () => {
+    setLoading(true);
+    console.log("Loading events with registration data...");
     try {
-      setLoading(true);
-
       const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('is_active', true)
-        .order('event_date', { ascending: true });
+        .from("events")
+        .select(`
+          *,
+          event_registrations (
+            id,
+            checked_in
+          )
+        `)
+        .eq("is_active", true)
+        .order("event_date", { ascending: true });
 
-      if (eventsError) throw eventsError;
+      if (eventsError) {
+        console.error("Error fetching events:", eventsError);
+        throw eventsError;
+      }
 
-      const eventsWithStats = await Promise.all(
-        (eventsData || []).map(async (event) => {
-          const { data: registrations } = await supabase
-            .from('event_registrations')
-            .select('checked_in')
-            .eq('event_id', event.id);
+      console.log("Raw events data from Supabase:", eventsData);
 
-          const total_registrations = registrations?.length || 0;
-          const checked_in = registrations?.filter((r) => r.checked_in).length || 0;
+      const formattedEvents = eventsData?.map((event) => {
+        const registrations = event.event_registrations || [];
+        const total_registrations = registrations.length;
+        const checked_in = registrations.filter((reg: any) => reg.checked_in).length;
+        
+        console.log(`Event "${event.title}": ${total_registrations} registrations, ${checked_in} checked in`);
+        
+        return {
+          id: event.id,
+          title: event.title,
+          event_date: event.event_date,
+          location: event.location || "TBA",
+          description: event.description,
+          total_registrations,
+          checked_in,
+        };
+      }) || [];
 
-          return {
-            id: event.id,
-            title: event.title,
-            event_date: event.event_date,
-            location: event.location,
-            description: event.description,
-            total_registrations,
-            checked_in,
-          };
-        })
-      );
-
-      setEvents(eventsWithStats);
-    } catch (error) {
-      console.error('Error loading events:', error);
+      console.log("Formatted events:", formattedEvents);
+      setEvents(formattedEvents);
+    } catch (error: any) {
+      console.error("Error loading events:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to load events',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to load events",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);

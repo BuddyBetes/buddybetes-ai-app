@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Calendar, ChevronLeft, ChevronRight, X, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import InlineRSVPForm from "@/components/events/InlineRSVPForm";
+import { QRCodeSVG } from "qrcode.react";
 import { useSwipe } from "@/hooks/useSwipe";
 
 const STATIC_WEBINAR_ID = '22222222-2222-2222-2222-222222222222';
@@ -32,6 +33,10 @@ const AnnouncementsCarousel = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRSVPForm, setShowRSVPForm] = useState(false);
+  const [eventRegistrations, setEventRegistrations] = useState<Map<string, { qrCode: string, firstName: string, lastName: string }>>(new Map());
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [userData, setUserData] = useState<{ firstName: string; lastName: string } | null>(null);
+  const [loadingRegistrations, setLoadingRegistrations] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const swipeHandlers = useSwipe({
@@ -45,9 +50,47 @@ const AnnouncementsCarousel = () => {
     },
   });
 
+  const loadUserRegistrations = async () => {
+    if (!user) return;
+    
+    setLoadingRegistrations(true);
+    try {
+      const userEmail = user.email || "";
+      const { data: registrations, error } = await supabase
+        .from("event_registrations")
+        .select("event_id, qr_code, first_name, last_name")
+        .or(`user_id.eq.${user.id},email.eq.${userEmail}`);
+      
+      if (error) throw error;
+      
+      if (registrations) {
+        const regMap = new Map();
+        registrations.forEach(reg => {
+          regMap.set(reg.event_id, {
+            qrCode: reg.qr_code,
+            firstName: reg.first_name,
+            lastName: reg.last_name
+          });
+        });
+        setEventRegistrations(regMap);
+        console.log("Loaded user registrations:", regMap.size);
+      }
+    } catch (error) {
+      console.error("Error loading user registrations:", error);
+    } finally {
+      setLoadingRegistrations(false);
+    }
+  };
+
   useEffect(() => {
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    if (user && events.length > 0) {
+      loadUserRegistrations();
+    }
+  }, [user, events]);
 
   const loadEvents = async () => {
     try {
@@ -81,8 +124,23 @@ const AnnouncementsCarousel = () => {
 
   const handleShowInterest = (event: Event) => {
     setSelectedEvent(event);
-    setShowRSVPForm(true);
     setIsAutoPlaying(false);
+    
+    // Check if already registered
+    const registration = eventRegistrations.get(event.id);
+    if (registration) {
+      console.log("User already registered for this event, showing QR code");
+      // Show QR code directly, skip form
+      setQrCode(registration.qrCode);
+      setUserData({ firstName: registration.firstName, lastName: registration.lastName });
+      setShowRSVPForm(false);
+    } else {
+      console.log("User not registered, showing registration form");
+      // Reset and show registration form
+      setQrCode(null);
+      setUserData(null);
+      setShowRSVPForm(true);
+    }
   };
 
   useEffect(() => {
@@ -178,7 +236,7 @@ const AnnouncementsCarousel = () => {
                         {event.description}
                       </p>
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 md:gap-4">
-                        <Button
+                         <Button
                           onClick={() => {
                             if (event.id === STATIC_WEBINAR_ID) {
                               window.open(FACEBOOK_WEBINAR_URL, '_blank');
@@ -186,15 +244,19 @@ const AnnouncementsCarousel = () => {
                               handleShowInterest(event);
                             }
                           }}
-                          className="w-full sm:w-auto bg-white text-[#208687] hover:bg-white/90 font-semibold text-sm sm:text-base"
+                          className="w-full sm:w-auto bg-white text-[#208687] hover:bg-white/90 font-semibold text-base sm:text-lg h-14 sm:h-12 px-6 sm:px-8 touch-manipulation"
+                          disabled={loadingRegistrations}
                         >
-                          {event.id === STATIC_WEBINAR_ID ? "Watch Now" : "Register Now"}
-                          <ArrowRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                          {loadingRegistrations ? "Loading..." : (
+                            event.id === STATIC_WEBINAR_ID ? "Watch Now" : 
+                            eventRegistrations.has(event.id) ? "View QR Code" : "Register Now"
+                          )}
+                          <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
                         <Button
                           onClick={() => setSelectedEvent(event)}
                           variant="outline"
-                          className="w-full sm:w-auto bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20 hover:text-white text-sm sm:text-base"
+                          className="w-full sm:w-auto bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20 hover:text-white text-base sm:text-lg h-14 sm:h-12 px-6 sm:px-8 touch-manipulation"
                         >
                           Learn More
                         </Button>
@@ -223,34 +285,34 @@ const AnnouncementsCarousel = () => {
                 prevSlide();
                 setIsAutoPlaying(false);
               }}
-              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all hover:scale-110"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 sm:p-4 rounded-full shadow-lg transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
               aria-label="Previous slide"
             >
-              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-gray-800" />
+              <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7 text-gray-800" />
             </button>
             <button
               onClick={() => {
                 nextSlide();
                 setIsAutoPlaying(false);
               }}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition-all hover:scale-110"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 sm:p-4 rounded-full shadow-lg transition-all hover:scale-110 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
               aria-label="Next slide"
             >
-              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-gray-800" />
+              <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 text-gray-800" />
             </button>
           </>
         )}
 
         {/* Dots */}
         {events.length > 1 && (
-          <div className="flex justify-center gap-1.5 sm:gap-2 py-4 sm:py-3 bg-white">
+          <div className="flex justify-center gap-3 py-4 bg-white">
             {events.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`transition-all ${
-                  index === currentSlide ? "w-6 sm:w-8 bg-[#208687]" : "w-2 bg-muted hover:bg-muted-foreground/50"
-                } h-1.5 sm:h-2 rounded-full`}
+                className={`transition-all touch-manipulation ${
+                  index === currentSlide ? "w-10 bg-[#208687]" : "w-3 bg-muted hover:bg-muted-foreground/50"
+                } h-3 rounded-full min-h-[10px]`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
@@ -259,62 +321,127 @@ const AnnouncementsCarousel = () => {
       </div>
 
       {/* Event Modal */}
-      {selectedEvent && !showRSVPForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50">
-          <Card className="max-w-[92vw] sm:max-w-lg md:max-w-2xl w-full mx-2 sm:mx-4 rounded-t-3xl sm:rounded-xl animate-slide-in-bottom sm:animate-scale-in overflow-hidden max-h-[85vh]">
-            <CardContent className="p-3 sm:p-6 h-full overflow-y-auto overscroll-contain webkit-overflow-scrolling-touch">
-              <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 flex justify-between items-start mb-3 sm:mb-4 pb-3 border-b sm:border-0">
-                <Badge className="bg-primary/10 text-primary font-medium">{selectedEvent.badge || "Event"}</Badge>
-                <button
-                  onClick={() => {
-                    setSelectedEvent(null);
-                    setIsAutoPlaying(true);
-                  }}
-                  className="hover:bg-muted p-2.5 sm:p-2 rounded-full transition flex-shrink-0 touch-manipulation"
-                >
-                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
-                </button>
-              </div>
-              <div
-                className="h-32 sm:h-40 rounded-lg mb-4 bg-cover bg-center relative"
-                style={{ backgroundImage: `url(${selectedEvent.image_url})` }}
+      {selectedEvent && !showRSVPForm && !qrCode && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+          onClick={() => setSelectedEvent(null)}
+        >
+          <Card 
+            className="max-w-[95vw] sm:max-w-lg md:max-w-2xl w-full mx-0 sm:mx-4 rounded-t-3xl sm:rounded-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="relative p-4 sm:p-6">
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation z-10"
+                aria-label="Close"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/20"></div>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-2 text-foreground">{selectedEvent.title}</h3>
-              {selectedEvent.subtitle && <p className="text-base sm:text-lg text-muted-foreground mb-3">{selectedEvent.subtitle}</p>}
-              <p className="text-muted-foreground mb-4 leading-relaxed">{selectedEvent.description}</p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  {selectedEvent.id === STATIC_WEBINAR_ID
-                    ? "Every Wednesday"
-                    : format(new Date(selectedEvent.event_date), "PPP p")}
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full">
-                <Button
-                  onClick={() => {
-                    if (selectedEvent.id === STATIC_WEBINAR_ID) {
-                      window.open(FACEBOOK_WEBINAR_URL, '_blank');
-                    } else {
-                      handleShowInterest(selectedEvent);
-                    }
-                  }}
-                  className="bg-primary text-white hover:bg-primary/90 h-12 sm:h-10 w-full touch-manipulation"
-                  size="lg"
-                >
-                  {selectedEvent.id === STATIC_WEBINAR_ID ? "Watch Now" : "Register Now"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <X className="h-6 w-6" />
+              </button>
+              {selectedEvent.image_url && (
+                <img
+                  src={selectedEvent.image_url}
+                  alt={selectedEvent.title}
+                  className="w-full h-48 sm:h-64 object-cover rounded-lg mb-4"
+                  loading="lazy"
+                />
+              )}
+              <CardTitle className="text-2xl sm:text-3xl pr-12">{selectedEvent.title}</CardTitle>
+              {selectedEvent.subtitle && (
+                <CardDescription className="text-base sm:text-lg mt-2">{selectedEvent.subtitle}</CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4 p-4 sm:p-6">
+              <p className="text-muted-foreground leading-relaxed text-base">
+                {selectedEvent.description}
+              </p>
+              {selectedEvent.event_date && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-5 w-5" />
+                  <span>{new Date(selectedEvent.event_date).toLocaleDateString()}</span>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                {selectedEvent.id === STATIC_WEBINAR_ID ? (
+                  <Button
+                    onClick={() => window.open(selectedEvent.video_url, '_blank')}
+                    className="flex-1 h-14 sm:h-12 text-base sm:text-lg font-semibold touch-manipulation"
+                  >
+                    Watch Now
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleShowInterest(selectedEvent)}
+                    className="flex-1 h-14 sm:h-12 text-base sm:text-lg font-semibold touch-manipulation"
+                    disabled={loadingRegistrations}
+                  >
+                    {loadingRegistrations ? "Loading..." : eventRegistrations.has(selectedEvent.id) ? "View QR Code" : "Register Now"}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                )}
                 <Button
                   variant="outline"
+                  onClick={() => setSelectedEvent(null)}
+                  className="h-14 sm:h-12 text-base sm:text-lg font-semibold touch-manipulation"
+                >
+                  Close
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* QR Code Display Modal */}
+      {qrCode && userData && selectedEvent && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+          onClick={() => {
+            setQrCode(null);
+            setUserData(null);
+            setSelectedEvent(null);
+          }}
+        >
+          <Card 
+            className="max-w-[95vw] sm:max-w-lg w-full mx-0 sm:mx-4 rounded-t-3xl sm:rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="relative p-4 sm:p-6">
+              <button
+                onClick={() => {
+                  setQrCode(null);
+                  setUserData(null);
+                  setSelectedEvent(null);
+                }}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                aria-label="Close"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              <CardTitle className="text-2xl sm:text-3xl pr-12">Your Registration</CardTitle>
+              <CardDescription className="text-base">for {selectedEvent.title}</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="text-center space-y-6">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 rounded-xl">
+                  <QRCodeSVG value={qrCode} size={250} level="H" className="mx-auto" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold mb-1">
+                    {userData.firstName} {userData.lastName}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Show this QR code at the event for check-in
+                  </p>
+                </div>
+                <Button
                   onClick={() => {
+                    setQrCode(null);
+                    setUserData(null);
                     setSelectedEvent(null);
-                    setIsAutoPlaying(true);
                   }}
-                  className="h-12 sm:h-10 w-full touch-manipulation"
-                  size="lg"
+                  className="w-full h-14 sm:h-12 text-base sm:text-lg font-semibold touch-manipulation"
                 >
                   Close
                 </Button>
@@ -326,29 +453,39 @@ const AnnouncementsCarousel = () => {
 
       {/* RSVP Form */}
       {showRSVPForm && selectedEvent && user && (
-        <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50">
-          <Card className="max-w-[92vw] sm:max-w-lg w-full mx-2 sm:mx-4 rounded-t-3xl sm:rounded-xl animate-slide-in-bottom sm:animate-scale-in overflow-hidden max-h-[85vh]">
-            <CardContent className="p-3 sm:p-6 h-full overflow-y-auto overscroll-contain webkit-overflow-scrolling-touch">
-              <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 flex justify-between items-start mb-3 sm:mb-4 pb-3 border-b sm:border-0">
-                <h3 className="text-base sm:text-lg md:text-xl font-bold pr-2">Register for {selectedEvent.title}</h3>
-                <button
-                  onClick={() => {
-                    setShowRSVPForm(false);
-                    setSelectedEvent(null);
-                    setIsAutoPlaying(true);
-                  }}
-                  className="hover:bg-muted p-2.5 sm:p-2 rounded-full transition flex-shrink-0 touch-manipulation"
-                >
-                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
-                </button>
-              </div>
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+          onClick={() => {
+            setShowRSVPForm(false);
+            setSelectedEvent(null);
+          }}
+        >
+          <Card 
+            className="max-w-[95vw] sm:max-w-lg w-full mx-0 sm:mx-4 rounded-t-3xl sm:rounded-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="relative p-4 sm:p-6">
+              <button
+                onClick={() => {
+                  setShowRSVPForm(false);
+                  setSelectedEvent(null);
+                }}
+                className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                aria-label="Close"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              <CardTitle className="text-xl sm:text-2xl pr-12">Complete Registration</CardTitle>
+              <CardDescription className="text-base">for {selectedEvent.title}</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
               <InlineRSVPForm
                 eventId={selectedEvent.id}
                 eventTitle={selectedEvent.title}
                 onSuccess={() => {
                   setShowRSVPForm(false);
                   setSelectedEvent(null);
-                  setIsAutoPlaying(true);
+                  loadUserRegistrations(); // Reload to show QR code next time
                 }}
               />
             </CardContent>

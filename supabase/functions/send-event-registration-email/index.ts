@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import QRCode from "npm:qrcode@1.5.3";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { createBaseTemplate } from '../_shared/email-templates/base-template.ts';
 import { createInfoBox, createDivider } from '../_shared/email-templates/components.ts';
@@ -28,7 +29,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, firstName, lastName, eventTitle, eventDate, userId }: EmailRequest = await req.json();
+    const { email, firstName, lastName, eventTitle, eventDate, qrCode, userId }: EmailRequest = await req.json();
+
+    console.log("Sending event registration email:", { firstName, lastName, email, eventTitle });
 
     // Format event date if available
     const formattedDate = eventDate 
@@ -41,6 +44,16 @@ const handler = async (req: Request): Promise<Response> => {
           minute: "2-digit",
         })
       : "To be announced";
+
+    // Generate QR code as base64 data URL
+    const qrCodeDataUrl = await QRCode.toDataURL(qrCode, { 
+      width: 300,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
 
     const eventDetails = `
       <div style="margin: 20px 0;">
@@ -58,21 +71,23 @@ const handler = async (req: Request): Promise<Response> => {
       ${createDivider()}
       
       <div style="text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
-        <h2 style="font-size: 24px; font-weight: bold; color: #ffffff; margin: 0 0 16px 0;">Access Your QR Code</h2>
+        <h2 style="font-size: 24px; font-weight: bold; color: #ffffff; margin: 0 0 16px 0;">Your Event QR Code</h2>
         <p style="color: #ffffff; font-size: 16px; margin: 0 0 24px 0;">
-          Your check-in QR code is ready and waiting for you in your BuddyBetes account.
+          Show this QR code at the event for check-in.
         </p>
-        <a href="https://app.buddybetes.com/dashboard" 
-           style="display: inline-block; padding: 14px 32px; background: #ffffff; color: #667eea; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);">
-          View QR Code in App →
-        </a>
+        <div style="background: white; padding: 20px; border-radius: 12px; display: inline-block; margin: 0 auto;">
+          <img 
+            src="${qrCodeDataUrl}" 
+            alt="Event QR Code" 
+            style="width: 300px; height: 300px; display: block;"
+          />
+        </div>
+        <p style="color: #ffffff; font-size: 14px; margin: 24px 0 0 0; opacity: 0.9;">
+          💡 Save this email or take a screenshot for easy access
+        </p>
       </div>
       
       ${createDivider()}
-      
-      <p style="${emailStyles.text}">
-        <strong>Important:</strong> Login to your BuddyBetes account before the event to access your QR code. You'll need it to check in at the event.
-      </p>
       
       <p style="${emailStyles.text}">
         If you have any questions, please don't hesitate to reach out to our team.
