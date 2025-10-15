@@ -30,13 +30,16 @@ interface Registration {
 }
 
 const AnnouncementsCarousel = () => {
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRSVPModal, setShowRSVPModal] = useState(false);
   const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
-  const [loadingRegCheck, setLoadingRegCheck] = useState(false);
-  const { user } = useAuth();
+  const [checkingRegistration, setCheckingRegistration] = useState(false);
 
+  // ---------------------------
+  // Load Active Events
+  // ---------------------------
   const loadEvents = async () => {
     try {
       const { data, error } = await supabase
@@ -46,9 +49,7 @@ const AnnouncementsCarousel = () => {
         .order("event_date", { ascending: true });
 
       if (error) throw error;
-      if (data && data.length > 0) {
-        setEvents(data);
-      }
+      setEvents(data || []);
     } catch (error) {
       console.error("Error loading events:", error);
     }
@@ -58,9 +59,13 @@ const AnnouncementsCarousel = () => {
     loadEvents();
   }, []);
 
+  // ---------------------------
+  // Check if user already registered for the event
+  // ---------------------------
   const checkExistingRegistration = async (eventId: string) => {
     if (!user) return null;
-    setLoadingRegCheck(true);
+    setCheckingRegistration(true);
+
     try {
       const { data: profile } = await supabase
         .from("profiles")
@@ -70,43 +75,38 @@ const AnnouncementsCarousel = () => {
 
       const userEmail = profile?.email || user.email || "";
 
-      const { data: existingReg } = await supabase
+      const { data: reg } = await supabase
         .from("event_registrations")
         .select("id, qr_code, first_name, last_name, email")
         .eq("event_id", eventId)
         .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
         .maybeSingle();
 
-      if (existingReg) {
-        setExistingRegistration(existingReg);
-        return existingReg;
-      } else {
-        setExistingRegistration(null);
-        return null;
-      }
+      setExistingRegistration(reg || null);
+      return reg || null;
     } catch (error) {
       console.error("Error checking registration:", error);
+      setExistingRegistration(null);
       return null;
     } finally {
-      setLoadingRegCheck(false);
+      setCheckingRegistration(false);
     }
   };
 
+  // ---------------------------
+  // When "Register Now" button is clicked
+  // ---------------------------
   const handleRegisterClick = async (event: Event) => {
-    // If it's a webinar, open video directly
+    // For webinars → open video directly
     if (event.webinar_video_url) {
       window.open(event.webinar_video_url, "_blank");
       return;
     }
 
+    // Start modal only after registration check
     setSelectedEvent(event);
-    const reg = await checkExistingRegistration(event.id);
     setShowRSVPModal(true);
-
-    // If registration exists, InlineRSVPForm won't show — QRCodeDisplay will.
-    if (reg) {
-      setExistingRegistration(reg);
-    }
+    await checkExistingRegistration(event.id);
   };
 
   const handleLearnMoreClick = (event: Event) => {
@@ -121,9 +121,7 @@ const AnnouncementsCarousel = () => {
     setExistingRegistration(null);
   };
 
-  if (events.length === 0) {
-    return null;
-  }
+  if (events.length === 0) return null;
 
   return (
     <section className="w-full px-4 py-6">
@@ -138,6 +136,7 @@ const AnnouncementsCarousel = () => {
         </p>
       </div>
 
+      {/* Event Cards */}
       <div className="space-y-4 max-w-2xl mx-auto">
         {events.map((event) => (
           <Card key={event.id} className="overflow-hidden">
@@ -190,7 +189,7 @@ const AnnouncementsCarousel = () => {
         ))}
       </div>
 
-      {/* Registration Modal */}
+      {/* Modal */}
       <Dialog open={showRSVPModal} onOpenChange={setShowRSVPModal}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -198,26 +197,25 @@ const AnnouncementsCarousel = () => {
             <DialogDescription>{selectedEvent?.title}</DialogDescription>
           </DialogHeader>
 
-          {loadingRegCheck ? (
-            <div className="flex justify-center py-10">Checking registration...</div>
-          ) : (
-            <div className="mt-4">
-              {selectedEvent &&
-                (existingRegistration ? (
-                  <QRCodeDisplay
-                    qrCode={existingRegistration.qr_code}
-                    eventTitle={selectedEvent.title}
-                    userName={`${existingRegistration.first_name} ${existingRegistration.last_name}`}
-                  />
-                ) : (
-                  <InlineRSVPForm
-                    eventId={selectedEvent.id}
-                    eventTitle={selectedEvent.title}
-                    onSuccess={handleRSVPSuccess}
-                  />
-                ))}
-            </div>
-          )}
+          <div className="mt-4">
+            {checkingRegistration ? (
+              <div className="flex justify-center items-center py-8 text-muted-foreground">
+                Checking registration...
+              </div>
+            ) : selectedEvent && existingRegistration ? (
+              <QRCodeDisplay
+                qrCode={existingRegistration.qr_code}
+                eventTitle={selectedEvent.title}
+                userName={`${existingRegistration.first_name} ${existingRegistration.last_name}`}
+              />
+            ) : selectedEvent ? (
+              <InlineRSVPForm
+                eventId={selectedEvent.id}
+                eventTitle={selectedEvent.title}
+                onSuccess={handleRSVPSuccess}
+              />
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
     </section>
