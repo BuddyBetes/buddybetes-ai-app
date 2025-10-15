@@ -4,9 +4,10 @@ import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MapPin, Bell } from "lucide-react";
+import { Calendar, MapPin, Bell, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import InlineRSVPForm from "@/components/events/InlineRSVPForm";
+import QRCodeDisplay from "@/components/events/QRCodeDisplay";
 import { Badge } from "@/components/ui/badge";
 
 interface Event {
@@ -20,15 +21,23 @@ interface Event {
   webinar_video_url?: string;
 }
 
+interface Registration {
+  qr_code: string;
+  first_name: string;
+  last_name: string;
+}
+
 const AnnouncementsCarousel = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRSVPModal, setShowRSVPModal] = useState(false);
+  const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
+  const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
-  // Load events from Supabase
+  // Load events
   const loadEvents = async () => {
     try {
       const { data, error } = await supabase
@@ -50,8 +59,8 @@ const AnnouncementsCarousel = () => {
     loadEvents();
   }, []);
 
-  // Handle register or webinar click
-  const handleRegisterClick = (event: Event) => {
+  // Handle Register / Webinar button
+  const handleRegisterClick = async (event: Event) => {
     if (event.webinar_video_url) {
       window.open(event.webinar_video_url, "_blank");
       return;
@@ -59,14 +68,44 @@ const AnnouncementsCarousel = () => {
 
     setSelectedEvent(event);
     setShowRSVPModal(true);
+    setIsCheckingRegistration(true);
+    setExistingRegistration(null);
+
+    if (!user) {
+      setIsCheckingRegistration(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("event_registrations")
+        .select("qr_code, first_name, last_name")
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        // User already registered
+        setExistingRegistration(data);
+      }
+    } catch (error) {
+      console.error("Error checking registration:", error);
+    } finally {
+      setIsCheckingRegistration(false);
+    }
   };
 
-  const handleRSVPSuccess = () => {
-    setShowRSVPModal(false);
-    setSelectedEvent(null);
+  // On successful RSVP registration
+  const handleRSVPSuccess = (data: { qrCode: string; firstName: string; lastName: string }) => {
+    setExistingRegistration({
+      qr_code: data.qrCode,
+      first_name: data.firstName,
+      last_name: data.lastName,
+    });
   };
 
-  // Handle carousel scrolling
+  // Handle carousel scroll tracking
   const handleScroll = () => {
     if (carouselRef.current) {
       const newIndex = Math.round(carouselRef.current.scrollLeft / carouselRef.current.offsetWidth);
@@ -74,13 +113,11 @@ const AnnouncementsCarousel = () => {
     }
   };
 
-  if (events.length === 0) {
-    return null;
-  }
+  if (events.length === 0) return null;
 
   return (
     <section className="w-full max-w-2xl mx-auto px-4 py-6 font-sans">
-      {/* Header Section */}
+      {/* Header */}
       <div className="text-center mb-6 space-y-2">
         <Badge variant="secondary" className="mb-2">
           <Bell className="h-3 w-3 mr-1" />
@@ -92,7 +129,7 @@ const AnnouncementsCarousel = () => {
         </p>
       </div>
 
-      {/* Carousel Container */}
+      {/* Carousel */}
       <div
         ref={carouselRef}
         onScroll={handleScroll}
@@ -116,7 +153,7 @@ const AnnouncementsCarousel = () => {
                   <div>
                     <div className="space-y-3 mt-4">
                       <Button onClick={() => handleRegisterClick(event)} className="w-full h-14 text-base" size="lg">
-                        {event.webinar_video_url ? "Watch Now" : "Register Now"}
+                        {event.webinar_video_url ? "Watch Now" : "Register / View QR"}
                       </Button>
                     </div>
 
@@ -142,7 +179,7 @@ const AnnouncementsCarousel = () => {
         ))}
       </div>
 
-      {/* Carousel Dots */}
+      {/* Dots */}
       <div className="flex justify-center space-x-2 mt-6">
         {events.map((_, index) => (
           <button
@@ -163,20 +200,33 @@ const AnnouncementsCarousel = () => {
         ))}
       </div>
 
-      {/* RSVP Modal */}
+      {/* Modal */}
       <Dialog open={showRSVPModal} onOpenChange={setShowRSVPModal}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Event Registration</DialogTitle>
             <DialogDescription>{selectedEvent?.title}</DialogDescription>
           </DialogHeader>
+
           <div className="mt-4">
-            {selectedEvent && (
-              <InlineRSVPForm
-                eventId={selectedEvent.id}
-                eventTitle={selectedEvent.title}
-                onSuccess={handleRSVPSuccess}
+            {isCheckingRegistration ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : existingRegistration ? (
+              <QRCodeDisplay
+                qrCode={existingRegistration.qr_code}
+                eventTitle={selectedEvent?.title || ""}
+                userName={`${existingRegistration.first_name} ${existingRegistration.last_name}`}
               />
+            ) : (
+              selectedEvent && (
+                <InlineRSVPForm
+                  eventId={selectedEvent.id}
+                  eventTitle={selectedEvent.title}
+                  onSuccess={handleRSVPSuccess}
+                />
+              )
             )}
           </div>
         </DialogContent>
