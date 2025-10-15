@@ -96,13 +96,9 @@ const AnnouncementsCarousel = () => {
     }
   };
 
-  // On successful RSVP registration
-  const handleRSVPSuccess = (data: { qrCode: string; firstName: string; lastName: string }) => {
-    setExistingRegistration({
-      qr_code: data.qrCode,
-      first_name: data.firstName,
-      last_name: data.lastName,
-    });
+  // On successful RSVP registration, just close the modal
+  const handleRSVPSuccess = () => {
+    setShowRSVPModal(false);
   };
 
   // Handle carousel scroll tracking
