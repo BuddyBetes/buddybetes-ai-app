@@ -40,3 +40,9 @@ export interface AnalyticsResponse {
   ai_assistant_users: number;
   engagement_rate: number;
 }
+
+export interface MonthlyActiveUser {
+  month: string;
+  total_users: number;
+  growth_percentage: number;
+}

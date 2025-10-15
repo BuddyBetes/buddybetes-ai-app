@@ -7,6 +7,7 @@ import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
 import DayNavigator from '@/components/analytics/DayNavigator';
 import OverviewMetricsSection from '@/components/analytics/OverviewMetricsSection';
 import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
+import MonthlyActiveUsers from '@/components/analytics/MonthlyActiveUsers';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Analytics = () => {
@@ -19,6 +20,7 @@ const Analytics = () => {
     engagementData, 
     featureUsage,
     availableDates,
+    monthlyActiveUsers,
     loading, 
     refreshData 
   } = useMetricsData(selectedDateString || undefined);
@@ -44,6 +46,8 @@ const Analytics = () => {
       </div>
 
       <OverviewMetricsSection retentionData={retentionData} />
+
+      <MonthlyActiveUsers data={monthlyActiveUsers} />
 
       {availableDates.length > 0 && selectedDateString && (
         <>

@@ -5,9 +5,20 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Users, QrCode, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Users, QrCode, Loader2, Plus, Edit, Trash2 } from 'lucide-react';
 import { format, isPast, isFuture, isToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import EventDialog from '@/components/admin/EventDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Event {
   id: string;
@@ -24,6 +35,10 @@ const EventDashboard = () => {
   const { toast } = useToast();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<any | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -97,6 +112,46 @@ const EventDashboard = () => {
     }
   };
 
+  const handleSubmit = async (data: any) => {
+    try {
+      if (editingEvent) {
+        const { error } = await supabase
+          .from('events')
+          .update(data)
+          .eq('id', editingEvent.id);
+        if (error) throw error;
+        toast({ title: 'Success', description: 'Event updated successfully' });
+      } else {
+        const { error } = await supabase
+          .from('events')
+          .insert([{ ...data, is_active: true }]);
+        if (error) throw error;
+        toast({ title: 'Success', description: 'Event created successfully' });
+      }
+      setDialogOpen(false);
+      setEditingEvent(null);
+      loadEvents();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ is_active: false })
+        .eq('id', eventToDelete);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Event deleted successfully' });
+      setDeleteDialogOpen(false);
+      setEventToDelete(null);
+      loadEvents();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
   const getStatusBadge = (eventDate: string | null) => {
     if (!eventDate) return null;
     
@@ -124,7 +179,8 @@ const EventDashboard = () => {
           <h1 className="text-3xl font-bold">Event Management</h1>
           <p className="text-muted-foreground">Manage and monitor event registrations</p>
         </div>
-        <Button onClick={() => navigate('/admin/events')}>
+        <Button onClick={() => { setEditingEvent(null); setDialogOpen(true); }}>
+          <Plus className="h-4 w-4 mr-2" />
           Create Event
         </Button>
       </div>
@@ -197,9 +253,29 @@ const EventDashboard = () => {
                       </p>
                     </div>
 
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setEditingEvent(event); setDialogOpen(true); }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => { setEventToDelete(event.id); setDeleteDialogOpen(true); }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+
                     <Button
                       onClick={() => navigate(`/admin/events/scan/${event.id}`)}
-                      className="w-full"
+                      className="w-full mt-2"
                     >
                       <QrCode className="h-4 w-4 mr-2" />
                       Scan QR Codes
@@ -210,6 +286,29 @@ const EventDashboard = () => {
             })}
           </div>
         )}
+
+      <EventDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={handleSubmit}
+        defaultValues={editingEvent}
+        title={editingEvent ? 'Edit Event' : 'Create Event'}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this event? This will deactivate it and it will no longer appear in the active events list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

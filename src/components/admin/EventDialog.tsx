@@ -1,13 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import EventForm, { EventFormData } from './EventForm';
+import EventForm from './EventForm';
 
 interface EventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: EventFormData) => Promise<void>;
-  defaultValues?: Partial<EventFormData>;
+  onSubmit: (data: any) => Promise<void>;
+  defaultValues?: any;
   title: string;
-  isLoading?: boolean;
 }
 
 const EventDialog = ({
@@ -16,7 +15,6 @@ const EventDialog = ({
   onSubmit,
   defaultValues,
   title,
-  isLoading,
 }: EventDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -27,7 +25,6 @@ const EventDialog = ({
         <EventForm
           defaultValues={defaultValues}
           onSubmit={onSubmit}
-          isLoading={isLoading}
         />
       </DialogContent>
     </Dialog>

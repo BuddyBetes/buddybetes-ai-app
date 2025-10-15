@@ -6,6 +6,7 @@ import {
   Mail, 
   Calendar,
   BarChart3,
+  Tag,
   Menu,
   X
 } from 'lucide-react';
@@ -16,6 +17,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 const navigationItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Events', href: '/admin/events', icon: Calendar },
+  { name: 'Discount Codes', href: '/admin/discounts', icon: Tag },
   { name: 'Payment Receipts', href: '/admin/receipts', icon: Receipt },
   { name: 'Email Management', href: '/admin/emails', icon: Mail },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },

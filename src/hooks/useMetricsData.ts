@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import type { DailyActiveUser, RetentionData, EngagementData, FeatureUsage } from '@/types/metrics';
+import type { DailyActiveUser, RetentionData, EngagementData, FeatureUsage, MonthlyActiveUser } from '@/types/metrics';
 import {
   fetchDailyActiveUsers,
   fetchSpecificDateData,
   fetchRetentionData,
   fetchEngagementData,
   fetchFeatureUsage,
-  fetchAvailableDates
+  fetchAvailableDates,
+  fetchMonthlyActiveUsers
 } from '@/services/metricsService';
 
 export const useMetricsData = (selectedDateString?: string) => {
@@ -18,22 +19,25 @@ export const useMetricsData = (selectedDateString?: string) => {
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [monthlyActiveUsers, setMonthlyActiveUsers] = useState<MonthlyActiveUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshData = async () => {
     setLoading(true);
     
-    const [dailyUsers, retention, features, dates] = await Promise.all([
+    const [dailyUsers, retention, features, dates, monthlyUsers] = await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
       fetchFeatureUsage(),
-      fetchAvailableDates()
+      fetchAvailableDates(),
+      fetchMonthlyActiveUsers()
     ]);
 
     setDailyActiveUsers(dailyUsers);
     setRetentionData(retention);
     setFeatureUsage(features);
     setAvailableDates(dates);
+    setMonthlyActiveUsers(monthlyUsers);
 
     // Fetch engagement data for selected date
     const engagement = await fetchEngagementData(selectedDateString);
@@ -75,6 +79,7 @@ export const useMetricsData = (selectedDateString?: string) => {
     engagementData,
     featureUsage,
     availableDates,
+    monthlyActiveUsers,
     loading,
     refreshData
   };
