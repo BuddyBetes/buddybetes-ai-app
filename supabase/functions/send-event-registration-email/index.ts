@@ -45,10 +45,11 @@ const handler = async (req: Request): Promise<Response> => {
         })
       : "To be announced";
 
-    // Generate QR code as base64 data URL
-    const qrCodeDataUrl = await QRCode.toDataURL(qrCode, { 
-      width: 300,
+    // Generate QR code as PNG buffer
+    const qrCodeBuffer = await QRCode.toBuffer(qrCode, { 
+      width: 600,
       margin: 2,
+      type: 'png',
       color: {
         dark: '#000000',
         light: '#FFFFFF'
@@ -72,18 +73,11 @@ const handler = async (req: Request): Promise<Response> => {
       
       <div style="text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
         <h2 style="font-size: 24px; font-weight: bold; color: #ffffff; margin: 0 0 16px 0;">Your Event QR Code</h2>
-        <p style="color: #ffffff; font-size: 16px; margin: 0 0 24px 0;">
-          Show this QR code at the event for check-in.
+        <p style="color: #ffffff; font-size: 16px; margin: 0 0 16px 0;">
+          The attached PNG file below is your QR code for event check-in.
         </p>
-        <div style="background: white; padding: 20px; border-radius: 12px; display: inline-block; margin: 0 auto;">
-          <img 
-            src="${qrCodeDataUrl}" 
-            alt="Event QR Code" 
-            style="width: 300px; height: 300px; display: block;"
-          />
-        </div>
-        <p style="color: #ffffff; font-size: 14px; margin: 24px 0 0 0; opacity: 0.9;">
-          💡 Save this email or take a screenshot for easy access
+        <p style="color: #ffffff; font-size: 14px; margin: 0; opacity: 0.9;">
+          💾 Please save the attached file to your device and present it at the event entrance.
         </p>
       </div>
       
@@ -106,6 +100,12 @@ const handler = async (req: Request): Promise<Response> => {
       to: [email],
       subject: `Event Registration Confirmed - ${eventTitle}`,
       html: htmlContent,
+      attachments: [
+        {
+          filename: `event-qr-${firstName}-${lastName}.png`,
+          content: qrCodeBuffer,
+        }
+      ],
     });
 
     console.log("Email sent successfully:", emailResponse);
