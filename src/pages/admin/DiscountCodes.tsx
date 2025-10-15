@@ -6,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import DiscountCodeDialog from '@/components/admin/DiscountCodeDialog';
-import { DiscountCodeFormData } from '@/components/admin/DiscountCodeForm';
-import type { DiscountCode } from '@/types/discountCodes';
+import type { DiscountCode, DiscountCodeFormData } from '@/types/discountCodes';
 import { format } from 'date-fns';
 
 const DiscountCodes = () => {

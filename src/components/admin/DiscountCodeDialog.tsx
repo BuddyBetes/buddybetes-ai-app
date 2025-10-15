@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import DiscountCodeForm, { DiscountCodeFormData } from './DiscountCodeForm';
+import DiscountCodeForm from './DiscountCodeForm';
+import type { DiscountCodeFormData } from '@/types/discountCodes';
 
 interface DiscountCodeDialogProps {
   open: boolean;

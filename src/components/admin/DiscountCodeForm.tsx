@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import type { DiscountCodeFormData } from '@/types/discountCodes';
 
 const discountCodeSchema = z.object({
   code: z.string()
@@ -20,8 +21,6 @@ const discountCodeSchema = z.object({
   expires_at: z.string().optional().nullable(),
   is_active: z.boolean().default(true),
 });
-
-export type DiscountCodeFormData = z.infer<typeof discountCodeSchema>;
 
 interface DiscountCodeFormProps {
   defaultValues?: Partial<DiscountCodeFormData>;
