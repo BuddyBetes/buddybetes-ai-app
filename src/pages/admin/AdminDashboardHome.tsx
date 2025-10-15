@@ -55,27 +55,27 @@ const AdminDashboardHome = () => {
         <StatsCard
           title="Total Users"
           value={stats?.totalUsers || 0}
-          icon={<Users className="h-5 w-5 text-primary" />}
+          icon={Users}
         />
         <StatsCard
           title="Pending Receipts"
           value={stats?.pendingReceipts || 0}
-          icon={<FileText className="h-5 w-5 text-yellow-500" />}
+          icon={FileText}
         />
         <StatsCard
           title="Emails Sent Today"
           value={stats?.todayEmails || 0}
-          icon={<Mail className="h-5 w-5 text-blue-500" />}
+          icon={Mail}
         />
         <StatsCard
           title="Active Events"
           value={stats?.activeEvents || 0}
-          icon={<Calendar className="h-5 w-5 text-green-500" />}
+          icon={Calendar}
         />
         <StatsCard
           title="Active Subscriptions"
           value={stats?.activeSubscriptions || 0}
-          icon={<DollarSign className="h-5 w-5 text-emerald-500" />}
+          icon={DollarSign}
         />
       </div>
 
