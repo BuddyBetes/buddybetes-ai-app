@@ -17,7 +17,7 @@ const AdminHeader = () => {
     setIsLoggingOut(true);
     try {
       await signOut();
-      navigate('/admin/login');
+      navigate('/admin');
     } catch (error) {
       toast({
         title: 'Logout failed',
