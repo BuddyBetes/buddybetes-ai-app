@@ -76,7 +76,7 @@ const AppRoutes: React.FC = () => {
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminAuth />} />
       <Route path="/admin/dashboard" element={<AdminRoute><AdminLayout><AdminDashboardHome /></AdminLayout></AdminRoute>} />
-      <Route path="/admin/payments" element={<AdminRoute><AdminLayout><PaymentReceipts /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/receipts" element={<AdminRoute><AdminLayout><PaymentReceipts /></AdminLayout></AdminRoute>} />
       <Route path="/admin/emails" element={<AdminRoute><AdminLayout><EmailManagement /></AdminLayout></AdminRoute>} />
       <Route path="/admin/analytics" element={<AdminRoute><AdminLayout><Analytics /></AdminLayout></AdminRoute>} />
       <Route path="/admin/events" element={<AdminRoute><AdminLayout><EventDashboard /></AdminLayout></AdminRoute>} />

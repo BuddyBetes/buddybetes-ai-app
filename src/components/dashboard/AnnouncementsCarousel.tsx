@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import useEmblaCarousel from 'embla-carousel-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +10,7 @@ import { format } from "date-fns";
 import InlineRSVPForm from "@/components/events/InlineRSVPForm";
 import { Badge } from "@/components/ui/badge";
 import QRCodeDisplay from "@/components/events/QRCodeDisplay";
+import { cn } from "@/lib/utils";
 
 interface Event {
   id: string;
@@ -36,6 +38,30 @@ const AnnouncementsCarousel = () => {
   const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
   const [checkingRegistration, setCheckingRegistration] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(true);
+
+  // Embla Carousel
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
+
+  // Setup carousel event listeners
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    setScrollSnaps(emblaApi.scrollSnapList());
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi, onSelect]);
 
   // ---------------------------
   // Load Active Events
@@ -112,17 +138,14 @@ const AnnouncementsCarousel = () => {
       return;
     }
 
-    setSelectedEvent(null); // Clear previous state first
+    setSelectedEvent(null);
     setExistingRegistration(null);
     setCheckingRegistration(true);
 
-    // ✅ Perform registration check BEFORE opening modal
     const reg = await checkExistingRegistration(event.id);
 
     setSelectedEvent(event);
     setCheckingRegistration(false);
-
-    // ✅ Modal opens now with accurate content
   };
 
   const handleLearnMoreClick = (event: Event) => {
@@ -133,7 +156,6 @@ const AnnouncementsCarousel = () => {
 
   const handleRSVPSuccess = async () => {
     if (selectedEvent) {
-      // ✅ Re-check registration immediately after successful RSVP
       const reg = await checkExistingRegistration(selectedEvent.id);
       setExistingRegistration(reg);
     }
@@ -151,82 +173,108 @@ const AnnouncementsCarousel = () => {
 
   return (
     <section className="w-full px-4 py-6">
-      <div className="text-center mb-6 space-y-2">
-        <Badge variant="secondary" className="mb-2">
-          <Bell className="h-3 w-3 mr-1" />
-          What's New
-        </Badge>
-        <h2 className="text-2xl sm:text-3xl font-bold">Latest Updates & Events</h2>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Stay informed about upcoming events and new features
-        </p>
-      </div>
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-6 space-y-2">
+          <Badge variant="secondary" className="mb-2 bg-buddy-100 text-buddy-700 border border-buddy-200">
+            <Bell className="h-3 w-3 mr-1" />
+            What's New
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl font-bold">Latest Updates & Events</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Stay informed about upcoming events and new features
+          </p>
+        </div>
 
-      {/* Event Cards */}
-      <div className="space-y-4 max-w-2xl mx-auto">
-        {events.map((event) => (
-          <Card key={event.id} className="overflow-hidden">
-            <CardContent className={`p-6 ${event.gradient || ""}`}>
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  {event.badge && (
-                    <Badge variant="secondary" className="text-xs">
-                      {event.badge}
-                    </Badge>
-                  )}
-                  <h3 className="text-xl sm:text-2xl font-bold">{event.title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground">{event.description}</p>
-                </div>
+        {/* Embla Carousel */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex">
+            {events.map((event) => (
+              <div key={event.id} className="flex-[0_0_100%] min-w-0 px-2">
+                <Card className="overflow-hidden border border-buddy-100 bg-gradient-to-br from-white to-buddy-50/30 hover:shadow-lg transition-shadow">
+                  <CardContent className={`p-6 ${event.gradient || ""}`}>
+                    <div className="space-y-4">
+                      <div className="space-y-3">
+                        {event.badge && (
+                          <Badge variant="secondary" className="text-xs bg-buddy-100 text-buddy-700 border-buddy-200">
+                            {event.badge}
+                          </Badge>
+                        )}
+                        <h3 className="text-xl sm:text-2xl font-bold">{event.title}</h3>
+                        <p className="text-sm sm:text-base text-muted-foreground">{event.description}</p>
+                      </div>
 
-                <div className="space-y-3">
-                  <Button
-                    onClick={() => handleRegisterClick(event)}
-                    className="w-full h-14 text-base"
-                    size="lg"
-                    disabled={checkingRegistration}
-                  >
-                    {checkingRegistration ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Checking...
-                      </>
-                    ) : event.webinar_video_url ? (
-                      "Watch Now"
-                    ) : (
-                      "Register Now"
-                    )}
-                  </Button>
+                      <div className="space-y-3">
+                        <Button
+                          onClick={() => handleRegisterClick(event)}
+                          className="w-full h-14 text-base bg-buddy-500 hover:bg-buddy-600"
+                          size="lg"
+                          disabled={checkingRegistration}
+                        >
+                          {checkingRegistration ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Checking...
+                            </>
+                          ) : event.webinar_video_url ? (
+                            "Watch Now"
+                          ) : (
+                            "Register Now"
+                          )}
+                        </Button>
 
-                  {event.webinar_video_url && (
-                    <Button
-                      variant="outline"
-                      onClick={() => handleLearnMoreClick(event)}
-                      className="w-full h-14 text-base"
-                      size="lg"
-                    >
-                      Learn More
-                    </Button>
-                  )}
-                </div>
+                        {event.webinar_video_url && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleLearnMoreClick(event)}
+                            className="w-full h-14 text-base border-buddy-300 text-buddy-700 hover:bg-buddy-50"
+                            size="lg"
+                          >
+                            Learn More
+                          </Button>
+                        )}
+                      </div>
 
-                <div className="space-y-2 text-sm text-muted-foreground pt-2">
-                  {event.event_date && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(event.event_date), "PPP")}</span>
+                      <div className="space-y-2 text-sm text-muted-foreground pt-2">
+                        {event.event_date && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            <span>{format(new Date(event.event_date), "PPP")}</span>
+                          </div>
+                        )}
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>{event.location}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  {event.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{event.location}</span>
-                    </div>
-                  )}
-                </div>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            ))}
+          </div>
+        </div>
+
+        {/* Dot Indicators */}
+        {events.length > 1 && (
+          <div className="flex justify-center gap-2 mt-6">
+            {scrollSnaps.map((_, index) => (
+              <button
+                key={index}
+                className={cn(
+                  "h-2 rounded-full transition-all",
+                  index === selectedIndex 
+                    ? "w-8 bg-buddy-500" 
+                    : "w-2 bg-buddy-200 hover:bg-buddy-300"
+                )}
+                onClick={() => emblaApi?.scrollTo(index)}
+                aria-label={`Go to event ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* RSVP / QR Modal */}
