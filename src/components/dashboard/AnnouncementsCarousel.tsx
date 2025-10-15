@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, MapPin, Bell } from "lucide-react";
 import { format } from "date-fns";
+import QRCodeDisplay from "@/components/events/QRCodeDisplay";
 import InlineRSVPForm from "@/components/events/InlineRSVPForm";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,15 +21,23 @@ interface Event {
   webinar_video_url?: string;
 }
 
+interface Registration {
+  qr_code: string;
+  first_name: string;
+  last_name: string;
+}
+
 const AnnouncementsCarousel = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRSVPModal, setShowRSVPModal] = useState(false);
+  const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
+  const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
-  // Load events from Supabase
+  // Load events
   const loadEvents = async () => {
     try {
       const { data, error } = await supabase
@@ -50,8 +59,8 @@ const AnnouncementsCarousel = () => {
     loadEvents();
   }, []);
 
-  // Handle register or webinar click
-  const handleRegisterClick = (event: Event) => {
+  // Handle Register / Webinar button
+  const handleRegisterClick = async (event: Event) => {
     if (event.webinar_video_url) {
       window.open(event.webinar_video_url, "_blank");
       return;
@@ -59,14 +68,44 @@ const AnnouncementsCarousel = () => {
 
     setSelectedEvent(event);
     setShowRSVPModal(true);
+    setIsCheckingRegistration(true);
+    setExistingRegistration(null);
+
+    if (!user) {
+      setIsCheckingRegistration(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("event_registrations")
+        .select("qr_code, first_name, last_name")
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        // User already registered
+        setExistingRegistration(data);
+      }
+    } catch (error) {
+      console.error("Error checking registration:", error);
+    } finally {
+      setIsCheckingRegistration(false);
+    }
   };
 
-  const handleRSVPSuccess = () => {
-    setShowRSVPModal(false);
-    setSelectedEvent(null);
+  // On successful RSVP registration
+  const handleRSVPSuccess = (data: { qrCode: string; firstName: string; lastName: string }) => {
+    setExistingRegistration({
+      qr_code: data.qrCode,
+      first_name: data.firstName,
+      last_name: data.lastName,
+    });
   };
 
-  // Handle carousel scrolling
+  // Handle carousel scroll tracking
   const handleScroll = () => {
     if (carouselRef.current) {
       const newIndex = Math.round(carouselRef.current.scrollLeft / carouselRef.current.offsetWidth);
@@ -74,9 +113,7 @@ const AnnouncementsCarousel = () => {
     }
   };
 
-  if (events.length === 0) {
-    return null;
-  }
+  if (events.length === 0) return null;
 
   return (
     <section className="w-full max-w-2xl mx-auto px-4 py-6 font-sans">
