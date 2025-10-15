@@ -12,9 +12,15 @@ interface InlineRSVPFormProps {
   eventId: string;
   eventTitle: string;
   onSuccess?: () => void;
+  existingRegistration?: {
+    qr_code: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  } | null;
 }
 
-const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps) => {
+const InlineRSVPForm = ({ eventId, eventTitle, onSuccess, existingRegistration }: InlineRSVPFormProps) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
@@ -27,11 +33,28 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
 
+  // 👇 Early exit: if the parent already has registration data
   useEffect(() => {
+    if (existingRegistration) {
+      setQrCode(existingRegistration.qr_code);
+      setSuccess(true);
+      setIsAlreadyRegistered(true);
+      setFormData({
+        email: existingRegistration.email || "",
+        firstName: existingRegistration.first_name || "",
+        lastName: existingRegistration.last_name || "",
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise, continue normal flow
     if (user) {
       loadProfileAndCheckRegistration();
+    } else {
+      setLoading(false);
     }
-  }, [user, eventId]);
+  }, [user, eventId, existingRegistration]);
 
   const loadProfileAndCheckRegistration = async () => {
     if (!user) return;
@@ -192,7 +215,9 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
       </div>
 
       <div>
-        <Label htmlFor="lastName" className="text-base sm:text-sm mb-1.5">Last Name</Label>
+        <Label htmlFor="lastName" className="text-base sm:text-sm mb-1.5">
+          Last Name
+        </Label>
         <Input
           id="lastName"
           type="text"
@@ -204,7 +229,12 @@ const InlineRSVPForm = ({ eventId, eventTitle, onSuccess }: InlineRSVPFormProps)
         />
       </div>
 
-      <Button type="submit" disabled={submitting || success} className="w-full h-12 sm:h-11 touch-manipulation" size="lg">
+      <Button
+        type="submit"
+        disabled={submitting || success}
+        className="w-full h-12 sm:h-11 touch-manipulation"
+        size="lg"
+      >
         {submitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

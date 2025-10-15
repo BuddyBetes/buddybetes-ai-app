@@ -212,6 +212,7 @@ const AnnouncementsCarousel = () => {
               <InlineRSVPForm
                 eventId={selectedEvent.id}
                 eventTitle={selectedEvent.title}
+                existingRegistration={existingRegistration} // 👈 NEW PROP
                 onSuccess={handleRSVPSuccess}
               />
             ) : null}
