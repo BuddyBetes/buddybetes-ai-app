@@ -172,7 +172,7 @@ const AnnouncementsCarousel = () => {
   if (events.length === 0) return null;
 
   return (
-    <section className="w-full px-4 py-6">
+    <section className="p-6 rounded-xl bg-white shadow-sm">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 space-y-2">

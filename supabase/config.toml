@@ -14,3 +14,5 @@ verify_jwt = false
 [functions.test-email-templates]
 [functions.invoke-payment-email]
 verify_jwt = false
+[functions.send-email-blast]
+[functions.verify-admin]

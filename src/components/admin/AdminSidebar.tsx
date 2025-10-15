@@ -19,6 +19,7 @@ const navigationItems = [
   { name: 'Events', href: '/admin/events', icon: Calendar },
   { name: 'Discount Codes', href: '/admin/discounts', icon: Tag },
   { name: 'Payment Receipts', href: '/admin/receipts', icon: Receipt },
+  { name: 'Email Campaigns', href: '/admin/campaigns', icon: Mail },
   { name: 'Email Management', href: '/admin/emails', icon: Mail },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];

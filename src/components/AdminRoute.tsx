@@ -26,15 +26,59 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
       return;
     }
 
+    // Validate route pattern
+    const currentPath = window.location.pathname;
+    if (!currentPath.startsWith('/admin')) {
+      console.warn('Invalid admin route access attempt:', currentPath);
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Use the is_admin() database function for server-side RBAC
-      const { data, error } = await supabase.rpc('is_admin', {
-        _user_id: user.id,
-      });
+      // Verify session validity
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (!session || sessionError) {
+        console.error('Invalid session:', sessionError);
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      // Use the is_admin() database function for server-side RBAC with timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Admin check timeout')), 5000)
+      );
+
+      const { data, error } = await Promise.race([
+        supabase.rpc('is_admin', { _user_id: user.id }),
+        timeoutPromise
+      ]) as any;
 
       if (error) throw error;
 
+      // Double-check with server-side verification
+      if (data === true) {
+        const { data: verification } = await supabase.functions.invoke('verify-admin');
+        if (verification && !verification.isAdmin) {
+          console.warn('Admin verification failed');
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+      }
+
       setIsAdmin(data === true);
+      
+      // Log admin access
+      if (data === true) {
+        await supabase.from('admin_activity_logs').insert({
+          admin_user_id: user.id,
+          action: 'admin_route_access',
+          resource: currentPath,
+          metadata: { timestamp: new Date().toISOString() }
+        });
+      }
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
