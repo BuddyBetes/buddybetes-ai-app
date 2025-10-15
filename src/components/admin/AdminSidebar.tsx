@@ -55,18 +55,18 @@ const AdminSidebar = () => {
   return (
     <>
       {/* Mobile sidebar */}
-      <div className="lg:hidden fixed bottom-4 right-4 z-50">
+      <div className="lg:hidden fixed bottom-20 right-4 z-50">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button size="icon" className="h-14 w-14 rounded-full shadow-lg">
+            <Button size="icon" className="h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-transform">
               {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <div className="py-4">
-              <h2 className="px-4 text-lg font-semibold mb-4">Navigation</h2>
-              <SidebarContent onNavigate={() => setOpen(false)} />
+          <SheetContent side="left" className="w-72 p-0">
+            <div className="p-4 border-b">
+              <h2 className="font-semibold text-lg">Admin Menu</h2>
             </div>
+            <SidebarContent onNavigate={() => setOpen(false)} />
           </SheetContent>
         </Sheet>
       </div>

@@ -10,9 +10,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       <AdminHeader />
-      <div className="flex h-[calc(100vh-64px)]">
+      <div className="flex h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)]">
         <AdminSidebar />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 pb-20 sm:pb-8">
           {children}
         </main>
       </div>

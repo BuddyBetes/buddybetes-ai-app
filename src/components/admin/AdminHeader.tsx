@@ -36,10 +36,10 @@ const AdminHeader = () => {
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'AD';
 
   return (
-    <header className="h-16 border-b bg-card px-4 sm:px-6 flex items-center justify-between">
+    <header className="h-14 sm:h-16 border-b bg-card px-3 sm:px-6 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Shield className="h-6 w-6 text-primary" />
-        <h1 className="text-xl font-bold">BuddyBetes Admin</h1>
+        <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+        <h1 className="text-lg sm:text-xl font-bold">BuddyBetes Admin</h1>
       </div>
 
       <div className="flex items-center gap-3">

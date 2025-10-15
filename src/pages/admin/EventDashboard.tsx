@@ -176,33 +176,26 @@ const EventDashboard = () => {
   const totalCheckedIn = events.reduce((sum, event) => sum + event.checkedInCount, 0);
 
   return (
-    <div className="space-y-6">
-        <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Event Management</h1>
-            <p className="text-muted-foreground mt-2">
-              Create and manage events, track registrations
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Event Management</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage events and track registrations</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={loadEvents}>
-              Refresh
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Event
-            </Button>
-          </div>
+          <Button onClick={() => setIsDialogOpen(true)} className="h-12 sm:h-10 w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Event
+          </Button>
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Events</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{totalEvents}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{totalEvents}</div>
             </CardContent>
           </Card>
           <Card>
@@ -210,7 +203,7 @@ const EventDashboard = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Registrations</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{totalRegistrations}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{totalRegistrations}</div>
             </CardContent>
           </Card>
           <Card>
@@ -218,7 +211,7 @@ const EventDashboard = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Checked In</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{totalCheckedIn}</div>
+              <div className="text-2xl sm:text-3xl font-bold">{totalCheckedIn}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {totalRegistrations > 0 ? Math.round((totalCheckedIn / totalRegistrations) * 100) : 0}% attendance
               </p>
@@ -249,87 +242,85 @@ const EventDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
             {events.map((event) => {
               const progress = getProgressPercentage(event.checkedInCount, event.totalRegistrations);
 
               return (
-                <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1 flex-1">
-                        <h3 className="text-xl font-semibold leading-tight">
-                          {event.title}
-                        </h3>
+                <Card key={event.id} className="overflow-hidden">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-bold break-words">{event.title}</h3>
+                          <p className="text-sm text-muted-foreground break-words line-clamp-2 mt-1">
+                            {event.description}
+                          </p>
+                        </div>
                         {getStatusBadge(event.event_date)}
                       </div>
-                    </div>
 
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {event.description}
-                    </p>
-
-                    <div className="space-y-2">
-                      {event.event_date && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>{format(new Date(event.event_date), 'PPP p')}</span>
-                        </div>
-                      )}
-                      {event.location && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
-                          <span>{event.location}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Check-in Progress</span>
-                        <span className="font-medium">
-                          {event.checkedInCount} / {event.totalRegistrations}
-                        </span>
+                      <div className="space-y-2 text-sm">
+                        {event.event_date && (
+                          <div className="flex items-center gap-2 text-muted-foreground flex-wrap">
+                            <Calendar className="h-4 w-4 flex-shrink-0" />
+                            <span className="break-words">{format(new Date(event.event_date), 'PPP')}</span>
+                          </div>
+                        )}
+                        {event.location && (
+                          <div className="flex items-center gap-2 text-muted-foreground flex-wrap">
+                            <MapPin className="h-4 w-4 flex-shrink-0" />
+                            <span className="break-words">{event.location}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div
-                          className="bg-primary rounded-full h-2 transition-all"
-                          style={{ width: `${progress}%` }}
-                        />
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Check-in Progress</span>
+                          <span className="font-medium">
+                            {event.checkedInCount}/{event.totalRegistrations}
+                          </span>
+                        </div>
+                        <div className="w-full bg-secondary rounded-full h-2">
+                          <div
+                            className="bg-primary rounded-full h-2 transition-all"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground text-right">
-                        {progress}% checked in
-                      </p>
-                    </div>
 
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { setEditingEvent(event); setIsDialogOpen(true); }}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => { setEventToDelete(event.id); setDeleteDialogOpen(true); }}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
+                      <div className="grid gap-2 sm:gap-3 pt-2">
+                        <Button
+                          onClick={() => navigate(`/admin/events/scan/${event.id}`)}
+                          className="w-full h-12 sm:h-11 text-base"
+                          size="lg"
+                        >
+                          <QrCode className="mr-2 h-5 w-5" />
+                          Scan QR Codes
+                        </Button>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => { setEditingEvent(event); setIsDialogOpen(true); }}
+                            className="h-11 sm:h-10"
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => { setEventToDelete(event.id); setDeleteDialogOpen(true); }}
+                            className="h-11 sm:h-10 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-
-                    <Button
-                      onClick={() => navigate(`/admin/events/scan/${event.id}`)}
-                      className="w-full mt-2"
-                    >
-                      <QrCode className="h-4 w-4 mr-2" />
-                      Scan QR Codes
-                    </Button>
-                  </div>
+                  </CardContent>
                 </Card>
               );
             })}
