@@ -1,225 +1,152 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MapPin, Bell } from "lucide-react";
-import { format } from "date-fns";
-import InlineRSVPForm from "@/components/events/InlineRSVPForm";
-import { Badge } from "@/components/ui/badge";
-import QRCodeDisplay from "@/components/events/QRCodeDisplay";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import QRCodeDisplay from "@/components/QRCodeDisplay";
+import InlineRSVPForm from "@/components/InlineRSVPForm";
+import { Loader2 } from "lucide-react";
 
 interface Event {
   id: string;
   title: string;
   description: string;
-  event_date: string | null;
-  location?: string;
-  gradient?: string;
-  badge?: string;
-  webinar_video_url?: string;
-}
-
-interface Registration {
-  id: string;
-  qr_code: string;
-  first_name: string;
-  last_name: string;
-  email: string;
+  date: string;
+  image_url?: string;
 }
 
 const AnnouncementsCarousel = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [showRSVPModal, setShowRSVPModal] = useState(false);
-  const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
-  const [checkingRegistration, setCheckingRegistration] = useState(false);
+  const [existingRegistration, setExistingRegistration] = useState<any>(null);
+  const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
-  // ---------------------------
-  // Load Active Events
-  // ---------------------------
-  const loadEvents = async () => {
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    setLoadingEvents(true);
     try {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
-        .eq("is_active", true)
-        .order("event_date", { ascending: true });
+        .select("id, title, description, date, image_url")
+        .order("date", { ascending: true });
 
       if (error) throw error;
       setEvents(data || []);
-    } catch (error) {
-      console.error("Error loading events:", error);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+    } finally {
+      setLoadingEvents(false);
     }
   };
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
+  const handleEventClick = async (event: Event) => {
+    if (!user) return;
 
-  // ---------------------------
-  // Check if user already registered for the event
-  // ---------------------------
-  const checkExistingRegistration = async (eventId: string) => {
-    if (!user) return null;
-    setCheckingRegistration(true);
+    setIsCheckingRegistration(true);
+    setSelectedEvent(null);
+    setExistingRegistration(null);
 
     try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, last_name, email")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const userEmail = profile?.email || user.email || "";
-
-      const { data: reg } = await supabase
+      // ✅ Check if user already registered for this event
+      const { data, error } = await supabase
         .from("event_registrations")
-        .select("id, qr_code, first_name, last_name, email")
-        .eq("event_id", eventId)
-        .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      setExistingRegistration(reg || null);
-      return reg || null;
-    } catch (error) {
-      console.error("Error checking registration:", error);
-      setExistingRegistration(null);
-      return null;
+      if (error && error.code !== "PGRST116") throw error;
+
+      if (data) {
+        setExistingRegistration(data);
+      } else {
+        setExistingRegistration(null);
+      }
+
+      // ✅ Only open modal after check completes
+      setSelectedEvent(event);
+    } catch (err) {
+      console.error("Error checking registration:", err);
     } finally {
-      setCheckingRegistration(false);
-    }
-  };
-
-  // ---------------------------
-  // When "Register Now" button is clicked
-  // ---------------------------
-  const handleRegisterClick = async (event: Event) => {
-    // For webinars → open video directly
-    if (event.webinar_video_url) {
-      window.open(event.webinar_video_url, "_blank");
-      return;
-    }
-
-    // Start modal only after registration check
-    setSelectedEvent(event);
-    setShowRSVPModal(true);
-    await checkExistingRegistration(event.id);
-  };
-
-  const handleLearnMoreClick = (event: Event) => {
-    if (event.webinar_video_url) {
-      window.open(event.webinar_video_url, "_blank");
+      setIsCheckingRegistration(false);
     }
   };
 
   const handleRSVPSuccess = () => {
-    setShowRSVPModal(false);
-    setSelectedEvent(null);
-    setExistingRegistration(null);
+    // Re-fetch registration entry after successful RSVP
+    if (selectedEvent && user) {
+      handleEventClick(selectedEvent);
+    }
   };
 
-  if (events.length === 0) return null;
-
   return (
-    <section className="w-full px-4 py-6">
-      <div className="text-center mb-6 space-y-2">
-        <Badge variant="secondary" className="mb-2">
-          <Bell className="h-3 w-3 mr-1" />
-          What's New
-        </Badge>
-        <h2 className="text-2xl sm:text-3xl font-bold">Latest Updates & Events</h2>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Stay informed about upcoming events and new features
-        </p>
-      </div>
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold text-center sm:text-left">Upcoming Events</h2>
 
-      {/* Event Cards */}
-      <div className="space-y-4 max-w-2xl mx-auto">
-        {events.map((event) => (
-          <Card key={event.id} className="overflow-hidden">
-            <CardContent className={`p-6 ${event.gradient || ""}`}>
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  {event.badge && (
-                    <Badge variant="secondary" className="text-xs">
-                      {event.badge}
-                    </Badge>
-                  )}
-                  <h3 className="text-xl sm:text-2xl font-bold">{event.title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground">{event.description}</p>
-                </div>
+      {loadingEvents ? (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : events.length === 0 ? (
+        <p className="text-center text-muted-foreground">No upcoming events.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {events.map((event) => (
+            <div
+              key={event.id}
+              className="p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition cursor-pointer"
+              onClick={() => handleEventClick(event)}
+            >
+              {event.image_url && (
+                <img src={event.image_url} alt={event.title} className="w-full h-40 object-cover rounded-lg mb-3" />
+              )}
+              <h3 className="font-semibold text-lg">{event.title}</h3>
+              <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+              <p className="text-xs text-muted-foreground mt-2">📅 {new Date(event.date).toLocaleDateString()}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
-                <div className="space-y-3">
-                  <Button onClick={() => handleRegisterClick(event)} className="w-full h-14 text-base" size="lg">
-                    {event.webinar_video_url ? "Watch Now" : "Register Now"}
-                  </Button>
+      {selectedEvent && (
+        <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{selectedEvent.title}</DialogTitle>
+              <DialogDescription>
+                {existingRegistration
+                  ? "You're already registered for this event."
+                  : "Fill out the form to register for this event."}
+              </DialogDescription>
+            </DialogHeader>
 
-                  {event.webinar_video_url && (
-                    <Button
-                      variant="outline"
-                      onClick={() => handleLearnMoreClick(event)}
-                      className="w-full h-14 text-base"
-                      size="lg"
-                    >
-                      Learn More
-                    </Button>
-                  )}
-                </div>
-
-                <div className="space-y-2 text-sm text-muted-foreground pt-2">
-                  {event.event_date && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(event.event_date), "PPP")}</span>
-                    </div>
-                  )}
-                  {event.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{event.location}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Modal */}
-      <Dialog open={showRSVPModal} onOpenChange={setShowRSVPModal}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{existingRegistration ? "Your Event QR Code" : "Event Registration"}</DialogTitle>
-            <DialogDescription>{selectedEvent?.title}</DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-4">
-            {checkingRegistration ? (
+            {isCheckingRegistration ? (
               <div className="flex justify-center items-center py-8 text-muted-foreground">
-                Checking registration...
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="ml-2">Checking registration...</span>
               </div>
-            ) : selectedEvent && existingRegistration ? (
+            ) : existingRegistration ? (
               <QRCodeDisplay
                 qrCode={existingRegistration.qr_code}
                 eventTitle={selectedEvent.title}
                 userName={`${existingRegistration.first_name} ${existingRegistration.last_name}`}
               />
-            ) : selectedEvent ? (
+            ) : (
               <InlineRSVPForm
                 eventId={selectedEvent.id}
                 eventTitle={selectedEvent.title}
-                existingRegistration={existingRegistration} // 👈 NEW PROP
                 onSuccess={handleRSVPSuccess}
               />
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </section>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
   );
 };
 
