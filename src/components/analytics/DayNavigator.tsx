@@ -76,52 +76,56 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2 mb-6">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handlePreviousDay}
-        disabled={!canGoPrevious}
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Previous Day
-      </Button>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 overflow-x-auto">
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePreviousDay}
+          disabled={!canGoPrevious}
+          className="h-9"
+        >
+          <ChevronLeft className="h-4 w-4 sm:mr-1" />
+          <span className="hidden sm:inline">Previous</span>
+        </Button>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-[240px] justify-start text-left font-normal",
-              !selectedDate && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleCalendarSelect}
-            disabled={(date) => !isDateAvailable(date)}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-[180px] sm:w-[240px] justify-start text-left font-normal h-9",
+                !selectedDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{selectedDate ? format(selectedDate, "PPP") : "Pick a date"}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleCalendarSelect}
+              disabled={(date) => !isDateAvailable(date)}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleNextDay}
-        disabled={!canGoNext}
-      >
-        Next Day
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNextDay}
+          disabled={!canGoNext}
+          className="h-9"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="h-4 w-4 sm:ml-1" />
+        </Button>
+      </div>
 
-      <div className="ml-4 flex gap-2">
+      <div className="flex gap-2 flex-shrink-0">
         <Button
           variant="ghost"
           size="sm"
@@ -130,6 +134,7 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
             if (mostRecent) onDateChange(mostRecent);
           }}
           disabled={!getMostRecentDate()}
+          className="h-9"
         >
           Latest
         </Button>
@@ -141,6 +146,7 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
             if (secondMostRecent) onDateChange(secondMostRecent);
           }}
           disabled={!getSecondMostRecentDate()}
+          className="h-9"
         >
           Previous
         </Button>

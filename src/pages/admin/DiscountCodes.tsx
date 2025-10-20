@@ -80,12 +80,12 @@ const DiscountCodes = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Discount Codes</h1>
-          <p className="text-muted-foreground">Manage discount codes and view redemptions</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Discount Codes</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage discount codes and view redemptions</p>
         </div>
-        <Button onClick={() => { setEditingCode(null); setDialogOpen(true); }}>
+        <Button onClick={() => { setEditingCode(null); setDialogOpen(true); }} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Create Code
         </Button>
@@ -100,14 +100,14 @@ const DiscountCodes = () => {
           {codes.map((code) => (
             <Card key={code.id}>
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="font-mono">{code.code}</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="font-mono text-lg break-all">{code.code}</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {code.discount_percentage}% off
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Badge variant={code.is_active ? 'default' : 'secondary'}>
                       {code.is_active ? 'Active' : 'Inactive'}
                     </Badge>
@@ -122,7 +122,7 @@ const DiscountCodes = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Usage</p>
                     <p className="font-medium">

@@ -1,117 +1,112 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import StatsCard from '@/components/admin/StatsCard';
-import { Users, Mail, Calendar, DollarSign, FileText, Loader2, Tag, TicketPercent } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Receipt, Mail, Calendar, CreditCard, Ticket, TrendingUp, BarChart3, FileText, Megaphone } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
+import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
+import DayNavigator from '@/components/analytics/DayNavigator';
+import OverviewMetricsSection from '@/components/analytics/OverviewMetricsSection';
+import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
+import MonthlyActiveUsers from '@/components/analytics/MonthlyActiveUsers';
+import { useMetricsData } from '@/hooks/useMetricsData';
 
 const AdminDashboardHome = () => {
-  const navigate = useNavigate();
+  const [selectedDateString, setSelectedDateString] = useState<string | null>(null);
 
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['admin-stats'],
-    queryFn: async () => {
-      const [profiles, receipts, emails, events, subscriptions, discountCodes, discountRedemptions] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('payment_receipts').select('id', { count: 'exact', head: true }).eq('verification_status', 'pending'),
-        supabase.from('email_logs').select('id', { count: 'exact', head: true }).gte('sent_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
-        supabase.from('events').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('user_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('discount_codes').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('discount_redemptions').select('id', { count: 'exact', head: true })
-          .gte('redeemed_at', new Date(new Date().setDate(new Date().getDate() - 30)).toISOString()),
-      ]);
+  const { 
+    selectedDayData,
+    previousDayData,
+    retentionData, 
+    engagementData, 
+    featureUsage,
+    availableDates,
+    monthlyActiveUsers,
+    loading, 
+    refreshData 
+  } = useMetricsData(selectedDateString || undefined);
 
-      return {
-        totalUsers: profiles.count || 0,
-        pendingReceipts: receipts.count || 0,
-        todayEmails: emails.count || 0,
-        activeEvents: events.count || 0,
-        activeSubscriptions: subscriptions.count || 0,
-        activeDiscountCodes: discountCodes.count || 0,
-        recentRedemptions: discountRedemptions.count || 0,
-      };
-    },
-  });
+  useEffect(() => {
+    if (availableDates.length > 0 && !selectedDateString) {
+      const mostRecentDate = [...availableDates].sort().reverse()[0];
+      setSelectedDateString(mostRecentDate);
+    }
+  }, [availableDates, selectedDateString]);
 
   const quickActions = [
-    { title: 'Payment Receipts', href: '/admin/receipts', icon: <FileText className="h-5 w-5" />, description: 'Review and approve payment receipts' },
-    { title: 'Email Management', href: '/admin/emails', icon: <Mail className="h-5 w-5" />, description: 'View email logs and send test emails' },
-    { title: 'Event Management', href: '/admin/events', icon: <Calendar className="h-5 w-5" />, description: 'Manage events and registrations' },
-    { title: 'Discount Codes', href: '/admin/discounts', icon: <Tag className="h-5 w-5" />, description: 'Manage discount codes and redemptions' },
+    { title: 'Payment Receipts', href: '/admin/receipts', icon: Receipt, description: 'Review payment receipts' },
+    { title: 'Events', href: '/admin/events', icon: Calendar, description: 'Manage events' },
+    { title: 'Discount Codes', href: '/admin/discounts', icon: Ticket, description: 'Manage discounts' },
+    { title: 'Email Campaigns', href: '/admin/campaigns', icon: Megaphone, description: 'Create campaigns' },
+    { title: 'Email Management', href: '/admin/emails', icon: Mail, description: 'Email logs' },
   ];
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-3 text-muted-foreground">Loading dashboard statistics...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Welcome to the BuddyBetes Admin Portal</p>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Analytics Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track app usage and user engagement</p>
+        </div>
+        <Button onClick={refreshData} disabled={loading} className="w-full sm:w-auto">
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Users"
-          value={stats?.totalUsers || 0}
-          icon={Users}
+      <OverviewMetricsSection retentionData={retentionData} />
+
+      <MonthlyActiveUsers data={monthlyActiveUsers} />
+
+      {availableDates.length > 0 && selectedDateString && (
+        <>
+          <DayNavigator
+            selectedDateString={selectedDateString}
+            onDateChange={setSelectedDateString}
+            availableDates={availableDates}
+          />
+
+          <DailyMetricsSection
+            selectedDateString={selectedDateString}
+            dailyData={selectedDayData}
+            previousDayData={previousDayData}
+          />
+        </>
+      )}
+
+      {availableDates.length === 0 && !loading && (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-lg font-medium">No historical data available yet</p>
+          <p className="text-sm">Daily metrics will appear here once users start using the app</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EngagementHeatmap 
+          data={engagementData} 
+          selectedDateString={selectedDateString || undefined}
         />
-        <StatsCard
-          title="Pending Receipts"
-          value={stats?.pendingReceipts || 0}
-          icon={FileText}
-        />
-        <StatsCard
-          title="Emails Sent Today"
-          value={stats?.todayEmails || 0}
-          icon={Mail}
-        />
-        <StatsCard
-          title="Active Events"
-          value={stats?.activeEvents || 0}
-          icon={Calendar}
-        />
-        <StatsCard
-          title="Active Subscriptions"
-          value={stats?.activeSubscriptions || 0}
-          icon={DollarSign}
-        />
-        <StatsCard
-          title="Active Discount Codes"
-          value={stats?.activeDiscountCodes || 0}
-          icon={Tag}
-        />
-        <StatsCard
-          title="Redemptions (30d)"
-          value={stats?.recentRedemptions || 0}
-          icon={TicketPercent}
-        />
+        <FeatureUsageChart data={featureUsage} />
       </div>
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
+      <div className="mt-8">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4">Quick Actions</h2>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {quickActions.map((action) => (
-            <Card
-              key={action.title}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate(action.href)}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {action.icon}
-                  {action.title}
-                </CardTitle>
-                <CardDescription>{action.description}</CardDescription>
-              </CardHeader>
-            </Card>
+            <Link key={action.href} to={action.href}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <action.icon className="h-5 w-5 flex-shrink-0" />
+                    <span>{action.title}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{action.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

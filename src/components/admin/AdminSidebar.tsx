@@ -5,10 +5,10 @@ import {
   Receipt, 
   Mail, 
   Calendar,
-  BarChart3,
   Tag,
   Menu,
-  X
+  X,
+  Megaphone
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,8 @@ const navigationItems = [
   { name: 'Events', href: '/admin/events', icon: Calendar },
   { name: 'Discount Codes', href: '/admin/discounts', icon: Tag },
   { name: 'Payment Receipts', href: '/admin/receipts', icon: Receipt },
-  { name: 'Email Campaigns', href: '/admin/campaigns', icon: Mail },
+  { name: 'Email Campaigns', href: '/admin/campaigns', icon: Megaphone },
   { name: 'Email Management', href: '/admin/emails', icon: Mail },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 
 const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => {
