@@ -38,6 +38,8 @@ const AnnouncementsCarousel = () => {
   const [existingRegistration, setExistingRegistration] = useState<Registration | null>(null);
   const [checkingRegistration, setCheckingRegistration] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [registrationStatuses, setRegistrationStatuses] = useState<Record<string, Registration | null>>({});
+  const [loadingStatuses, setLoadingStatuses] = useState(true);
 
   // Embla Carousel
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'center' });
@@ -87,6 +89,57 @@ const AnnouncementsCarousel = () => {
   useEffect(() => {
     loadEvents();
   }, []);
+
+  // Check registration status for all events when events load or user changes
+  useEffect(() => {
+    if (events.length > 0 && user) {
+      checkAllRegistrations();
+    } else {
+      setLoadingStatuses(false);
+    }
+  }, [events, user]);
+
+  // Check registration status for ALL events
+  const checkAllRegistrations = async () => {
+    if (!user || events.length === 0) {
+      setLoadingStatuses(false);
+      return;
+    }
+
+    setLoadingStatuses(true);
+    const statuses: Record<string, Registration | null> = {};
+
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const userEmail = profile?.email || user.email || "";
+
+      for (const event of events) {
+        const { data: reg, error } = await supabase
+          .from("event_registrations")
+          .select("id, qr_code, first_name, last_name, email")
+          .eq("event_id", event.id)
+          .or(`user_id.eq.${user.id},email.eq.${userEmail}`)
+          .maybeSingle();
+
+        if (!error && reg) {
+          statuses[event.id] = reg;
+        } else {
+          statuses[event.id] = null;
+        }
+      }
+
+      setRegistrationStatuses(statuses);
+    } catch (error) {
+      console.error("Error checking registrations:", error);
+    } finally {
+      setLoadingStatuses(false);
+    }
+  };
 
   // ---------------------------
   // Check if user already registered for the event
@@ -138,14 +191,14 @@ const AnnouncementsCarousel = () => {
       return;
     }
 
-    setSelectedEvent(null);
-    setExistingRegistration(null);
-    setCheckingRegistration(true);
-
-    const reg = await checkExistingRegistration(event.id);
-
+    // Open dialog - will show registration form since no existing registration
     setSelectedEvent(event);
-    setCheckingRegistration(false);
+    setExistingRegistration(null);
+  };
+
+  const handleShowQRCode = (event: Event, registration: Registration) => {
+    setSelectedEvent(event);
+    setExistingRegistration(registration);
   };
 
   const handleLearnMoreClick = (event: Event) => {
@@ -158,6 +211,13 @@ const AnnouncementsCarousel = () => {
     if (selectedEvent) {
       const reg = await checkExistingRegistration(selectedEvent.id);
       setExistingRegistration(reg);
+      // Update the statuses state
+      if (reg) {
+        setRegistrationStatuses(prev => ({
+          ...prev,
+          [selectedEvent.id]: reg
+        }));
+      }
     }
   };
 
@@ -205,23 +265,32 @@ const AnnouncementsCarousel = () => {
                       </div>
 
                       <div className="space-y-3">
-                        <Button
-                          onClick={() => handleRegisterClick(event)}
-                          className="w-full h-14 text-base bg-buddy-500 hover:bg-buddy-600"
-                          size="lg"
-                          disabled={checkingRegistration}
-                        >
-                          {checkingRegistration ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Checking...
-                            </>
-                          ) : event.webinar_video_url ? (
-                            "Watch Now"
-                          ) : (
-                            "Register Now"
-                          )}
-                        </Button>
+                        {loadingStatuses ? (
+                          <Button
+                            disabled
+                            className="w-full h-14 text-base bg-buddy-500 hover:bg-buddy-600"
+                            size="lg"
+                          >
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Loading...
+                          </Button>
+                        ) : registrationStatuses[event.id] ? (
+                          <Button
+                            onClick={() => handleShowQRCode(event, registrationStatuses[event.id]!)}
+                            className="w-full h-14 text-base bg-green-600 hover:bg-green-700"
+                            size="lg"
+                          >
+                            Show QR Code
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleRegisterClick(event)}
+                            className="w-full h-14 text-base bg-buddy-500 hover:bg-buddy-600"
+                            size="lg"
+                          >
+                            {event.webinar_video_url ? "Watch Now" : "Register Now"}
+                          </Button>
+                        )}
 
                         {event.webinar_video_url && (
                           <Button

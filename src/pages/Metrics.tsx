@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import MetricsPasswordProtection from '@/components/analytics/MetricsPasswordProtection';
 import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
-import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
 import DayNavigator from '@/components/analytics/DayNavigator';
 import OverviewMetricsSection from '@/components/analytics/OverviewMetricsSection';
 import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
+import CohortRetentionHeatmap from '@/components/analytics/CohortRetentionHeatmap';
+import UserLifecycleDistribution from '@/components/analytics/UserLifecycleDistribution';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Metrics = () => {
@@ -19,8 +20,9 @@ const Metrics = () => {
     previousDayData,
     retentionData, 
     engagementData, 
-    featureUsage,
     availableDates,
+    cohortRetentionData,
+    lifecycleData,
     loading, 
     refreshData 
   } = useMetricsData(selectedDateString || undefined);
@@ -51,6 +53,12 @@ const Metrics = () => {
         {/* Overview Metrics */}
         <OverviewMetricsSection retentionData={retentionData} />
 
+        {/* Retention Visualizations */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <CohortRetentionHeatmap data={cohortRetentionData} />
+          <UserLifecycleDistribution data={lifecycleData} />
+        </div>
+
         {/* Day Navigation - only show when we have available dates and a selected date */}
         {availableDates.length > 0 && selectedDateString && (
           <>
@@ -77,14 +85,11 @@ const Metrics = () => {
           </div>
         )}
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EngagementHeatmap 
-            data={engagementData} 
-            selectedDateString={selectedDateString || undefined}
-          />
-          <FeatureUsageChart data={featureUsage} />
-        </div>
+        {/* Engagement Heatmap */}
+        <EngagementHeatmap 
+          data={engagementData} 
+          selectedDateString={selectedDateString || undefined}
+        />
       </div>
     </div>
   );

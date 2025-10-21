@@ -211,11 +211,20 @@ export const fetchFeatureUsage = async (): Promise<FeatureUsage[]> => {
     .slice(0, 10);
 };
 
-export const fetchMonthlyActiveUsers = async () => {
-  const { data, error } = await supabase.rpc('get_monthly_active_users');
+export const fetchCohortRetentionData = async () => {
+  const { data, error } = await supabase.rpc('get_cohort_retention_data');
   if (error) {
-    console.error('Error fetching monthly active users:', error);
+    console.error('Error fetching cohort retention:', error);
     return [];
   }
   return data || [];
+};
+
+export const fetchUserLifecycleDistribution = async () => {
+  const { data, error } = await supabase.rpc('get_user_lifecycle_distribution');
+  if (error) {
+    console.error('Error fetching user lifecycle:', error);
+    return { new_users: 0, active_users: 0, at_risk_users: 0, churned_users: 0 };
+  }
+  return data?.[0] || { new_users: 0, active_users: 0, at_risk_users: 0, churned_users: 0 };
 };

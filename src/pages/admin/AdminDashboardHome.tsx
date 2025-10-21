@@ -5,11 +5,11 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
-import FeatureUsageChart from '@/components/analytics/FeatureUsageChart';
 import DayNavigator from '@/components/analytics/DayNavigator';
 import OverviewMetricsSection from '@/components/analytics/OverviewMetricsSection';
 import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
-import MonthlyActiveUsers from '@/components/analytics/MonthlyActiveUsers';
+import CohortRetentionHeatmap from '@/components/analytics/CohortRetentionHeatmap';
+import UserLifecycleDistribution from '@/components/analytics/UserLifecycleDistribution';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
 const AdminDashboardHome = () => {
@@ -20,9 +20,9 @@ const AdminDashboardHome = () => {
     previousDayData,
     retentionData, 
     engagementData, 
-    featureUsage,
     availableDates,
-    monthlyActiveUsers,
+    cohortRetentionData,
+    lifecycleData,
     loading, 
     refreshData 
   } = useMetricsData(selectedDateString || undefined);
@@ -57,7 +57,10 @@ const AdminDashboardHome = () => {
 
       <OverviewMetricsSection retentionData={retentionData} />
 
-      <MonthlyActiveUsers data={monthlyActiveUsers} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <CohortRetentionHeatmap data={cohortRetentionData} />
+        <UserLifecycleDistribution data={lifecycleData} />
+      </div>
 
       {availableDates.length > 0 && selectedDateString && (
         <>
@@ -82,13 +85,10 @@ const AdminDashboardHome = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <EngagementHeatmap 
-          data={engagementData} 
-          selectedDateString={selectedDateString || undefined}
-        />
-        <FeatureUsageChart data={featureUsage} />
-      </div>
+      <EngagementHeatmap 
+        data={engagementData} 
+        selectedDateString={selectedDateString || undefined}
+      />
 
       <div className="mt-8">
         <h2 className="text-xl sm:text-2xl font-bold mb-4">Quick Actions</h2>

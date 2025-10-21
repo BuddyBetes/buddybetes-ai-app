@@ -220,6 +220,48 @@ export type Database = {
           },
         ]
       }
+      email_analytics: {
+        Row: {
+          campaign_id: string | null
+          clicked_at: string | null
+          created_at: string | null
+          email_log_id: string | null
+          id: string
+          opened_at: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          email_log_id?: string | null
+          id?: string
+          opened_at?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          email_log_id?: string | null
+          id?: string
+          opened_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_analytics_email_log_id_fkey"
+            columns: ["email_log_id"]
+            isOneToOne: false
+            referencedRelation: "email_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaign_recipients: {
         Row: {
           campaign_id: string
@@ -362,6 +404,30 @@ export type Database = {
           sent_at?: string | null
           status?: string
           subject?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_unsubscribes: {
+        Row: {
+          email: string
+          id: string
+          reason: string | null
+          unsubscribed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          reason?: string | null
+          unsubscribed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          reason?: string | null
+          unsubscribed_at?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -956,12 +1022,31 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_cohort_retention_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cohort_week: string
+          day_1_retention: number
+          day_30_retention: number
+          day_7_retention: number
+          signup_count: number
+        }[]
+      }
       get_monthly_active_users: {
         Args: Record<PropertyKey, never>
         Returns: {
           growth_percentage: number
           month: string
           total_users: number
+        }[]
+      }
+      get_user_lifecycle_distribution: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_users: number
+          at_risk_users: number
+          churned_users: number
+          new_users: number
         }[]
       }
       has_active_subscription: {

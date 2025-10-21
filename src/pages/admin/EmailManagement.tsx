@@ -42,10 +42,10 @@ const EmailManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6">
       <div>
-        <h1 className="text-3xl font-bold">Email Management</h1>
-        <p className="text-muted-foreground">Manage email templates and view logs</p>
+        <h1 className="text-2xl sm:text-3xl font-bold">Email Management</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Manage email templates and view logs</p>
       </div>
       
       <Card className="mb-6">
@@ -53,14 +53,15 @@ const EmailManagement = () => {
           <CardTitle>Test Email Templates</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Input
               placeholder="test@example.com"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
+              className="w-full sm:flex-1"
             />
             <select 
-              className="border rounded px-3"
+              className="border rounded px-3 py-2 w-full sm:w-auto"
               value={testType}
               onChange={(e) => setTestType(e.target.value as any)}
             >
@@ -68,7 +69,7 @@ const EmailManagement = () => {
               <option value="password_reset">Password Reset</option>
               <option value="payment_receipt">Payment Receipt</option>
             </select>
-            <Button onClick={sendTestEmail}>Send Test</Button>
+            <Button onClick={sendTestEmail} className="w-full sm:w-auto">Send Test</Button>
           </div>
         </CardContent>
       </Card>
@@ -80,16 +81,16 @@ const EmailManagement = () => {
         <CardContent>
           <div className="space-y-4">
             {emailLogs?.map((log) => (
-              <div key={log.id} className="border-b pb-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold">{log.subject}</p>
-                    <p className="text-sm text-muted-foreground">{log.recipient_email}</p>
+              <div key={log.id} className="border-b pb-4 last:border-b-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
+                  <div className="w-full sm:w-auto">
+                    <p className="font-semibold text-sm sm:text-base">{log.subject}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground break-all">{log.recipient_email}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(log.sent_at).toLocaleString()}
                     </p>
                   </div>
-                  <Badge variant={log.status === 'sent' ? 'default' : 'destructive'}>
+                  <Badge variant={log.status === 'sent' ? 'default' : 'destructive'} className="self-start sm:self-auto">
                     {log.status}
                   </Badge>
                 </div>

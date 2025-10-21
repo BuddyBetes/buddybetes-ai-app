@@ -19,8 +19,14 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
   availableDates
 }) => {
   // Convert string dates to Date objects for calendar component
-  const selectedDate = new Date(selectedDateString + 'T12:00:00.000Z');
-  const availableDateObjects = availableDates.map(dateStr => new Date(dateStr + 'T12:00:00.000Z'));
+  // Parse date strings to Date objects using local timezone (avoid timezone conversion issues)
+  const [year, month, day] = selectedDateString.split('-').map(Number);
+  const selectedDate = new Date(year, month - 1, day);
+  
+  const availableDateObjects = availableDates.map(dateStr => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  });
 
   const getNextAvailableDate = (direction: 'next' | 'previous') => {
     const sortedDates = [...availableDates].sort();
@@ -48,7 +54,11 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
   };
 
   const isDateAvailable = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+    // Use local timezone date components to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
     return availableDates.includes(dateString);
   };
 
@@ -68,7 +78,12 @@ const DayNavigator: React.FC<DayNavigatorProps> = ({
 
   const handleCalendarSelect = (date: Date | undefined) => {
     if (date) {
-      const dateString = date.toISOString().split('T')[0];
+      // FIX: Use local timezone date components to avoid timezone conversion issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
       if (availableDates.includes(dateString)) {
         onDateChange(dateString);
       }

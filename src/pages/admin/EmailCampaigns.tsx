@@ -269,21 +269,21 @@ const EmailCampaigns = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Email Campaigns</h1>
-          <p className="text-muted-foreground mt-1">Manage promotional email campaigns</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Email Campaigns</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage promotional email campaigns</p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-buddy-500 hover:bg-buddy-600">
+        <Button onClick={() => setShowCreateDialog(true)} className="w-full sm:w-auto bg-buddy-500 hover:bg-buddy-600">
           <Mail className="h-4 w-4 mr-2" />
           New Campaign
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Campaigns"
           value={stats.total}
@@ -311,8 +311,9 @@ const EmailCampaigns = () => {
       </div>
 
       {/* Campaigns Table */}
-      <Card>
-        <Table>
+      <Card className="overflow-x-auto">
+        <div className="min-w-[800px]">
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Campaign Name</TableHead>
@@ -341,7 +342,7 @@ const EmailCampaigns = () => {
                   </TableCell>
                   <TableCell>{new Date(campaign.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -376,7 +377,8 @@ const EmailCampaigns = () => {
               ))
             )}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </Card>
 
       {/* Create Campaign Dialog */}
@@ -428,7 +430,7 @@ const EmailCampaigns = () => {
 
       {/* Campaign Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedCampaign?.campaign_name}</DialogTitle>
             <DialogDescription>Campaign Details & Recipients</DialogDescription>
