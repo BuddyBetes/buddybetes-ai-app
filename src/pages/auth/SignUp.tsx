@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,14 +18,6 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,12 +37,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignUp = () => {
   const { signUp, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,8 +59,30 @@ const SignUp = () => {
       const { error, user } = await signUp(values.email, values.password);
       
       if (!error && user) {
-        setUserEmail(values.email);
-        setShowConfirmationDialog(true);
+        console.log('User signed up successfully:', user.id);
+        
+        // Show success toast
+        toast({
+          title: "Account Created Successfully! 🎉",
+          description: `Please check ${values.email} and confirm your email address before signing in.`,
+          duration: 10000,
+        });
+        
+        // Redirect to signin page with confirmation message
+        navigate('/signin', { 
+          state: { 
+            email: values.email,
+            showConfirmationMessage: true 
+          },
+          replace: true
+        });
+      } else if (error) {
+        console.error('Sign up error:', error);
+        toast({
+          title: "Signup Failed",
+          description: error.message || "Unable to create account. Please try again.",
+          variant: "destructive",
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -245,37 +258,6 @@ const SignUp = () => {
           </p>
         </div>
       </motion.div>
-      
-      <Dialog open={showConfirmationDialog} onOpenChange={setShowConfirmationDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl">Account Created Successfully</DialogTitle>
-            <DialogDescription className="text-center">
-              <div className="flex justify-center my-4">
-                <CheckCircle2 className="h-16 w-16 text-buddy-500" />
-              </div>
-              <p className="mb-2">
-                We've sent a confirmation email to:
-              </p>
-              <p className="font-medium text-black mb-4">
-                {userEmail}
-              </p>
-              <p>
-                Please check your email and click the confirmation link to activate your account before signing in.
-              </p>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="sm:justify-center">
-            <Button 
-              variant="default" 
-              className="w-full sm:w-auto bg-buddy-500 hover:bg-buddy-600"
-              onClick={() => setShowConfirmationDialog(false)}
-            >
-              Got it
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

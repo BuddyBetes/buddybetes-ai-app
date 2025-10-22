@@ -39,9 +39,15 @@ const handler = async (req: Request): Promise<Response> => {
         <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 20px 0;">
           Or use this one-time code:
         </p>
-        <div style="background-color: #f5f5f5; border: 2px dashed #35cab4; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
-          <p style="font-size: 32px; font-weight: bold; color: #208687; letter-spacing: 4px; margin: 0;">
+        <div style="background: linear-gradient(135deg, rgba(53, 202, 180, 0.15) 0%, rgba(32, 134, 135, 0.15) 100%); border: 2px dashed #35cab4; border-radius: 12px; padding: 25px; text-align: center; margin: 20px 0;">
+          <p style="font-size: 14px; color: #208687; font-weight: 600; margin: 0 0 12px 0;">
+            ONE-TIME PASSWORD
+          </p>
+          <p style="font-size: 36px; font-weight: bold; color: #208687; letter-spacing: 6px; margin: 0;">
             ${otp}
+          </p>
+          <p style="font-size: 14px; color: #208687; margin: 12px 0 0 0;">
+            ⏱️ Expires in 1 hour
           </p>
         </div>
       ` : ''}
@@ -74,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "BuddyBetes <security@resend.dev>",
       to: [email],
-      subject: "Reset Your BuddyBetes Password",
+      subject: "🔐 Reset Your BuddyBetes Password (Expires in 1h)",
       html,
     });
 

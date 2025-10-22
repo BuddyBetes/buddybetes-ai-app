@@ -85,56 +85,52 @@ const handler = async (req: Request): Promise<Response> => {
 
     const bodyContent = `
       <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 0 0 20px 0;">
-        Thank you for your payment! Here are the details of your transaction:
+        Thank you for subscribing to BuddyBetes ${tierName}! We've received your payment and your subscription is being processed.
       </p>
       
-      <div style="text-align: center; margin: 20px 0;">
-        ${statusBadge}
+      <div style="background: linear-gradient(135deg, rgba(53, 202, 180, 0.1) 0%, rgba(32, 134, 135, 0.1) 100%); border-radius: 12px; padding: 25px; margin: 30px 0; border: 2px solid rgba(53, 202, 180, 0.3);">
+        <p style="font-size: 16px; color: #208687; font-weight: 600; margin: 0 0 15px 0;">
+          📝 Payment Details
+        </p>
+        <div style="background: white; border-radius: 8px; padding: 15px;">
+          <p style="font-size: 14px; color: #666; margin: 8px 0; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+            <strong style="color: #333;">Plan:</strong> ${tierName}
+          </p>
+          <p style="font-size: 14px; color: #666; margin: 8px 0; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+            <strong style="color: #333;">Amount:</strong> ₱${Number(receipt.amount).toFixed(2)}
+          </p>
+          <p style="font-size: 14px; color: #666; margin: 8px 0; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+            <strong style="color: #333;">Payment Method:</strong> ${receipt.payment_method === 'gcash' ? '💳 GCash' : '🏦 Bank Transfer'}
+          </p>
+          <p style="font-size: 14px; color: #666; margin: 8px 0; padding: 8px 0;">
+            <strong style="color: #333;">Reference Number:</strong> ${receipt.reference_number || 'N/A'}
+          </p>
+        </div>
       </div>
       
-      ${createInfoBox(
-        '💳 Payment Summary',
-        paymentDetails
-      )}
-      
       ${isManualPayment ? `
-        <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 20px 0;">
-          <strong>What happens next?</strong>
-        </p>
-        <ul style="margin: 10px 0; padding-left: 20px;">
-          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-            Our team will verify your payment within 24 hours
-          </li>
-          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-            You'll receive a confirmation email once approved
-          </li>
-          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-            Your premium features will be activated immediately after verification
-          </li>
-        </ul>
+        <div style="background: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <p style="font-size: 16px; color: #f57c00; font-weight: 600; margin: 0 0 10px 0;">
+            ⏳ What happens next?
+          </p>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li style="font-size: 14px; color: #666; margin-bottom: 8px;">
+              Our team will verify your payment within 24 hours
+            </li>
+            <li style="font-size: 14px; color: #666; margin-bottom: 8px;">
+              You'll receive a confirmation email once approved
+            </li>
+            <li style="font-size: 14px; color: #666; margin-bottom: 8px;">
+              Your premium features will be activated immediately after verification
+            </li>
+          </ul>
+        </div>
         
         ${createSecurityNote('Keep this email for your records. You may need the reference number for any payment inquiries.')}
       ` : `
         <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 20px 0;">
           🎉 Your payment has been confirmed! Your premium features are now active.
         </p>
-        <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 0;">
-          Start enjoying:
-        </p>
-        <ul style="margin: 10px 0; padding-left: 20px;">
-          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-            🤖 Advanced AI insights and recommendations
-          </li>
-          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-            📊 Detailed analytics and trends
-          </li>
-          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-            📸 Unlimited meal photo analysis
-          </li>
-          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-            💬 Priority support
-          </li>
-        </ul>
       `}
     `;
 

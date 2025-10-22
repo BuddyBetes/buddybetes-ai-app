@@ -4,21 +4,50 @@ import { User } from '@supabase/supabase-js';
 
 export function useAuthOperations() {
   const signUp = async (email: string, password: string) => {
+    console.log('[AUTH] Starting signup process for:', email);
+    
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/confirm`
+          emailRedirectTo: `${window.location.origin}/confirm`,
+          data: {
+            signup_timestamp: new Date().toISOString(),
+          }
         }
       });
       
-      if (error) throw error;
+      console.log('[AUTH] Signup response:', { 
+        hasUser: !!data.user, 
+        userId: data.user?.id,
+        emailSent: !error 
+      });
+      
+      if (error) {
+        console.error('[AUTH] Signup error:', error);
+        throw error;
+      }
+      
+      // Check if profile was created by the trigger
+      if (data.user) {
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+          
+          console.log('[AUTH] Profile check:', { 
+            profileExists: !!profile,
+            userId: data.user.id 
+          });
+        }, 1000);
+      }
       
       return { user: data.user, error: null };
     } catch (error) {
-      console.error('Sign up error:', error);
-      // Don't show toast here, we'll handle the error in the component
+      console.error('[AUTH] Sign up error:', error);
       return { user: null, error: error as Error };
     }
   };

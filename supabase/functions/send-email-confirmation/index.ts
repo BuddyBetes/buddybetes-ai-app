@@ -30,35 +30,42 @@ const handler = async (req: Request): Promise<Response> => {
                      firstName ? firstName : 'there';
     
     const bodyContent = `
-      <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 0 0 20px 0;">
-        We're excited to have you on board! 🎉
-      </p>
-      <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 0 0 20px 0;">
-        BuddyBetes is your personal diabetes management companion, helping you track glucose levels, 
-        meals, and get AI-powered insights to better manage your health.
+      <p style="font-size: 18px; line-height: 1.6; color: #333; font-weight: 600; text-align: center; margin: 20px 0;">
+        You're just one click away from getting started! 🎉
       </p>
       
-      ${createButton('Confirm Your Email', confirmationUrl)}
+      <div style="text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, rgba(53, 202, 180, 0.15) 0%, rgba(32, 134, 135, 0.15) 100%); border: 2px solid #35cab4; border-radius: 12px;">
+        <h2 style="font-size: 24px; font-weight: bold; color: #208687; margin: 0 0 16px 0;">Confirm Your Email Address</h2>
+        <p style="color: #208687; font-size: 16px; margin: 0 0 20px 0;">
+          Click the button below to activate your BuddyBetes account.
+        </p>
+        ${createButton('Confirm My Account', confirmationUrl)}
+        <p style="color: #208687; font-size: 14px; margin: 16px 0 0 0; font-weight: 600;">
+          ⏱️ This link expires in 24 hours
+        </p>
+      </div>
       
-      ${createSecurityNote('This confirmation link will expire in 24 hours. If you didn\'t create an account with BuddyBetes, you can safely ignore this email.')}
+      <div style="background: linear-gradient(135deg, rgba(53, 202, 180, 0.1) 0%, rgba(32, 134, 135, 0.1) 100%); border-left: 4px solid #35cab4; border-radius: 12px; padding: 25px; margin: 30px 0;">
+        <p style="font-size: 16px; color: #208687; font-weight: 600; margin: 0 0 15px 0;">
+          🌟 What You'll Get Access To:
+        </p>
+        <ul style="margin: 0; padding-left: 20px;">
+          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 10px;">
+            📊 Track glucose levels with smart insights
+          </li>
+          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 10px;">
+            🤖 AI-powered health recommendations
+          </li>
+          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 10px;">
+            📸 Instant meal analysis with photo recognition
+          </li>
+          <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 10px;">
+            📈 Personalized health trends and patterns
+          </li>
+        </ul>
+      </div>
       
-      <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 20px 0 0 0;">
-        Once confirmed, you'll be able to:
-      </p>
-      <ul style="margin: 10px 0; padding-left: 20px;">
-        <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-          📊 Track your glucose levels and health data
-        </li>
-        <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-          🤖 Get AI-powered insights and recommendations
-        </li>
-        <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-          📸 Analyze meals with photo recognition
-        </li>
-        <li style="font-size: 16px; line-height: 1.6; color: #666; margin-bottom: 8px;">
-          📈 View trends and patterns in your data
-        </li>
-      </ul>
+      ${createSecurityNote('If you didn\'t create a BuddyBetes account, you can safely ignore this email.')}
     `;
 
     const html = createBaseTemplate({
@@ -71,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "BuddyBetes <onboarding@resend.dev>",
       to: [email],
-      subject: "Welcome to BuddyBetes - Confirm Your Email",
+      subject: "⚡ Confirm Your BuddyBetes Account (Expires in 24h)",
       html,
     });
 

@@ -74,30 +74,32 @@ const handler = async (req: Request): Promise<Response> => {
     const appUrl = Deno.env.get('SUPABASE_URL')?.replace('https://zjqiikollqinafveesvo.supabase.co', 'https://app.buddybetes.com') || 'https://app.buddybetes.com';
 
     const bodyContent = `
-      <div style="text-align: center; margin: 20px 0;">
-        ${createBadge('Payment Approved ✓', 'success')}
+      <div style="text-align: center; margin: 30px 0; padding: 40px 20px; background: linear-gradient(135deg, rgba(53, 202, 180, 0.15) 0%, rgba(32, 134, 135, 0.15) 100%); border-radius: 16px; border: 2px solid #35cab4;">
+        <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
+        <h2 style="font-size: 28px; font-weight: bold; color: #208687; margin: 0 0 12px 0;">
+          Payment Approved!
+        </h2>
+        <p style="font-size: 18px; line-height: 1.6; color: #208687; font-weight: 600; margin: 0;">
+          Your subscription is now active
+        </p>
       </div>
-      
-      <p style="font-size: 18px; line-height: 1.6; color: #333; font-weight: 600; margin: 20px 0; text-align: center;">
-        Great news! Your payment has been verified. 🎉
-      </p>
       
       <p style="font-size: 16px; line-height: 1.6; color: #666; margin: 20px 0;">
         Your <strong>${tierName}</strong> subscription is now active! You have full access to all premium features.
       </p>
       
-      <div style="background: linear-gradient(135deg, rgba(53, 202, 180, 0.1) 0%, rgba(32, 134, 135, 0.1) 100%); border-radius: 12px; padding: 25px; margin: 30px 0;">
+      <div style="background: white; border: 2px solid rgba(53, 202, 180, 0.3); border-radius: 12px; padding: 25px; margin: 30px 0;">
         <p style="font-size: 16px; color: #208687; font-weight: 600; margin: 0 0 15px 0;">
           📅 Subscription Details
         </p>
-        <p style="font-size: 14px; color: #666; margin: 5px 0;">
-          <strong>Plan:</strong> ${tierName}
+        <p style="font-size: 14px; color: #666; margin: 8px 0; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+          <strong style="color: #333;">Plan:</strong> ${tierName}
         </p>
-        <p style="font-size: 14px; color: #666; margin: 5px 0;">
-          <strong>Amount:</strong> ₱${Number(receipt.amount).toFixed(2)}
+        <p style="font-size: 14px; color: #666; margin: 8px 0; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+          <strong style="color: #333;">Amount:</strong> ₱${Number(receipt.amount).toFixed(2)}
         </p>
-        <p style="font-size: 14px; color: #666; margin: 5px 0;">
-          <strong>Valid Until:</strong> ${expiresAt}
+        <p style="font-size: 14px; color: #666; margin: 8px 0; padding: 8px 0;">
+          <strong style="color: #333;">Valid Until:</strong> ${expiresAt}
         </p>
       </div>
       
