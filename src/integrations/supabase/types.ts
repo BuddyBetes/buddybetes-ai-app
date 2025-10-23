@@ -19,7 +19,7 @@ export type Database = {
           action: string
           admin_user_id: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           resource: string | null
           timestamp: string | null
@@ -29,7 +29,7 @@ export type Database = {
           action: string
           admin_user_id: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           resource?: string | null
           timestamp?: string | null
@@ -39,7 +39,7 @@ export type Database = {
           action?: string
           admin_user_id?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           resource?: string | null
           timestamp?: string | null
@@ -108,7 +108,7 @@ export type Database = {
       }
       daily_active_users: {
         Row: {
-          avg_session_duration: unknown | null
+          avg_session_duration: unknown
           created_at: string
           date: string
           id: string
@@ -119,7 +119,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          avg_session_duration?: unknown | null
+          avg_session_duration?: unknown
           created_at?: string
           date: string
           id?: string
@@ -130,7 +130,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          avg_session_duration?: unknown | null
+          avg_session_duration?: unknown
           created_at?: string
           date?: string
           id?: string
@@ -405,6 +405,51 @@ export type Database = {
           status?: string
           subject?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          email_type: string
+          error_message: string | null
+          id: string
+          max_attempts: number | null
+          payload: Json
+          recipient_email: string
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          email_type: string
+          error_message?: string | null
+          id?: string
+          max_attempts?: number | null
+          payload: Json
+          recipient_email: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          max_attempts?: number | null
+          payload?: Json
+          recipient_email?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -935,7 +980,7 @@ export type Database = {
           created_at: string
           device_type: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           session_end: string | null
           session_start: string
           user_id: string
@@ -945,7 +990,7 @@ export type Database = {
           created_at?: string
           device_type?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           session_end?: string | null
           session_start?: string
           user_id: string
@@ -955,7 +1000,7 @@ export type Database = {
           created_at?: string
           device_type?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           session_end?: string | null
           session_start?: string
           user_id?: string
@@ -1014,16 +1059,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      backfill_analytics_data: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_analytics_retention_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      backfill_analytics_data: { Args: never; Returns: undefined }
+      get_analytics_retention_data: { Args: never; Returns: Json }
       get_cohort_retention_data: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cohort_week: string
           day_1_retention: number
@@ -1033,7 +1072,7 @@ export type Database = {
         }[]
       }
       get_monthly_active_users: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           growth_percentage: number
           month: string
@@ -1041,7 +1080,7 @@ export type Database = {
         }[]
       }
       get_user_lifecycle_distribution: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_users: number
           at_risk_users: number
@@ -1049,30 +1088,15 @@ export type Database = {
           new_users: number
         }[]
       }
-      has_active_subscription: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_feature_access: {
         Args: { _feature: string; _user_id: string }
         Returns: boolean
       }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      update_daily_active_users: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_daily_active_users_enhanced: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      update_retention_cohorts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      update_daily_active_users: { Args: never; Returns: undefined }
+      update_daily_active_users_enhanced: { Args: never; Returns: undefined }
+      update_retention_cohorts: { Args: never; Returns: undefined }
     }
     Enums: {
       user_role: "admin" | "user"

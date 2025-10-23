@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { createBaseTemplate } from '../_shared/email-templates/base-template.ts';
+import { sendEmailWithRetry } from '../_shared/email-retry.ts';
+import { sendEmailDirectOrQueue } from '../_shared/email-queue-helper.ts';
 import { createInfoBox, createBadge, createTable, createSecurityNote } from '../_shared/email-templates/components.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -141,12 +143,17 @@ const handler = async (req: Request): Promise<Response> => {
       footerText: 'Questions about your payment? Contact our support team.'
     });
 
-    const emailResponse = await resend.emails.send({
-      from: "BuddyBetes <payments@resend.dev>",
-      to: [email],
-      subject: `Payment Receipt - ${tierName} Subscription`,
-      html,
-    });
+    const emailResponse = await sendEmailDirectOrQueue(
+      () => sendEmailWithRetry(() => resend.emails.send({
+        from: Deno.env.get('RESEND_FROM_EMAIL') || "BuddyBetes <noreply@buddybetes.com>",
+        to: [email],
+        subject: `Payment Receipt - ${tierName} Subscription`,
+        html,
+      })),
+      'send-payment-receipt',
+      email,
+      { receiptId, userId }
+    );
 
     // Log email to database
     await supabase.from('email_logs').insert({

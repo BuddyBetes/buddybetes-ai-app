@@ -16,3 +16,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.send-email-blast]
 [functions.verify-admin]
+[functions.email-queue-worker]
+verify_jwt = false

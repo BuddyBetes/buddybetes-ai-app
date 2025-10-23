@@ -3,6 +3,8 @@ import { Resend } from "npm:resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { createBaseTemplate } from '../_shared/email-templates/base-template.ts';
 import { createButton, createSecurityNote } from '../_shared/email-templates/components.ts';
+import { sendEmailWithRetry } from '../_shared/email-retry.ts';
+import { sendEmailDirectOrQueue } from '../_shared/email-queue-helper.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -77,12 +79,17 @@ const handler = async (req: Request): Promise<Response> => {
       footerText: 'Need help? Contact our support team.'
     });
 
-    const emailResponse = await resend.emails.send({
-      from: "BuddyBetes <security@resend.dev>",
-      to: [email],
-      subject: "🔐 Reset Your BuddyBetes Password (Expires in 1h)",
-      html,
-    });
+    const emailResponse = await sendEmailDirectOrQueue(
+      () => sendEmailWithRetry(() => resend.emails.send({
+        from: Deno.env.get('RESEND_FROM_EMAIL') || "BuddyBetes <noreply@buddybetes.com>",
+        to: [email],
+        subject: "🔐 Reset Your BuddyBetes Password (Expires in 1h)",
+        html,
+      })),
+      'send-password-reset',
+      email,
+      { email, resetUrl, otp }
+    );
 
     // Log email to database
     const supabase = createClient(

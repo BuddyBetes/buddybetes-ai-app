@@ -36,14 +36,14 @@ export default function EmailHealth() {
     try {
       // Fetch email queue stats
       const { data: queueData } = await supabase
-        .from('email_queue')
+        .from('email_queue' as any)
         .select('status');
 
       if (queueData) {
         const total = queueData.length;
-        const sent = queueData.filter(e => e.status === 'sent').length;
-        const failed = queueData.filter(e => e.status === 'failed').length;
-        const pending = queueData.filter(e => e.status === 'pending').length;
+        const sent = queueData.filter((e: any) => e.status === 'sent').length;
+        const failed = queueData.filter((e: any) => e.status === 'failed').length;
+        const pending = queueData.filter((e: any) => e.status === 'pending').length;
         
         setStats({
           total,
@@ -56,14 +56,14 @@ export default function EmailHealth() {
 
       // Fetch failed/pending emails
       const { data: failedEmails } = await supabase
-        .from('email_queue')
+        .from('email_queue' as any)
         .select('*')
         .in('status', ['failed', 'pending', 'processing'])
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (failedEmails) {
-        setQueuedEmails(failedEmails);
+        setQueuedEmails(failedEmails as any);
       }
     } catch (error: any) {
       toast({

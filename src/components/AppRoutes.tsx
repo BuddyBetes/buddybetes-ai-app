@@ -33,6 +33,7 @@ import DiscountCodes from '@/pages/admin/DiscountCodes';
 import EmailCampaigns from '@/pages/admin/EmailCampaigns';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { AdminRoute } from '@/components/AdminRoute';
+import EmailHealth from '@/pages/admin/EmailHealth';
 
 // Route guards
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -82,6 +83,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/admin/events" element={<AdminRoute><AdminLayout><EventDashboard /></AdminLayout></AdminRoute>} />
       <Route path="/admin/events/scan/:eventId" element={<AdminRoute><AdminLayout><EventScannerView /></AdminLayout></AdminRoute>} />
       <Route path="/admin/discounts" element={<AdminRoute><AdminLayout><DiscountCodes /></AdminLayout></AdminRoute>} />
+      <Route path="/admin/email-health" element={<AdminRoute><EmailHealth /></AdminRoute>} />
       <Route
         path="/dashboard"
         element={renderProtectedRoute(<Dashboard />)}
