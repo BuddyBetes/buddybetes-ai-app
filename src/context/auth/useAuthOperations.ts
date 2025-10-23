@@ -29,27 +29,20 @@ export function useAuthOperations() {
         throw error;
       }
       
-      // Send custom email confirmation
+      // Check if profile was created by the trigger
       if (data.user) {
-        try {
-          console.log('[AUTH] Sending custom confirmation email...');
-          const { error: emailError } = await supabase.functions.invoke('send-email-confirmation', {
-            body: {
-              email: email,
-              firstName: data.user.user_metadata?.first_name || '',
-              lastName: data.user.user_metadata?.last_name || '',
-              confirmationUrl: `${window.location.origin}/confirm?token=${data.user.id}`
-            }
-          });
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .maybeSingle();
           
-          if (emailError) {
-            console.error('[AUTH] Failed to send confirmation email:', emailError);
-          } else {
-            console.log('[AUTH] Custom confirmation email sent successfully');
-          }
-        } catch (emailErr) {
-          console.error('[AUTH] Email invocation error:', emailErr);
-        }
+          console.log('[AUTH] Profile check:', { 
+            profileExists: !!profile,
+            userId: data.user.id 
+          });
+        }, 1000);
       }
       
       return { user: data.user, error: null };

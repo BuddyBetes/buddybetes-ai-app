@@ -41,15 +41,12 @@ const PasswordResetRequestForm = () => {
     },
   });
 
-  // Handle email request submission - Use custom edge function
+  // Handle email request submission
   const onRequestReset = async (values: EmailFormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.functions.invoke('send-password-reset', {
-        body: {
-          email: values.email,
-          resetUrl: `${window.location.origin}/reset-password`,
-        }
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {

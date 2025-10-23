@@ -61,16 +61,21 @@ const SignUp = () => {
       if (!error && user) {
         console.log('User signed up successfully:', user.id);
         
-        // Show success toast with extended duration
+        // Show success toast
         toast({
-          title: "🎉 Account Created Successfully!",
-          description: `We've sent a confirmation email to ${values.email}. Please check your inbox and spam folder to activate your account before signing in.`,
-          duration: 30000,
-          className: "text-lg p-6 border-2 border-buddy-500",
+          title: "Account Created Successfully! 🎉",
+          description: `Please check ${values.email} and confirm your email address before signing in.`,
+          duration: 10000,
         });
         
-        // Redirect to signin page
-        navigate('/signin', { replace: true });
+        // Redirect to signin page with confirmation message
+        navigate('/signin', { 
+          state: { 
+            email: values.email,
+            showConfirmationMessage: true 
+          },
+          replace: true
+        });
       } else if (error) {
         console.error('Sign up error:', error);
         toast({

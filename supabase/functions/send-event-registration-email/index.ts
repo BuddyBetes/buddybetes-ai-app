@@ -5,8 +5,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { createBaseTemplate } from '../_shared/email-templates/base-template.ts';
 import { createInfoBox, createDivider } from '../_shared/email-templates/components.ts';
 import { emailStyles } from '../_shared/email-templates/styles.ts';
-import { sendEmailWithRetry } from '../_shared/email-retry.ts';
-import { sendEmailDirectOrQueue } from '../_shared/email-queue-helper.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -97,23 +95,18 @@ const handler = async (req: Request): Promise<Response> => {
       footerText: 'See you at the event!'
     });
 
-    const emailResponse = await sendEmailDirectOrQueue(
-      () => sendEmailWithRetry(() => resend.emails.send({
-        from: Deno.env.get('RESEND_FROM_EMAIL') || "BuddyBetes <events@buddybetes.com>",
-        to: [email],
-        subject: `Event Registration Confirmed - ${eventTitle}`,
-        html: htmlContent,
-        attachments: [
-          {
-            filename: `event-qr-${firstName}-${lastName}.png`,
-            content: qrCodeBuffer,
-          }
-        ],
-      })),
-      'send-event-registration-email',
-      email,
-      { email, firstName, lastName, eventTitle, qrCode, eventDate, userId }
-    );
+    const emailResponse = await resend.emails.send({
+      from: "BuddyBetes Events <events@buddybetes.com>",
+      to: [email],
+      subject: `Event Registration Confirmed - ${eventTitle}`,
+      html: htmlContent,
+      attachments: [
+        {
+          filename: `event-qr-${firstName}-${lastName}.png`,
+          content: qrCodeBuffer,
+        }
+      ],
+    });
 
     console.log("Email sent successfully:", emailResponse);
 
