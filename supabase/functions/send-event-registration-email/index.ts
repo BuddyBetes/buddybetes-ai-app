@@ -99,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await sendEmailDirectOrQueue(
       () => sendEmailWithRetry(() => resend.emails.send({
-        from: Deno.env.get('RESEND_FROM_EMAIL') || "BuddyBetes Events <events@buddybetes.com>",
+        from: Deno.env.get('RESEND_FROM_EMAIL') || "BuddyBetes <events@buddybetes.com>",
         to: [email],
         subject: `Event Registration Confirmed - ${eventTitle}`,
         html: htmlContent,
