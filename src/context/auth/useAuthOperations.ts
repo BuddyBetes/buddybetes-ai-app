@@ -29,6 +29,31 @@ export function useAuthOperations() {
         throw error;
       }
       
+      // Manually invoke custom email confirmation function
+      if (data.user) {
+        const confirmationUrl = `${window.location.origin}/confirm?token=${data.user.id}`;
+        
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-email-confirmation', {
+            body: {
+              email: email,
+              firstName: data.user.user_metadata?.first_name || '',
+              lastName: data.user.user_metadata?.last_name || '',
+              confirmationUrl: confirmationUrl,
+              userId: data.user.id
+            }
+          });
+          
+          if (emailError) {
+            console.error('[AUTH] Failed to send confirmation email:', emailError);
+          } else {
+            console.log('[AUTH] Custom confirmation email sent successfully');
+          }
+        } catch (emailErr) {
+          console.error('[AUTH] Email invocation error:', emailErr);
+        }
+      }
+      
       // Check if profile was created by the trigger
       if (data.user) {
         setTimeout(async () => {

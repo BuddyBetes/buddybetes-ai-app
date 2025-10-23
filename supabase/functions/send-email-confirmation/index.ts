@@ -16,6 +16,7 @@ interface EmailConfirmationRequest {
   firstName?: string;
   lastName?: string;
   confirmationUrl: string;
+  userId?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,7 +25,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, firstName, lastName, confirmationUrl }: EmailConfirmationRequest = await req.json();
+    const { email, firstName, lastName, confirmationUrl, userId }: EmailConfirmationRequest = await req.json();
 
     const userName = firstName && lastName ? `${firstName} ${lastName}` : 
                      firstName ? firstName : 'there';
@@ -76,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: "BuddyBetes <onboarding@resend.dev>",
+      from: Deno.env.get('RESEND_FROM_EMAIL') || "BuddyBetes <noreply@buddybetes.com>",
       to: [email],
       subject: "⚡ Confirm Your BuddyBetes Account (Expires in 24h)",
       html,
@@ -95,6 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
       status: emailResponse.error ? 'failed' : 'sent',
       resend_message_id: emailResponse.data?.id,
       error_message: emailResponse.error?.message,
+      user_id: userId || null,
       metadata: { firstName, lastName }
     });
 

@@ -59,29 +59,28 @@ const SignUp = () => {
       const { error, user } = await signUp(values.email, values.password);
       
       if (!error && user) {
-        console.log('User signed up successfully:', user.id);
+        console.log('[SIGNUP] User created successfully:', user.id);
         
-        // Show success toast
+        // Show 30-second prominent toast notification
         toast({
-          title: "Account Created Successfully! 🎉",
-          description: `Please check ${values.email} and confirm your email address before signing in.`,
-          duration: 10000,
+          title: "🎉 Account Created Successfully!",
+          description: `We've sent a confirmation email to ${values.email}. Please check your inbox and spam folder to activate your account before signing in.`,
+          duration: 30000,
+          className: "text-lg p-6 border-2 border-buddy-500",
         });
         
-        // Redirect to signin page with confirmation message
-        navigate('/signin', { 
-          state: { 
-            email: values.email,
-            showConfirmationMessage: true 
-          },
-          replace: true
-        });
+        // Redirect to signin WITHOUT state - clean URL
+        setTimeout(() => {
+          navigate('/signin', { replace: true });
+        }, 500);
+        
       } else if (error) {
-        console.error('Sign up error:', error);
+        console.error('[SIGNUP] Error:', error);
         toast({
           title: "Signup Failed",
           description: error.message || "Unable to create account. Please try again.",
           variant: "destructive",
+          duration: 8000,
         });
       }
     } finally {
