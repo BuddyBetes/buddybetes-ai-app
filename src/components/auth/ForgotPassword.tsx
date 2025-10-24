@@ -44,17 +44,22 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onCancel }) => {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const { error } = await supabase.functions.invoke('send-password-reset', {
+        body: {
+          email: values.email,
+          resetUrl: `${window.location.origin}/reset-password`,
+        }
       });
 
       if (error) {
+        console.error('[FORGOT_PASSWORD] Reset email error:', error);
         toast({
-          title: "Password Reset Failed",
-          description: error.message,
+          title: "Error",
+          description: error.message || "Failed to send reset email",
           variant: "destructive",
         });
       } else {
+        console.log('[FORGOT_PASSWORD] Reset email sent successfully');
         setEmailSent(true);
         toast({
           title: "Reset Email Sent",
@@ -62,11 +67,11 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onCancel }) => {
           duration: 5000,
         });
       }
-    } catch (error) {
-      console.error('Password reset error:', error);
+    } catch (err: any) {
+      console.error('[FORGOT_PASSWORD] Unexpected error:', err);
       toast({
-        title: "An error occurred",
-        description: "Please try again later",
+        title: "Error",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

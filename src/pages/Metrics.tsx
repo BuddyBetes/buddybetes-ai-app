@@ -7,8 +7,8 @@ import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
 import DayNavigator from '@/components/analytics/DayNavigator';
 import OverviewMetricsSection from '@/components/analytics/OverviewMetricsSection';
 import DailyMetricsSection from '@/components/analytics/DailyMetricsSection';
-import CohortRetentionHeatmap from '@/components/analytics/CohortRetentionHeatmap';
-import UserLifecycleDistribution from '@/components/analytics/UserLifecycleDistribution';
+import DailyActiveUsersChart from '@/components/analytics/DailyActiveUsersChart';
+import MonthlyActiveUsersChart from '@/components/analytics/MonthlyActiveUsersChart';
 import { useMetricsData } from '@/hooks/useMetricsData';
 
 const Metrics = () => {
@@ -16,13 +16,12 @@ const Metrics = () => {
   const [selectedDateString, setSelectedDateString] = useState<string | null>(null);
 
   const { 
+    dailyActiveUsers,
     selectedDayData,
     previousDayData,
     retentionData, 
     engagementData, 
     availableDates,
-    cohortRetentionData,
-    lifecycleData,
     loading, 
     refreshData 
   } = useMetricsData(selectedDateString || undefined);
@@ -53,10 +52,10 @@ const Metrics = () => {
         {/* Overview Metrics */}
         <OverviewMetricsSection retentionData={retentionData} />
 
-        {/* Retention Visualizations */}
+        {/* Active Users Visualizations */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <CohortRetentionHeatmap data={cohortRetentionData} />
-          <UserLifecycleDistribution data={lifecycleData} />
+          <DailyActiveUsersChart data={dailyActiveUsers} />
+          <MonthlyActiveUsersChart dailyData={dailyActiveUsers} />
         </div>
 
         {/* Day Navigation - only show when we have available dates and a selected date */}

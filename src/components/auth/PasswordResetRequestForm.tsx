@@ -45,26 +45,33 @@ const PasswordResetRequestForm = () => {
   const onRequestReset = async (values: EmailFormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      console.log('[PASSWORD_RESET_REQUEST] Sending reset email to:', values.email);
+      
+      const { error } = await supabase.functions.invoke('send-password-reset', {
+        body: {
+          email: values.email,
+          resetUrl: `${window.location.origin}/reset-password`,
+        }
       });
 
       if (error) {
-        console.error('Password reset request error:', error);
+        console.error('[PASSWORD_RESET_REQUEST] Error:', error);
         toast({
-          title: "Request Failed",
-          description: error.message,
+          title: "Reset Request Failed",
+          description: error.message || "Failed to send reset email",
           variant: "destructive",
         });
-      } else {
-        setShowEmailSent(true);
-        emailForm.reset();
+        return;
       }
+
+      console.log('[PASSWORD_RESET_REQUEST] Reset email sent successfully');
+      setShowEmailSent(true);
+      emailForm.reset();
     } catch (error: any) {
-      console.error('Password reset request error:', error);
+      console.error('[PASSWORD_RESET_REQUEST] Unexpected error:', error);
       toast({
         title: "An error occurred",
-        description: error?.message || "Please try again later",
+        description: "Please try again later",
         variant: "destructive",
       });
     } finally {

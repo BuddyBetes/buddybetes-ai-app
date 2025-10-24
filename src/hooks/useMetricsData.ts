@@ -33,26 +33,20 @@ export const useMetricsData = (selectedDateString?: string) => {
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
   const [engagementData, setEngagementData] = useState<EngagementData[]>([]);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
-  const [cohortRetentionData, setCohortRetentionData] = useState<CohortData[]>([]);
-  const [lifecycleData, setLifecycleData] = useState<LifecycleData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refreshData = async () => {
     setLoading(true);
     
-    const [dailyUsers, retention, dates, cohortData, lifecycle] = await Promise.all([
+    const [dailyUsers, retention, dates] = await Promise.all([
       fetchDailyActiveUsers(),
       fetchRetentionData(),
       fetchAvailableDates(),
-      fetchCohortRetentionData(),
-      fetchUserLifecycleDistribution()
     ]);
 
     setDailyActiveUsers(dailyUsers);
     setRetentionData(retention);
     setAvailableDates(dates);
-    setCohortRetentionData(cohortData);
-    setLifecycleData(lifecycle);
 
     // Fetch engagement data for selected date
     const engagement = await fetchEngagementData(selectedDateString);
@@ -93,8 +87,6 @@ export const useMetricsData = (selectedDateString?: string) => {
     retentionData,
     engagementData,
     availableDates,
-    cohortRetentionData,
-    lifecycleData,
     loading,
     refreshData
   };

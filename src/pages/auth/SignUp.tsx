@@ -17,7 +17,10 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Mail } from 'lucide-react';
+import SignInLogo from '@/components/auth/SignInLogo';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,6 +45,8 @@ const SignUp = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -60,19 +65,8 @@ const SignUp = () => {
       
       if (!error && user) {
         console.log('[SIGNUP] User created successfully:', user.id);
-        
-        // Show 30-second prominent toast notification
-        toast({
-          title: "🎉 Account Created Successfully!",
-          description: `We've sent a confirmation email to ${values.email}. Please check your inbox and spam folder to activate your account before signing in.`,
-          duration: 30000,
-          className: "text-lg p-6 border-2 border-buddy-500",
-        });
-        
-        // Redirect to signin WITHOUT state - clean URL
-        setTimeout(() => {
-          navigate('/signin', { replace: true });
-        }, 500);
+        setUserEmail(values.email);
+        setShowSuccessMessage(true);
         
       } else if (error) {
         console.error('[SIGNUP] Error:', error);
@@ -98,6 +92,37 @@ const SignUp = () => {
 
   if (isAuthenticated) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  if (showSuccessMessage) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4 bg-[#F8F8F8]">
+        <Card className="w-full max-w-md border-none shadow-lg">
+          <CardHeader className="space-y-4">
+            <SignInLogo />
+            <div className="space-y-2 text-center">
+              <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert className="border-primary bg-primary/5">
+              <Mail className="h-4 w-4" />
+              <AlertTitle>Confirmation Email Sent!</AlertTitle>
+              <AlertDescription>
+                We've sent a confirmation email to <strong>{userEmail}</strong>. 
+                Please check your inbox and spam folder to activate your account before signing in.
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={() => navigate('/signin', { replace: true })}
+              className="w-full bg-buddy-500 hover:bg-buddy-600"
+            >
+              Go to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

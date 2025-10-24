@@ -11,7 +11,7 @@ export function useAuthOperations() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/confirm`,
+          emailRedirectTo: `${window.location.origin}/email-confirmed`,
           data: {
             signup_timestamp: new Date().toISOString(),
           }
