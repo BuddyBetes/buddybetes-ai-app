@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: Deno.env.get('RESEND_FROM_EMAIL') || "BuddyBetes <noreply@buddybetes.com>",
+      from: "BuddyBetes <noreply@buddybetes.com>",
       to: [email],
       subject: "🔐 Reset Your BuddyBetes Password (Expires in 1h)",
       html,
