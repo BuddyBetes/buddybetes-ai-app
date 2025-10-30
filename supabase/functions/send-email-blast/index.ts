@@ -158,7 +158,7 @@ serve(async (req) => {
           });
 
           const response = await resend.emails.send({
-            from: "BuddyBetes <hello@buddybetes.com>",
+            from: "BuddyBetes <noreply@buddybetes.com>",
             to: profile.email,
             subject: campaign.subject,
             html,
