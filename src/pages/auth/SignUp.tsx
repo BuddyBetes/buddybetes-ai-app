@@ -68,12 +68,27 @@ const SignUp = () => {
         navigate('/signin');
       } else if (error) {
         console.error('[SIGNUP] Error:', error);
-        toast({
-          title: "Signup Failed",
-          description: error.message || "Unable to create account. Please try again.",
-          variant: "destructive",
-          duration: 8000,
-        });
+        
+        // Check if it's a rate limit error
+        const isRateLimitError = error.message?.includes('rate limit') || 
+                                 error.message?.includes('429') ||
+                                 error.message?.includes('over_email_send_rate_limit');
+        
+        if (isRateLimitError) {
+          toast({
+            title: "Too Many Attempts",
+            description: "Please wait a few minutes before trying again, or use a different email address. You can also ask your admin to disable email confirmation for testing.",
+            variant: "destructive",
+            duration: 10000,
+          });
+        } else {
+          toast({
+            title: "Signup Failed",
+            description: error.message || "Unable to create account. Please try again.",
+            variant: "destructive",
+            duration: 8000,
+          });
+        }
       }
     } finally {
       setIsSubmitting(false);
