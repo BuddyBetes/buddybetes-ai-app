@@ -61,11 +61,17 @@ const SignUp = () => {
       
       if (!error && user) {
         console.log('[SIGNUP] User created successfully:', user.id);
+        console.log('[SIGNUP] Email confirmed:', user.email_confirmed_at);
+        
         toast({
-          title: "Account Created",
-          description: "Please check your email to confirm your account.",
+          title: "Account Created! 📧",
+          description: "We've sent a confirmation email to " + values.email + " from noreply@buddybetes.com. Please check your inbox and click the link to activate your account.",
+          duration: 8000,
         });
-        navigate('/signin');
+        
+        // Don't navigate to signin - show success message on same page
+        // User will need to verify email first
+        form.reset();
       } else if (error) {
         console.error('[SIGNUP] Error:', error);
         
@@ -129,6 +135,13 @@ const SignUp = () => {
               Join BuddyBetes to get started
             </p>
           </div>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p className="text-sm text-blue-800">
+            📧 You'll receive a confirmation email from <strong>noreply@buddybetes.com</strong>. 
+            Please verify your email before signing in.
+          </p>
         </div>
 
         <Card className="border-none shadow-lg">

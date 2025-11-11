@@ -65,7 +65,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ onForgotPassword }) => {
         } else if (errorCode.includes('Email not confirmed')) {
           setAuthError({
             title: 'Email Not Confirmed',
-            message: 'Please check your inbox and confirm your email before logging in.'
+            message: 'Please verify your email address before signing in. Check your inbox for the confirmation link from noreply@buddybetes.com.'
           });
         } else if (errorCode.includes('User not found')) {
           setAuthError({

@@ -29,30 +29,32 @@ export function useAuthOperations() {
         throw error;
       }
       
-      // Temporarily disabled email confirmation for testing
-      // if (data.user) {
-      //   const confirmationUrl = `${window.location.origin}/confirm?token=${data.user.id}`;
-      //   
-      //   try {
-      //     const { error: emailError } = await supabase.functions.invoke('send-email-confirmation', {
-      //       body: {
-      //         email: email,
-      //         firstName: data.user.user_metadata?.first_name || '',
-      //         lastName: data.user.user_metadata?.last_name || '',
-      //         confirmationUrl: confirmationUrl,
-      //         userId: data.user.id
-      //       }
-      //     });
-      //     
-      //     if (emailError) {
-      //       console.error('[AUTH] Failed to send confirmation email:', emailError);
-      //     } else {
-      //       console.log('[AUTH] Custom confirmation email sent successfully');
-      //     }
-      //   } catch (emailErr) {
-      //     console.error('[AUTH] Email invocation error:', emailErr);
-      //   }
-      // }
+      // Send custom email confirmation with branded template
+      if (data.user && !data.user.email_confirmed_at) {
+        const confirmationUrl = `${window.location.origin}/confirm`;
+        
+        try {
+          const { error: emailError } = await supabase.functions.invoke('send-email-confirmation', {
+            body: {
+              email: email,
+              firstName: data.user.user_metadata?.first_name || '',
+              lastName: data.user.user_metadata?.last_name || '',
+              confirmationUrl: confirmationUrl,
+              userId: data.user.id
+            }
+          });
+          
+          if (emailError) {
+            console.error('[AUTH] Failed to send confirmation email:', emailError);
+            throw new Error('Failed to send confirmation email. Please try again.');
+          } else {
+            console.log('[AUTH] Confirmation email sent successfully to:', email);
+          }
+        } catch (emailErr) {
+          console.error('[AUTH] Email invocation error:', emailErr);
+          throw emailErr;
+        }
+      }
       
       // Check if profile was created by the trigger
       if (data.user) {
