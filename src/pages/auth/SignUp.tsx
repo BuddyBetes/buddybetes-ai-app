@@ -62,10 +62,17 @@ const SignUp = () => {
       if (!error && user) {
         console.log('[SIGNUP] User created successfully:', user.id);
         toast({
-          title: "Account Created",
-          description: "Please check your email to confirm your account.",
+          title: "Account Created Successfully!",
+          description: `Please check ${values.email} to confirm your account before signing in.`,
+          duration: 8000, // Longer duration so user sees it
         });
-        navigate('/signin', { state: { fromSignup: true, email: values.email } });
+        navigate('/signin', { 
+          state: { 
+            fromSignup: true, 
+            email: values.email,
+            requiresConfirmation: true 
+          } 
+        });
       } else if (error) {
         console.error('[SIGNUP] Error:', error);
         toast({

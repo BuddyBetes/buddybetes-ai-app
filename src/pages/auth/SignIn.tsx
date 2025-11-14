@@ -15,6 +15,7 @@ const SignIn = () => {
   
   const fromSignup = location.state?.fromSignup;
   const signupEmail = location.state?.email;
+  const requiresConfirmation = location.state?.requiresConfirmation;
 
   // Redirect authenticated users directly to dashboard
   if (isAuthenticated) {
@@ -50,6 +51,7 @@ const SignIn = () => {
           onForgotPassword={() => setShowForgotPassword(true)}
           showEmailConfirmationReminder={fromSignup}
           signupEmail={signupEmail}
+          emphasizeConfirmation={requiresConfirmation}
         />
       </motion.div>
     </div>

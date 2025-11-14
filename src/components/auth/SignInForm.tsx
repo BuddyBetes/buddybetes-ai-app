@@ -32,12 +32,14 @@ interface SignInFormProps {
   onForgotPassword: () => void;
   showEmailConfirmationReminder?: boolean;
   signupEmail?: string;
+  emphasizeConfirmation?: boolean;
 }
 
 const SignInForm: React.FC<SignInFormProps> = ({ 
   onForgotPassword, 
   showEmailConfirmationReminder,
-  signupEmail 
+  signupEmail,
+  emphasizeConfirmation 
 }) => {
   const { signIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,15 +65,15 @@ const SignInForm: React.FC<SignInFormProps> = ({
         // Handle specific error codes and provide meaningful messages
         const errorCode = error.message;
         
-        if (errorCode.includes('Invalid login credentials')) {
-          setAuthError({
-            title: 'Authentication Failed',
-            message: 'Incorrect email or password. Please try again.'
-          });
-        } else if (errorCode.includes('Email not confirmed')) {
+        if (errorCode.includes('Email not confirmed')) {
           setAuthError({
             title: 'Email Not Confirmed',
-            message: 'Please check your inbox and confirm your email before logging in.'
+            message: 'Please check your email and click the confirmation link before signing in.'
+          });
+        } else if (errorCode.includes('Invalid login credentials')) {
+          setAuthError({
+            title: 'Invalid Credentials',
+            message: 'The email or password you entered is incorrect. Please try again or reset your password.'
           });
         } else if (errorCode.includes('User not found')) {
           setAuthError({
@@ -102,7 +104,12 @@ const SignInForm: React.FC<SignInFormProps> = ({
           <AlertTitle className="text-blue-700">Check Your Email</AlertTitle>
           <AlertDescription className="text-blue-600">
             We've sent a confirmation email to <strong>{signupEmail}</strong>. 
-            Please check your inbox and confirm your email before signing in.
+            {emphasizeConfirmation && (
+              <span className="block mt-2 font-semibold">
+                ⚠️ You must confirm your email before you can sign in.
+              </span>
+            )}
+            Please check your inbox and click the confirmation link.
           </AlertDescription>
         </Alert>
       )}
