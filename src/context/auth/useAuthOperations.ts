@@ -52,6 +52,12 @@ export function useAuthOperations() {
         } catch (emailErr) {
           console.error('[AUTH] Email invocation error:', emailErr);
         }
+        
+        // CRITICAL: Sign out immediately after signup to enforce email confirmation
+        // User must confirm email before they can sign in
+        console.log('[AUTH] Signing out user to enforce email confirmation');
+        await supabase.auth.signOut();
+        console.log('[AUTH] User signed out - email confirmation required');
       }
       
       // Check if profile was created by the trigger
