@@ -6,13 +6,15 @@ import { useAuth } from '@/context/AuthContext';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   skipOnboardingCheck?: boolean;
+  requireEmailVerification?: boolean;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children,
   skipOnboardingCheck = false,
+  requireEmailVerification = true,
 }) => {
-  const { isAuthenticated, loading, hasCompletedOnboarding } = useAuth();
+  const { isAuthenticated, isEmailVerified, loading, hasCompletedOnboarding } = useAuth();
 
   // Show loading while checking authentication
   if (loading) {
@@ -22,6 +24,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Redirect to sign in if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
+  }
+
+  // Check email verification if required
+  if (requireEmailVerification && !isEmailVerified) {
+    return <Navigate to="/signin" state={{ requiresVerification: true }} replace />;
   }
 
   // If this is the onboarding route, we don't need to check completion status
