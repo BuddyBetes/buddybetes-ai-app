@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, AlertTriangle, Eye, EyeOff, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -30,9 +30,15 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface SignInFormProps {
   onForgotPassword: () => void;
+  showEmailConfirmationReminder?: boolean;
+  signupEmail?: string;
 }
 
-const SignInForm: React.FC<SignInFormProps> = ({ onForgotPassword }) => {
+const SignInForm: React.FC<SignInFormProps> = ({ 
+  onForgotPassword, 
+  showEmailConfirmationReminder,
+  signupEmail 
+}) => {
   const { signIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<{ title: string; message: string } | null>(null);
@@ -90,6 +96,17 @@ const SignInForm: React.FC<SignInFormProps> = ({ onForgotPassword }) => {
 
   return (
     <>
+      {showEmailConfirmationReminder && signupEmail && (
+        <Alert className="mb-6 border-blue-200 bg-blue-50">
+          <Mail className="h-5 w-5 text-blue-500" />
+          <AlertTitle className="text-blue-700">Check Your Email</AlertTitle>
+          <AlertDescription className="text-blue-600">
+            We've sent a confirmation email to <strong>{signupEmail}</strong>. 
+            Please check your inbox and confirm your email before signing in.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {authError && (
         <Alert variant="destructive" className="mb-6 border-red-200 bg-red-50">
           <AlertTriangle className="h-5 w-5 text-red-500" />
