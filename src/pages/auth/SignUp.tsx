@@ -65,7 +65,7 @@ const SignUp = () => {
           title: "Account Created",
           description: "Please check your email to confirm your account.",
         });
-        navigate('/signin');
+        navigate('/signin', { state: { fromSignup: true, email: values.email } });
       } else if (error) {
         console.error('[SIGNUP] Error:', error);
         toast({
@@ -88,7 +88,8 @@ const SignUp = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  if (isAuthenticated) {
+  // Don't redirect if user just signed up and is going to signin page
+  if (isAuthenticated && !window.location.pathname.includes('/signin')) {
     return <Navigate to="/onboarding" replace />;
   }
 

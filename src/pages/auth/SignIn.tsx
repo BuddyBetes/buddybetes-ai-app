@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +10,11 @@ import SignInLogo from '@/components/auth/SignInLogo';
 
 const SignIn = () => {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
+  const fromSignup = location.state?.fromSignup;
+  const signupEmail = location.state?.email;
 
   // Redirect authenticated users directly to dashboard
   if (isAuthenticated) {
@@ -42,7 +46,11 @@ const SignIn = () => {
       >
         <SignInLogo />
         
-        <SignInForm onForgotPassword={() => setShowForgotPassword(true)} />
+        <SignInForm 
+          onForgotPassword={() => setShowForgotPassword(true)}
+          showEmailConfirmationReminder={fromSignup}
+          signupEmail={signupEmail}
+        />
       </motion.div>
     </div>
   );
