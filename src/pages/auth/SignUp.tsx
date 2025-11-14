@@ -61,40 +61,19 @@ const SignUp = () => {
       
       if (!error && user) {
         console.log('[SIGNUP] User created successfully:', user.id);
-        console.log('[SIGNUP] Email confirmed:', user.email_confirmed_at);
-        
         toast({
-          title: "Account Created! 📧",
-          description: "We've sent a confirmation email to " + values.email + " from noreply@buddybetes.com. Please check your inbox and click the link to activate your account.",
-          duration: 8000,
+          title: "Account Created",
+          description: "Please check your email to confirm your account.",
         });
-        
-        // Don't navigate to signin - show success message on same page
-        // User will need to verify email first
-        form.reset();
+        navigate('/signin');
       } else if (error) {
         console.error('[SIGNUP] Error:', error);
-        
-        // Check if it's a rate limit error
-        const isRateLimitError = error.message?.includes('rate limit') || 
-                                 error.message?.includes('429') ||
-                                 error.message?.includes('over_email_send_rate_limit');
-        
-        if (isRateLimitError) {
-          toast({
-            title: "Too Many Attempts",
-            description: "Please wait a few minutes before trying again, or use a different email address. You can also ask your admin to disable email confirmation for testing.",
-            variant: "destructive",
-            duration: 10000,
-          });
-        } else {
-          toast({
-            title: "Signup Failed",
-            description: error.message || "Unable to create account. Please try again.",
-            variant: "destructive",
-            duration: 8000,
-          });
-        }
+        toast({
+          title: "Signup Failed",
+          description: error.message || "Unable to create account. Please try again.",
+          variant: "destructive",
+          duration: 8000,
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -135,13 +114,6 @@ const SignUp = () => {
               Join BuddyBetes to get started
             </p>
           </div>
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p className="text-sm text-blue-800">
-            📧 You'll receive a confirmation email from <strong>noreply@buddybetes.com</strong>. 
-            Please verify your email before signing in.
-          </p>
         </div>
 
         <Card className="border-none shadow-lg">

@@ -46,12 +46,12 @@ const EmailConfirmed = () => {
     processEmailConfirmation();
   }, [toast]);
 
-  // If already authenticated, redirect to onboarding after a delay
+  // If already authenticated, redirect to dashboard after a delay
   useEffect(() => {
     if (isAuthenticated && confirmationStatus === 'success') {
       const timer = setTimeout(() => {
-        navigate('/onboarding');
-      }, 3000);
+        navigate('/dashboard');
+      }, 5000);
       
       return () => clearTimeout(timer);
     }
@@ -105,7 +105,7 @@ const EmailConfirmed = () => {
           <CardContent className="text-center text-gray-600">
             {confirmationStatus === 'success' && (
               <p>
-                Thank you for confirming your email address! 🎉 You'll be redirected to complete your profile setup in a moment.
+                Thank you for confirming your email address. You can now fully access all features of BuddyBetes.
               </p>
             )}
             {confirmationStatus === 'error' && (
@@ -129,8 +129,8 @@ const EmailConfirmed = () => {
                 className="w-full" 
                 asChild
               >
-                <Link to="/onboarding">
-                  Complete Profile Setup
+                <Link to="/dashboard">
+                  Go to Dashboard
                 </Link>
               </Button>
             )}

@@ -29,9 +29,9 @@ export function useAuthOperations() {
         throw error;
       }
       
-      // Send custom email confirmation with branded template
-      if (data.user && !data.user.email_confirmed_at) {
-        const confirmationUrl = `${window.location.origin}/confirm`;
+      // Manually invoke custom email confirmation function
+      if (data.user) {
+        const confirmationUrl = `${window.location.origin}/confirm?token=${data.user.id}`;
         
         try {
           const { error: emailError } = await supabase.functions.invoke('send-email-confirmation', {
@@ -46,13 +46,11 @@ export function useAuthOperations() {
           
           if (emailError) {
             console.error('[AUTH] Failed to send confirmation email:', emailError);
-            throw new Error('Failed to send confirmation email. Please try again.');
           } else {
-            console.log('[AUTH] Confirmation email sent successfully to:', email);
+            console.log('[AUTH] Custom confirmation email sent successfully');
           }
         } catch (emailErr) {
           console.error('[AUTH] Email invocation error:', emailErr);
-          throw emailErr;
         }
       }
       

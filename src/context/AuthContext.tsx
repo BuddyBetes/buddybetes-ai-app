@@ -14,7 +14,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user, 
     loading, 
     isAuthenticated,
-    isEmailVerified,
     isPasswordRecovery 
   } = useAuthSession();
 
@@ -39,7 +38,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         isAuthenticated,
-        isEmailVerified,
         signIn,
         signUp,
         signOut,
