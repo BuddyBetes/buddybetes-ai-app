@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -34,9 +35,27 @@ interface SignInFormProps {
 
 const SignInForm: React.FC<SignInFormProps> = ({ onForgotPassword }) => {
   const { signIn } = useAuth();
+  const location = useLocation();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<{ title: string; message: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Check if user needs to verify email
+  const requiresVerification = location.state?.requiresVerification;
+
+  useEffect(() => {
+    if (requiresVerification) {
+      toast({
+        title: "Email Verification Required",
+        description: "Please check your inbox and verify your email address before you can access the app.",
+        variant: "destructive",
+        duration: 8000,
+      });
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [requiresVerification, toast]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

@@ -120,6 +120,7 @@ export function useAuthSession() {
     user,
     loading,
     isAuthenticated: !!user,
+    isEmailVerified: !!user?.email_confirmed_at,
     isPasswordRecovery
   };
 }
