@@ -12,7 +12,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   skipOnboardingCheck = false,
 }) => {
-  const { isAuthenticated, loading, hasCompletedOnboarding } = useAuth();
+  const { isAuthenticated, loading, hasCompletedOnboarding, user } = useAuth();
 
   // Show loading while checking authentication
   if (loading) {
@@ -22,6 +22,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Redirect to sign in if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
+  }
+
+  // For onboarding route, verify email is confirmed
+  if (skipOnboardingCheck && user) {
+    // Check if email is confirmed
+    const emailConfirmed = user.email_confirmed_at || user.confirmed_at;
+    
+    if (!emailConfirmed) {
+      console.log('[PROTECTED ROUTE] Email not confirmed, redirecting to signin');
+      return <Navigate to="/signin" replace />;
+    }
   }
 
   // If this is the onboarding route, we don't need to check completion status
