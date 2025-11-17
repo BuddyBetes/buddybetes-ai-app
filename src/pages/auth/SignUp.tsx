@@ -95,11 +95,6 @@ const SignUp = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  // Don't redirect if user just signed up and is going to signin page
-  if (isAuthenticated && !window.location.pathname.includes('/signin')) {
-    return <Navigate to="/onboarding" replace />;
-  }
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#F8F8F8] p-4">
       <motion.div

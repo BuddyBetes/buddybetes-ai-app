@@ -50,8 +50,8 @@ const Onboarding = () => {
     glucoseUnit: 'mg/dL' as GlucoseUnit,
   });
 
-  // If not authenticated, redirect to sign in
-  if (!isAuthenticated) {
+  // If not authenticated or email not confirmed, redirect to sign in
+  if (!isAuthenticated || !user?.email_confirmed_at) {
     return <Navigate to="/signin" replace />;
   }
 

@@ -58,6 +58,10 @@ export function useAuthOperations() {
         console.log('[AUTH] Signing out user to enforce email confirmation');
         await supabase.auth.signOut();
         console.log('[AUTH] User signed out - email confirmation required');
+        
+        // Wait for auth state to propagate to prevent race conditions
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('[AUTH] Auth state propagated');
       }
       
       // Check if profile was created by the trigger
