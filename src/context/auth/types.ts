@@ -12,4 +12,5 @@ export interface AuthContextProps {
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (value: boolean) => void;
   isPasswordRecovery: boolean;
+  isSignupInProgress: boolean;
 }

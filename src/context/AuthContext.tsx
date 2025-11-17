@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useOnboardingStatus(user?.id, isPasswordRecovery);
 
   // Handle auth operations
-  const { signIn, signUp, signOut: authSignOut } = useAuthOperations();
+  const { signIn, signUp, signOut: authSignOut, isSignupInProgress } = useAuthOperations();
 
   // Wrap sign out without clearing onboarding state (it's user data, not session data)
   const signOut = async () => {
@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasCompletedOnboarding,
         setHasCompletedOnboarding,
         isPasswordRecovery,
+        isSignupInProgress,
       }}
     >
       {children}

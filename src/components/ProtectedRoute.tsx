@@ -12,10 +12,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   skipOnboardingCheck = false,
 }) => {
-  const { isAuthenticated, loading, hasCompletedOnboarding, user } = useAuth();
+  const { isAuthenticated, loading, hasCompletedOnboarding, user, isSignupInProgress } = useAuth();
 
-  // Show loading while checking authentication
-  if (loading) {
+  // Show loading while checking authentication or during signup process
+  if (loading || isSignupInProgress) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
