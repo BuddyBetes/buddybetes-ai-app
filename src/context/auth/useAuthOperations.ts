@@ -1,12 +1,18 @@
-
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
 export function useAuthOperations() {
+  const [isSignupInProgress, setIsSignupInProgress] = useState(false);
+
   const signUp = async (email: string, password: string) => {
     console.log('[AUTH] Starting signup process for:', email);
     
     try {
+      // Set flag BEFORE calling supabase to block redirects
+      setIsSignupInProgress(true);
+      console.log('[AUTH] Signup process started - blocking redirects');
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -62,6 +68,10 @@ export function useAuthOperations() {
         // Wait for auth state to propagate to prevent race conditions
         await new Promise(resolve => setTimeout(resolve, 100));
         console.log('[AUTH] Auth state propagated');
+        
+        // Clear flag AFTER everything completes
+        console.log('[AUTH] Signup process complete - unblocking redirects');
+        setIsSignupInProgress(false);
       }
       
       // Check if profile was created by the trigger
@@ -83,6 +93,7 @@ export function useAuthOperations() {
       return { user: data.user, error: null };
     } catch (error) {
       console.error('[AUTH] Sign up error:', error);
+      setIsSignupInProgress(false); // Clear flag on error too
       return { user: null, error: error as Error };
     }
   };
@@ -126,6 +137,7 @@ export function useAuthOperations() {
   return {
     signUp,
     signIn,
-    signOut
+    signOut,
+    isSignupInProgress
   };
 }

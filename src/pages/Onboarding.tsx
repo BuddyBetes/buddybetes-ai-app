@@ -72,18 +72,6 @@ const Onboarding = () => {
     }
   };
 
-  const isFormValid = () => {
-    return (
-      personalInfo.firstName.trim() !== '' &&
-      personalInfo.lastName.trim() !== '' &&
-      healthData.gender !== '' &&
-      healthData.birthdate !== undefined &&
-      healthData.height.trim() !== '' &&
-      healthData.weight.trim() !== '' &&
-      healthData.diabetesType !== ''
-    );
-  };
-
   const handleSubmit = async () => {
     // Comprehensive validation with user feedback
     const validationErrors: string[] = [];
@@ -372,15 +360,14 @@ const Onboarding = () => {
           setMarketingOptIn={setMarketingOptIn}
         />
 
-      <OnboardingNavigation
-        currentStep={currentStep}
-        totalSteps={steps.length}
-        loading={loading}
-        handleBack={handleBack}
-        handleNext={handleNext}
-        handleSubmit={handleSubmit}
-        isFormValid={isFormValid()}
-      />
+          <OnboardingNavigation
+            currentStep={currentStep}
+            totalSteps={steps.length}
+            loading={loading}
+            handleBack={handleBack}
+            handleNext={handleNext}
+            handleSubmit={handleSubmit}
+          />
       </motion.div>
     </div>
   );
