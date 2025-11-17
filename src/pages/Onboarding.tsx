@@ -72,8 +72,58 @@ const Onboarding = () => {
     }
   };
 
+  const isFormValid = () => {
+    return (
+      personalInfo.firstName.trim() !== '' &&
+      personalInfo.lastName.trim() !== '' &&
+      healthData.gender !== '' &&
+      healthData.birthdate !== undefined &&
+      healthData.height.trim() !== '' &&
+      healthData.weight.trim() !== '' &&
+      healthData.diabetesType !== ''
+    );
+  };
+
   const handleSubmit = async () => {
-    if (!user || !healthData.birthdate) return;
+    // Comprehensive validation with user feedback
+    const validationErrors: string[] = [];
+    
+    // Validate personal info (Step 1)
+    if (!personalInfo.firstName.trim()) {
+      validationErrors.push('First name is required');
+    }
+    if (!personalInfo.lastName.trim()) {
+      validationErrors.push('Last name is required');
+    }
+    
+    // Validate health data (Step 2)
+    if (!healthData.gender) {
+      validationErrors.push('Gender is required');
+    }
+    if (!healthData.birthdate) {
+      validationErrors.push('Birthdate is required');
+    }
+    if (!healthData.height || !healthData.height.trim()) {
+      validationErrors.push('Height is required');
+    }
+    if (!healthData.weight || !healthData.weight.trim()) {
+      validationErrors.push('Weight is required');
+    }
+    if (!healthData.diabetesType) {
+      validationErrors.push('Diabetes type is required');
+    }
+    
+    // If validation fails, show errors and return
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Please complete all required fields",
+        description: validationErrors.join(', '),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!user) return;
     
     setLoading(true);
     
@@ -322,14 +372,15 @@ const Onboarding = () => {
           setMarketingOptIn={setMarketingOptIn}
         />
 
-        <OnboardingNavigation
-          currentStep={currentStep}
-          totalSteps={steps.length}
-          loading={loading}
-          handleBack={handleBack}
-          handleNext={handleNext}
-          handleSubmit={handleSubmit}
-        />
+      <OnboardingNavigation
+        currentStep={currentStep}
+        totalSteps={steps.length}
+        loading={loading}
+        handleBack={handleBack}
+        handleNext={handleNext}
+        handleSubmit={handleSubmit}
+        isFormValid={isFormValid()}
+      />
       </motion.div>
     </div>
   );

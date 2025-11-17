@@ -11,6 +11,7 @@ interface OnboardingNavigationProps {
   handleBack: () => void;
   handleNext: () => void;
   handleSubmit: () => void;
+  isFormValid?: boolean;
 }
 
 const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
@@ -19,7 +20,8 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
   loading,
   handleBack,
   handleNext,
-  handleSubmit
+  handleSubmit,
+  isFormValid = true
 }) => {
   return (
     <motion.div 
@@ -49,8 +51,8 @@ const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
       ) : (
         <Button
           onClick={handleSubmit}
-          className="h-12 px-6 bg-buddy-500 hover:bg-buddy-600 rounded-full flex items-center gap-2 shadow-md shadow-buddy-100/50 transition-all"
-          disabled={loading}
+          className="h-12 px-6 bg-buddy-500 hover:bg-buddy-600 rounded-full flex items-center gap-2 shadow-md shadow-buddy-100/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading || !isFormValid}
         >
           {loading ? (
             <>

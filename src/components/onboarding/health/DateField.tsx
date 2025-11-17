@@ -87,7 +87,7 @@ const DateField: React.FC<DateFieldProps> = ({ value, onChange }) => {
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="birth-day">Birthdate</Label>
+      <Label htmlFor="birth-day">Birthdate *</Label>
       <div className="flex gap-2">
         <div className="flex-1">
           <Input

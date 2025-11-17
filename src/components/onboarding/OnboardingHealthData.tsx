@@ -53,11 +53,12 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
       className="space-y-4"
     >
       <h2 className="text-xl font-semibold mb-4">Tell us about your health</h2>
+      <p className="text-sm text-muted-foreground mb-4">* Required fields</p>
       
       <div className="space-y-4">
         <SelectField
           id="gender"
-          label="Gender"
+          label="Gender *"
           options={genderOptions}
           value={healthData.gender}
           onValueChange={(value) => setHealthData(prev => ({ ...prev, gender: value }))}
@@ -70,7 +71,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
 
         <MeasurementField
           id="height"
-          label="Height"
+          label="Height *"
           value={healthData.height}
           onChange={handleInputChange}
           unit={healthData.heightUnit}
@@ -80,7 +81,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
         
         <MeasurementField
           id="weight"
-          label="Weight"
+          label="Weight *"
           value={healthData.weight}
           onChange={handleInputChange}
           unit={healthData.weightUnit}
@@ -90,7 +91,7 @@ const OnboardingHealthData: React.FC<OnboardingHealthDataProps> = ({ healthData,
 
         <SelectField
           id="diabetesType"
-          label="Diabetes Type"
+          label="Diabetes Type *"
           options={diabetesTypeOptions}
           value={healthData.diabetesType}
           onValueChange={(value) => setHealthData(prev => ({ ...prev, diabetesType: value }))}
