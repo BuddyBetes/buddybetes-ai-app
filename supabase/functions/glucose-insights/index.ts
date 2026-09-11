@@ -7,6 +7,7 @@ import { analyzeMealImpact, analyzeExerciseImpact, analyzeTimePatterns } from '.
 import { calculateGlucoseStats, filterGlucoseHistory } from './stats.ts';
 import { createSystemPrompt, createUserPrompt } from './prompts.ts';
 import { parseInsightsResponse } from './parser.ts';
+import { geminiChat } from '../_shared/gemini.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,11 +22,8 @@ serve(async (req) => {
 
   try {
     const { glucoseHistory, language = 'english', timeRange = 'all' }: InsightRequest = await req.json();
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-    if (!OPENAI_API_KEY) {
-      throw new Error("OpenAI API key not found");
-    }
+
 
     // Filter glucose data based on time range if specified
     const filteredHistory = filterGlucoseHistory(glucoseHistory, timeRange);
