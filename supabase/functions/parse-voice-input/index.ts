@@ -49,34 +49,18 @@ serve(async (req) => {
       "My fasting level is 85" → {"isGlucoseLog": true, "isFoodLog": false, "glucoseLevel": 85, "food": null, "mealContext": "fasting", "notes": null}
     `;
 
-    console.log("Sending request to OpenAI for parsing:", message);
+    console.log("Sending request to Gemini for parsing:", message);
 
-    // Make request to OpenAI API
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message }
-        ],
-        temperature: 0.1, // Lower temperature for more deterministic parsing
-        max_tokens: 300
-      })
+    let parsedResult: any = await geminiChat({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message }
+      ],
+      temperature: 0.1,
+      maxTokens: 300,
+      jsonMode: true
     });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("OpenAI API error:", errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    let parsedResult = data.choices[0].message.content;
+    
     
     console.log("Raw parsed result:", parsedResult);
     
