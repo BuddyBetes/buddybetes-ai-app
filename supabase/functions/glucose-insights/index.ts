@@ -83,34 +83,17 @@ serve(async (req) => {
 
     const userPrompt = createUserPrompt(language, formattedData, contextualAnalysis);
 
-    console.log(`Sending enhanced request to OpenAI with glucose history in ${language}`);
+    console.log(`Sending enhanced request to Gemini with glucose history in ${language}`);
 
-    // Make request to OpenAI API
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 200
-      })
+    const aiResponse = await geminiChat({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.7,
+      maxTokens: 400
     });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("OpenAI API error:", errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    
     
     // Parse the AI response into clean insights
     const insights = parseInsightsResponse(aiResponse);
