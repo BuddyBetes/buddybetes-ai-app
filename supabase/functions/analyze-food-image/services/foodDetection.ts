@@ -1,8 +1,9 @@
 
-// This file implements food detection using OpenAI's Vision API
+// This file implements food detection using Gemini's vision capability
 // with FatSecret API as the nutrition data source
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY') || '';
+import { geminiChat } from '../../_shared/gemini.ts';
+
 const fatSecretClientId = Deno.env.get('FATSECRET_API_KEY') || '';
 const fatSecretClientSecret = Deno.env.get('FATSECRET_API_SECRET') || '';
 
