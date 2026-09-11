@@ -14,64 +14,38 @@ const fatSecretClientSecret = Deno.env.get('FATSECRET_API_SECRET') || '';
  */
 export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
   try {
-    console.log('Starting food image analysis with OpenAI Vision API');
-    
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key is not configured');
-    }
-    
-    // Prepare the API request to OpenAI
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a food identification specialist. Identify all food items visible in the image. Return only a JSON array of food names without descriptions or explanations. For example: ["Apple", "Chicken Sandwich"]. If no food is visible, return an empty array.'
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'What food items do you see in this image? Return only a JSON array.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
+    console.log('Starting food image analysis with Gemini vision');
+
+    const rawContent = await geminiChat({
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a food identification specialist. Identify all food items visible in the image. Return only a JSON array of food names without descriptions or explanations. For example: ["Apple", "Chicken Sandwich"]. If no food is visible, return an empty array.'
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'What food items do you see in this image? Return only a JSON array.'
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
               }
-            ]
-          }
-        ],
-        max_tokens: 300
-      })
+            }
+          ]
+        }
+      ],
+      maxTokens: 300
     });
-    
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`OpenAI API error (${response.status}):`, errorData);
-      throw new Error(`Failed to analyze image with OpenAI: ${response.status} ${errorData}`);
-    }
-    
-    const data = await response.json();
-    console.log('OpenAI response:', data);
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-      console.error('Unexpected response format from OpenAI:', data);
-      throw new Error('Invalid response format from OpenAI');
-    }
-    
+
     // Parse the JSON array from the response
     try {
-      const content = data.choices[0].message.content.trim();
-      console.log('Raw content from OpenAI:', content);
+      const content = rawContent.trim();
+      console.log('Raw content from Gemini:', content);
+      
       
       // Handle different response formats OpenAI might return
       let foodItems: string[] = [];
