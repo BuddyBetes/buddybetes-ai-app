@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { geminiChat } from "../_shared/gemini.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,12 +16,8 @@ serve(async (req) => {
 
   try {
     const { message, glucoseHistory, foodQuery, makeBrief, language = 'english', analyzeTrends = false } = await req.json();
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const FATSECRET_API_KEY = Deno.env.get("FATSECRET_API_KEY");
 
-    if (!OPENAI_API_KEY) {
-      throw new Error("OpenAI API key not found");
-    }
 
     let nutritionalInfo = null;
     // If user is asking about food, look up nutritional information
