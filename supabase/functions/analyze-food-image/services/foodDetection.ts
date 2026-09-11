@@ -74,11 +74,10 @@ export async function analyzeFoodImage(base64Image: string): Promise<string[]> {
       
       return foodItems;
     } catch (parseError) {
-      console.error('Error parsing OpenAI response:', parseError, 'Response was:', data.choices[0].message.content);
+      console.error('Error parsing Gemini response:', parseError, 'Response was:', rawContent);
       
       // Fallback: Use a simple text parsing approach
-      const content = data.choices[0].message.content;
-      const foodItems = content.split(/,|\n/).map(item => item.trim()).filter(Boolean);
+      const foodItems = rawContent.split(/,|\n/).map(item => item.trim()).filter(Boolean);
       
       console.log('Fallback parsing detected items:', foodItems);
       return foodItems;
