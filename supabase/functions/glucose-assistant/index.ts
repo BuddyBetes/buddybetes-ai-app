@@ -228,63 +228,33 @@ serve(async (req) => {
       });
     }
 
-    console.log("Sending request to OpenAI with payload:", JSON.stringify(messagesPayload));
+    console.log("Sending request to Gemini with payload:", JSON.stringify(messagesPayload));
 
-    // Make request to OpenAI API
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: messagesPayload,
-        temperature: 0.7,
-        max_tokens: makeBrief ? 120 : 500
-      })
+    let assistantResponse = await geminiChat({
+      messages: messagesPayload,
+      temperature: 0.7,
+      maxTokens: makeBrief ? 200 : 800
     });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("OpenAI API error:", errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    let assistantResponse = data.choices[0].message.content;
 
     // Double-check that responses in Tagalog mode are actually in Tagalog
     // If they appear to be in English, force a translation
     if (language === 'tagalog' && /^[A-Za-z\s,.!?]+$/.test(assistantResponse.substring(0, 50))) {
       console.log("Response detected as possibly in English, forcing Tagalog translation");
-      
-      const translationResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
+
+      try {
+        assistantResponse = await geminiChat({
           messages: [
-            { 
-              role: "system", 
-              content: "Ikaw ay isang translator. Isalin ang sumusunod na teksto sa Tagalog." 
+            {
+              role: "system",
+              content: "Ikaw ay isang translator. Isalin ang sumusunod na teksto sa Tagalog."
             },
-            { 
-              role: "user", 
-              content: assistantResponse 
-            }
+            { role: "user", content: assistantResponse }
           ],
           temperature: 0.3,
-          max_tokens: makeBrief ? 120 : 500
-        })
-      });
-
-      if (translationResponse.ok) {
-        const translationData = await translationResponse.json();
-        assistantResponse = translationData.choices[0].message.content;
+          maxTokens: makeBrief ? 200 : 800
+        });
+      } catch (translationError) {
+        console.error("Tagalog translation failed:", translationError);
       }
     }
 
