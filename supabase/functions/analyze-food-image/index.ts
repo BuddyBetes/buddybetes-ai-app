@@ -53,62 +53,33 @@ serve(async (req) => {
       console.log(`[${requestId}] Starting glucometer reading analysis`);
       
       try {
-        // Process the image using OpenAI to recognize numbers
-        const openAIApiKey = Deno.env.get('OPENAI_API_KEY') || '';
-        if (!openAIApiKey) {
-          throw new Error('OpenAI API key is not configured');
-        }
-        
-        // Prepare the API request to OpenAI for glucometer reading
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a glucose meter reading specialist. Extract the glucose reading (numeric value only) from the image. Return ONLY the number. If no clear number is visible, respond with "NO_READING_DETECTED".'
-              },
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'text',
-                    text: 'What is the glucose reading shown on this meter?'
-                  },
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: `data:image/jpeg;base64,${image}`
-                    }
+        const rawContent = await geminiChat({
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a glucose meter reading specialist. Extract the glucose reading (numeric value only) from the image. Return ONLY the number. If no clear number is visible, respond with "NO_READING_DETECTED".'
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'What is the glucose reading shown on this meter?'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/jpeg;base64,${image}`
                   }
-                ]
-              }
-            ],
-            max_tokens: 50
-          })
+                }
+              ]
+            }
+          ],
+          maxTokens: 50
         });
-        
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error(`OpenAI API error (${response.status}):`, errorData);
-          throw new Error(`Failed to analyze glucometer with OpenAI: ${response.status} ${errorData}`);
-        }
-        
-        const data = await response.json();
-        console.log('OpenAI glucometer response:', data);
-        
-        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-          throw new Error('Invalid response format from OpenAI');
-        }
-        
-        // Extract the reading from OpenAI's response
-        const content = data.choices[0].message.content.trim();
-        console.log('Raw content from OpenAI glucometer analysis:', content);
+
+        const content = rawContent.trim();
+        console.log('Raw content from Gemini glucometer analysis:', content);
         
         if (content === 'NO_READING_DETECTED') {
           return new Response(
