@@ -78,7 +78,7 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
       .subscribe();
       
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user, toast]);
 
