@@ -8,7 +8,7 @@ const Index = () => {
   const location = useLocation();
   const { isAuthenticated, loading, isPasswordRecovery } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
-  const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [redirectTimeout, setRedirectTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Terms path is now handled by AppRoutes directly, so we can remove this check
