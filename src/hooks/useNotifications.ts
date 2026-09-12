@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,7 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { logs } = useLogContext();
+  const instanceId = useRef(Math.random().toString(36).slice(2));
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -235,7 +236,7 @@ export const useNotifications = () => {
     if (!user) return;
     
     const channel = supabase
-      .channel(`notifications-hook-${user.id}`)
+      .channel(`notifications-hook-${user.id}-${instanceId.current}`)
       .on('postgres_changes', 
         { 
           event: '*', 
