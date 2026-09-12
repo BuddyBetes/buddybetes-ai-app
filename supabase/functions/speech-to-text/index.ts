@@ -1,6 +1,12 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import {
+  geminiGenerateContent,
+  DEFAULT_GEMINI_MODEL,
+  bytesToBase64,
+  describeGeminiError,
+} from "../_shared/gemini.ts";
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
@@ -245,82 +251,61 @@ function getMimeTypeMapping(mimeType: string): string {
 }
 
 /**
- * Send audio data to OpenAI Whisper API
+ * Transcribe audio with Gemini's native audio understanding.
  * @param audioData - Audio data as Uint8Array
  * @param detectedMimeType - Detected MIME type
  * @param language - Language code
  * @returns Transcription result or error
  */
-async function sendToWhisperAPI(
-  audioData: Uint8Array, 
-  detectedMimeType: string, 
+async function transcribeWithGemini(
+  audioData: Uint8Array,
+  detectedMimeType: string,
   language: string
 ): Promise<{ text: string } | { error: string }> {
-  // Check if we have an OpenAI API key
-  const apiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!apiKey) {
-    console.error("🔑 Missing OpenAI API key");
-    return { error: 'OpenAI API key not configured' };
-  }
-
-  // Map MIME type to file extension
+  // Map MIME type to a format Gemini accepts
   const fileExtension = getMimeTypeMapping(detectedMimeType);
-  
-  // Set the proper MIME type for the Blob
-  const mimeType = `audio/${fileExtension}`;
-  console.log(`🔄 Using MIME type: ${mimeType} for file extension: ${fileExtension}`);
-  
-  // Create filename with proper extension
-  const filename = `audio.${fileExtension}`;
-  console.log(`📄 Using filename: ${filename}`);
-  
-  // Create a blob with the determined MIME type
-  const blob = new Blob([audioData], { type: mimeType });
-  console.log(`📏 Blob size: ${blob.size} bytes`);
-  
-  // Prepare form data with explicit MIME type and filename
-  const formData = new FormData();
-  formData.append('file', blob, filename);
-  formData.append('model', 'whisper-1');
-  formData.append('language', language);
+  const mimeType = fileExtension === 'mp3' ? 'audio/mp3' : `audio/${fileExtension}`;
+  console.log(`🔄 Using MIME type: ${mimeType} (${audioData.length} bytes)`);
 
-  console.log(`🚀 Sending to OpenAI Whisper API...`);
-  console.log(`📊 Using filename: ${filename}, MIME type: ${mimeType}, blob size: ${blob.size}`);
-  
-  // Send to OpenAI
+  const languageName = language?.toLowerCase().startsWith('tl') || language?.toLowerCase() === 'tagalog'
+    ? 'Tagalog'
+    : 'English';
+
   try {
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: formData,
+    const result = await geminiGenerateContent(DEFAULT_GEMINI_MODEL, {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text:
+                `Transcribe this audio recording verbatim in ${languageName}. ` +
+                `Return ONLY the spoken words as plain text, with no quotes, labels, timestamps or commentary. ` +
+                `If there is no intelligible speech, return an empty string.`,
+            },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: bytesToBase64(audioData),
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: { temperature: 0 },
     });
 
-    console.log("📥 OpenAI response status:", response.status);
-    
-    if (!response.ok) {
-      let errorText;
-      try {
-        const errorJson = await response.json();
-        errorText = JSON.stringify(errorJson);
-        console.error("⛔ OpenAI API error JSON:", errorJson);
-      } catch (e) {
-        errorText = await response.text();
-        console.error("⛔ OpenAI API error text:", errorText);
-      }
-      
-      return {
-        error: `OpenAI API error: ${errorText}`,
-      };
-    }
+    const parts = result?.candidates?.[0]?.content?.parts ?? [];
+    const text = parts
+      .map((part: any) => part?.text ?? '')
+      .join(' ')
+      .trim();
 
-    const result = await response.json();
-    console.log("✅ Transcription successful:", result.text);
-    return { text: result.text };
-  } catch (fetchError) {
-    console.error("❌ Fetch error:", fetchError);
-    return { error: `Fetch error: ${fetchError.message}` };
+    console.log("✅ Transcription successful:", text);
+    return { text };
+  } catch (error) {
+    console.error("❌ Gemini transcription error:", error);
+    return { error: describeGeminiError(error) };
   }
 }
 
@@ -402,7 +387,7 @@ serve(async (req) => {
     console.log("✅ Audio data processed successfully, size:", audioData.length);
     
     // Send to OpenAI Whisper API
-    const transcriptionResult = await sendToWhisperAPI(audioData, detectedMimeType, language);
+    const transcriptionResult = await transcribeWithGemini(audioData, detectedMimeType, language);
     
     if ('error' in transcriptionResult) {
       return createErrorResponse(transcriptionResult.error, 500);

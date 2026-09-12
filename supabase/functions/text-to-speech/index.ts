@@ -1,10 +1,37 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import {
+  geminiGenerateContent,
+  GEMINI_TTS_MODEL,
+  base64ToBytes,
+  bytesToBase64,
+  pcmToWav,
+  describeGeminiError,
+} from "../_shared/gemini.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Map the previously used OpenAI voice names onto Gemini prebuilt voices so
+// existing callers keep working without any frontend change.
+const VOICE_MAP: Record<string, string> = {
+  nova: 'Leda',
+  shimmer: 'Aoede',
+  alloy: 'Kore',
+  echo: 'Puck',
+  fable: 'Charon',
+  onyx: 'Charon',
+};
+
+const DEFAULT_VOICE = 'Leda';
+
+/** Pull the sample rate out of an audio/L16 mime type such as "audio/L16;rate=24000". */
+function parseSampleRate(mimeType: string | undefined): number {
+  const match = mimeType?.match(/rate=(\d+)/i);
+  return match ? parseInt(match[1], 10) : 24000;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -18,69 +45,50 @@ serve(async (req) => {
     if (!text) {
       throw new Error('Text is required');
     }
-    
+
     // Limit text length to prevent potential issues
-    const truncatedText = text.substring(0, 1000);
+    const truncatedText = String(text).substring(0, 1000);
     console.log("Processing text-to-speech request with text length:", truncatedText.length);
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key is not configured');
-    }
+    const selectedVoice = VOICE_MAP[String(voice || '').toLowerCase()] || voice || DEFAULT_VOICE;
+    console.log(`Using Gemini voice: ${selectedVoice}`);
 
-    // Use the highest quality voice option available - 'nova' is one of the best natural-sounding voices
-    // Other premium options include 'shimmer', 'alloy', 'echo', 'fable', and 'onyx'
-    const selectedVoice = voice || 'nova';
-    
-    console.log(`Using premium voice: ${selectedVoice}`);
-
-    // Generate speech from text
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
+    const result = await geminiGenerateContent(GEMINI_TTS_MODEL, {
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: `Say in a warm, friendly and natural tone: ${truncatedText}` }],
+        },
+      ],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: selectedVoice },
+          },
+        },
       },
-      body: JSON.stringify({
-        model: 'tts-1-hd', // Using the high-definition model for better quality
-        input: truncatedText,
-        voice: selectedVoice,
-        response_format: 'mp3',
-        speed: 1.0, // Default speed for natural sounding voice
-      }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI TTS API error:", errorData);
-      throw new Error(errorData.error?.message || 'Failed to generate speech');
+    const part = result?.candidates?.[0]?.content?.parts?.find(
+      (p: any) => p?.inlineData?.data || p?.inline_data?.data
+    );
+    const inline = part?.inlineData || part?.inline_data;
+
+    if (!inline?.data) {
+      console.error("No audio returned from Gemini:", JSON.stringify(result).slice(0, 800));
+      throw new Error('No audio was generated');
     }
 
-    console.log("Speech generation successful");
+    const pcm = base64ToBytes(inline.data);
+    const sampleRate = parseSampleRate(inline.mimeType || inline.mime_type);
+    const wav = pcmToWav(pcm, sampleRate, 1);
+    const base64Audio = bytesToBase64(wav);
 
-    // Convert audio buffer to base64
-    const arrayBuffer = await response.arrayBuffer();
-    
-    // Process the binary data in chunks to avoid stack overflow
-    const chunks = [];
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const chunkSize = 32768; // Process in smaller chunks
-    
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      chunks.push(
-        String.fromCharCode.apply(
-          null, 
-          uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length))
-        )
-      );
-    }
-    
-    const base64Audio = btoa(chunks.join(''));
-    console.log("Audio converted to base64, length:", base64Audio.length);
+    console.log("Speech generation successful, audio bytes:", wav.length);
 
     return new Response(
-      JSON.stringify({ audioContent: base64Audio }),
+      JSON.stringify({ audioContent: base64Audio, mimeType: 'audio/wav' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
@@ -88,7 +96,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in text-to-speech function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: describeGeminiError(error) }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

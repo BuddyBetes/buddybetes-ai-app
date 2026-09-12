@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { analyzeFoodImage } from "./services/foodDetection.ts";
 import { getFoodNutrition } from "./services/nutrition.ts";
 import { createDefaultFoodItem, FoodItem } from "./utils/foodUtils.ts";
+import { geminiChat } from "../_shared/gemini.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
