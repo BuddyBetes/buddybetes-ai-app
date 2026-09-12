@@ -387,7 +387,7 @@ serve(async (req) => {
     console.log("✅ Audio data processed successfully, size:", audioData.length);
     
     // Send to OpenAI Whisper API
-    const transcriptionResult = await sendToWhisperAPI(audioData, detectedMimeType, language);
+    const transcriptionResult = await transcribeWithGemini(audioData, detectedMimeType, language);
     
     if ('error' in transcriptionResult) {
       return createErrorResponse(transcriptionResult.error, 500);
