@@ -84,7 +84,7 @@ export const useSpeechSynthesis = () => {
         if (data.audioContent && audioRef.current) {
           console.log("Received audio content, playing...");
           // Create audio from base64
-          const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
+          const audioSrc = `data:${data.mimeType || 'audio/wav'};base64,${data.audioContent}`;
           audioRef.current.src = audioSrc;
           
           try {
