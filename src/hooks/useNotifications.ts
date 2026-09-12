@@ -234,8 +234,8 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user) return;
     
-    const subscription = supabase
-      .channel('public:user_notifications')
+    const channel = supabase
+      .channel(`notifications-hook-${user.id}`)
       .on('postgres_changes', 
         { 
           event: '*', 
@@ -243,14 +243,14 @@ export const useNotifications = () => {
           table: 'user_notifications',
           filter: `user_id=eq.${user.id}`
         },
-        (payload) => {
+        () => {
           fetchNotifications();
         }
       )
       .subscribe();
       
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [user]);
 
