@@ -61,8 +61,8 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
     fetchNotifications();
     
     // Subscribe to notification changes
-    const subscription = supabase
-      .channel('public:user_notifications')
+    const channel = supabase
+      .channel(`notifications-panel-${user.id}`)
       .on('postgres_changes', 
         { 
           event: '*', 
