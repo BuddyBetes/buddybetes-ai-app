@@ -40,6 +40,9 @@
     <uses-permission android:name="android.permission.RECORD_AUTO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
+    <!-- Hardware Permissions -->
+    <uses-permission android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.hardware.microphone" android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
