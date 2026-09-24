@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Sheet,
@@ -35,10 +34,12 @@ const GlucometerScanModal: React.FC<GlucometerScanModalProps> = ({
         </div>
         <div className="flex flex-col h-full" aria-describedby="glucometer-description">
           <div className="flex-1 flex items-center justify-center">
-            <GlucometerCapture 
-              onCapture={handleCapture} 
-              onClose={() => onOpenChange(false)} 
-            />
+            {open && (
+              <GlucometerCapture 
+                onCapture={handleCapture} 
+                onClose={() => onOpenChange(false)} 
+              />
+            )}
           </div>
         </div>
       </SheetContent>

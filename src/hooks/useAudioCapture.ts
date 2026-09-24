@@ -1,6 +1,6 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { getMedia } from '@/utils/mediaPermissions';
 
 // MediaRecorder configuration options
 const AUDIO_CONSTRAINTS = {
@@ -9,10 +9,9 @@ const AUDIO_CONSTRAINTS = {
   autoGainControl: true,
 };
 
-// Use a supported audio format that works well with the OpenAI Whisper API
-// Explicitly use webm with opus codec which is well supported by Whisper API
+// Use a supported audio format that works well with the OpenAI Whisper / Gemini API
 const PREFERRED_MIME_TYPES = [
-  'audio/webm;codecs=opus',  // Most compatible with Whisper API
+  'audio/webm;codecs=opus',
   'audio/webm',
   'audio/ogg;codecs=opus',
   'audio/wav',
@@ -89,43 +88,39 @@ export const useAudioCapture = (): AudioCaptureControls => {
   };
 
   /**
-   * Request microphone access and initialize media stream
+   * Request microphone access using getMedia helper
    */
-  const initializeMicrophone = async (): Promise<MediaStream> => {
-    try {
-      // Check browser support first
-      if (!checkBrowserSupport()) {
-        throw new Error("Your browser doesn't support audio recording. Please try using Chrome or Firefox.");
-      }
-      
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: AUDIO_CONSTRAINTS
+  const initializeMicrophone = async (): Promise<MediaStream | null> => {
+    if (!checkBrowserSupport()) {
+      toast({
+        title: "Recording Error",
+        description: "Your browser does not support audio recording.",
+        variant: "destructive"
       });
-      
-      console.log("Microphone access granted", stream);
-      return stream;
-    } catch (error) {
-      console.error("Microphone access error:", error);
-      throw new Error("Could not access microphone. Please check permissions.");
+      return null;
     }
+    
+    // getMedia displays custom toast with "Open settings" button on Android when denied
+    const stream = await getMedia('microphone', { 
+      audio: AUDIO_CONSTRAINTS
+    });
+    
+    if (stream) {
+      console.log("Microphone access granted", stream);
+    }
+    return stream;
   };
 
   /**
    * Create and configure a MediaRecorder for the given stream
    */
   const initializeMediaRecorder = (stream: MediaStream): MediaRecorder => {
-    // Try to use a specific MIME type that works well with speech recognition
     const mimeType = getSupportedMimeType();
-    
-    // Create media recorder with supported MIME type
     const options = mimeType ? { mimeType } : {};
     console.log("Creating MediaRecorder with options:", options);
     
-    // Create media recorder
     const mediaRecorder = new MediaRecorder(stream, options);
     
-    // Set up data handler
     mediaRecorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) {
         console.log("Voice data chunk received, size:", event.data.size, "type:", event.data.type);
@@ -149,7 +144,7 @@ export const useAudioCapture = (): AudioCaptureControls => {
   };
 
   /**
-   * Begins audio recording from the microphone
+   * Begins audio recording from the microphone (called only on user tap)
    */
   const startRecording = async () => {
     try {
@@ -158,18 +153,22 @@ export const useAudioCapture = (): AudioCaptureControls => {
       setHasRecordingStarted(false);
       
       const stream = await initializeMicrophone();
-      streamRef.current = stream;
+      // If access was denied or no device exists, reset state and exit
+      if (!stream) {
+        setIsRecording(false);
+        return;
+      }
       
+      streamRef.current = stream;
       const mediaRecorder = initializeMediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       
-      // Start recording
-      mediaRecorder.start(1000); // Collect data every 1000ms
+      mediaRecorder.start(1000);
       console.log("Media recorder started with MIME type:", mediaRecorder.mimeType);
       setIsRecording(true);
-      
     } catch (error) {
       console.error("Error starting recording:", error);
+      setIsRecording(false);
       toast({
         title: "Recording Error",
         description: "Could not access microphone. Please check permissions.",
@@ -183,7 +182,6 @@ export const useAudioCapture = (): AudioCaptureControls => {
    */
   const stopRecording = () => {
     console.log("Stopping recording...");
-    
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       console.log("Voice recording stopped");
@@ -198,10 +196,8 @@ export const useAudioCapture = (): AudioCaptureControls => {
    */
   const getAudioBlob = (): Blob | null => {
     if (audioChunks.length > 0 && hasRecordingStarted) {
-      // Get MIME type from the first chunk or use a fallback
       const mimeType = audioChunks[0].type || PREFERRED_MIME_TYPES[0];
       console.log(`Creating audio blob with MIME type: ${mimeType}`);
-      
       return new Blob(audioChunks, { type: mimeType });
     }
     return null;
