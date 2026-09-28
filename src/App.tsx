@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,11 +8,13 @@ import { LogProvider } from "@/context/LogContext";
 import { PasswordResetProvider } from "@/context/passwordReset/PasswordResetContext";
 import AppRoutes from "@/components/AppRoutes";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import NativeBackButton from "@/components/NativeBackButton";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <BrowserRouter>
+    <NativeBackButton />
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>

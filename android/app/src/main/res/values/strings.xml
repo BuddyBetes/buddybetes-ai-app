@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<resources>
+    <string name="app_name">BuddyBetes</string>
+    <string name="title_activity_main">BuddyBetes</string>
+    <string name="package_name">com.buddybetes.app</string>
+    <string name="custom_url_scheme">com.buddybetes.app</string>
+</resources>

@@ -1,7 +1,7 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, Check } from 'lucide-react';
+import { getMedia } from '@/utils/mediaPermissions';
 
 interface CameraCaptureProps {
   onCapture: (imageData: string) => void;
@@ -11,13 +11,16 @@ interface CameraCaptureProps {
 const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCapturing, setIsCapturing] = useState(true);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize camera
+  // Initialize camera when modal content mounts on user action
   useEffect(() => {
+    let isCancelled = false;
+
     const startCamera = async () => {
       try {
         const constraints = {
@@ -29,28 +32,46 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         };
         
         console.log('Requesting camera with constraints:', constraints);
-        const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const mediaStream = await getMedia('camera', constraints);
         
+        if (isCancelled) {
+          if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+          }
+          return;
+        }
+
+        // If user denied or device missing, getMedia notifies and returns null -> close modal
+        if (!mediaStream) {
+          onClose();
+          return;
+        }
+
+        streamRef.current = mediaStream;
+        setStream(mediaStream);
+
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
-          setStream(mediaStream);
           console.log('Camera started successfully');
         }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
+      } catch (err) {
+        console.error('Error accessing camera:', err);
         setError('Could not access camera. Please ensure camera permissions are granted.');
+        onClose();
       }
     };
 
     startCamera();
 
-    // Cleanup function
+    // Clean up: stop all active camera tracks
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      isCancelled = true;
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
     };
-  }, []);
+  }, [onClose]);
 
   const captureImage = () => {
     if (videoRef.current && canvasRef.current) {
@@ -59,16 +80,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
       const context = canvas.getContext('2d');
       
       if (context) {
-        // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
         console.log(`Capturing image at resolution: ${canvas.width}x${canvas.height}`);
-        
-        // Draw the current video frame to the canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert canvas to data URL with high quality
         const imageData = canvas.toDataURL('image/jpeg', 0.9);
         console.log('Image captured, data URL length:', imageData.length);
         

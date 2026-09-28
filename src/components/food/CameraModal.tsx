@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Sheet,
@@ -35,10 +34,12 @@ const CameraModal: React.FC<CameraModalProps> = ({
         </div>
         <div className="flex flex-col h-full" aria-describedby="camera-description">
           <div className="flex-1 flex items-center justify-center">
-            <CameraCapture 
-              onCapture={handleCapture} 
-              onClose={() => onOpenChange(false)} 
-            />
+            {open && (
+              <CameraCapture 
+                onCapture={handleCapture} 
+                onClose={() => onOpenChange(false)} 
+              />
+            )}
           </div>
         </div>
       </SheetContent>

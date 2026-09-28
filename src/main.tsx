@@ -1,10 +1,13 @@
 
 import { createRoot } from 'react-dom/client'
+import { Capacitor } from '@capacitor/core';
 import App from './App.tsx'
 import './index.css'
 
-// Register service worker
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+const isNative = Capacitor.isNativePlatform();
+
+// Register service worker (web only)
+if ('serviceWorker' in navigator && import.meta.env.PROD && !isNative) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then(registration => {
@@ -14,6 +17,12 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
         console.log('SW registration failed: ', registrationError);
       });
   });
+}
+
+// Clean up any SW left over from earlier native builds
+if ('serviceWorker' in navigator && isNative) {
+  navigator.serviceWorker.getRegistrations()
+    .then(regs => regs.forEach(r => r.unregister()));
 }
 
 // Use standard rendering instead of delayed rendering to avoid React context issues
