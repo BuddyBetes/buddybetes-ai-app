@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, Check, Edit3, AlertCircle } from 'lucide-react';
@@ -6,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { processGlucometerImage } from '@/utils/glucometerProcessing';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { getMedia } from '@/utils/mediaPermissions';
 
 interface GlucometerCaptureProps {
   onCapture: (reading: number) => void;
@@ -15,6 +15,7 @@ interface GlucometerCaptureProps {
 const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCapturing, setIsCapturing] = useState(true);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -25,8 +26,10 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
   const [manualReading, setManualReading] = useState<string>('');
   const { toast } = useToast();
 
-  // Initialize camera
+  // Initialize camera when modal content mounts on user action
   useEffect(() => {
+    let isCancelled = false;
+
     const startCamera = async () => {
       try {
         const constraints = {
@@ -38,28 +41,46 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
         };
         
         console.log('Requesting camera with constraints:', constraints);
-        const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const mediaStream = await getMedia('camera', constraints);
         
+        if (isCancelled) {
+          if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+          }
+          return;
+        }
+
+        // If user denied or device missing, getMedia notifies and returns null -> close modal
+        if (!mediaStream) {
+          onClose();
+          return;
+        }
+
+        streamRef.current = mediaStream;
+        setStream(mediaStream);
+
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
-          setStream(mediaStream);
           console.log('Camera started successfully');
         }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
+      } catch (err) {
+        console.error('Error accessing camera:', err);
         setError('Could not access camera. Please ensure camera permissions are granted.');
+        onClose();
       }
     };
 
     startCamera();
 
-    // Cleanup function
+    // Clean up: stop all active camera tracks
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      isCancelled = true;
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
     };
-  }, []);
+  }, [onClose]);
 
   const captureImage = () => {
     if (videoRef.current && canvasRef.current) {
@@ -68,22 +89,18 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
       const context = canvas.getContext('2d');
       
       if (context) {
-        // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
         console.log(`Capturing image at resolution: ${canvas.width}x${canvas.height}`);
-        
-        // Draw the current video frame to the canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert canvas to data URL with high quality
         const imageData = canvas.toDataURL('image/jpeg', 0.9);
         console.log('Image captured, data URL length:', imageData.length);
         
         setCapturedImage(imageData);
         setIsCapturing(false);
-        setProcessingError(null); // Clear any previous errors
+        setProcessingError(null);
       }
     }
   };
@@ -94,20 +111,18 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
       setProcessingError(null);
       
       try {
-        // Process the image to extract the glucometer reading
         const reading = await processGlucometerImage(capturedImage);
         
         if (reading && !isNaN(reading)) {
           console.log('Extracted glucometer reading:', reading);
           onCapture(reading);
         } else {
-          // No reading detected - set error and stay on the current screen
           setProcessingError('No glucose reading detected. Please try again with a clearer photo, ensure the display is well-lit and centered, or enter the reading manually.');
           setIsProcessing(false);
         }
-      } catch (error) {
-        console.error('Error processing glucometer image:', error);
-        setProcessingError(error instanceof Error ? error.message : 'Processing error');
+      } catch (err) {
+        console.error('Error processing glucometer image:', err);
+        setProcessingError(err instanceof Error ? err.message : 'Processing error');
         setIsProcessing(false);
       }
     }
@@ -116,8 +131,9 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
   const handleManualEntry = () => {
     setManualEntryMode(true);
     setProcessingError(null);
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
   };
 
@@ -219,14 +235,12 @@ const GlucometerCapture: React.FC<GlucometerCaptureProps> = ({ onCapture, onClos
           />
         )}
         
-        {/* Overlay guide for glucometer positioning */}
         {isCapturing && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="border-2 border-buddy-500 rounded-lg w-4/5 h-1/4 opacity-50"></div>
           </div>
         )}
         
-        {/* Hidden canvas for capturing */}
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
