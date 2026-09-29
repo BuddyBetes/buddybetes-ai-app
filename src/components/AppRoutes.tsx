@@ -18,6 +18,7 @@ import Profile from '@/pages/Profile';
 import Assistant from '@/pages/Assistant';
 import Event from '@/pages/Event';
 import Settings from '@/pages/settings/Settings';
+import Privacy from '@/pages/settings/Privacy';
 import Terms from '@/pages/Terms';
 import Subscription from '@/pages/Subscription';
 import PaymentSuccess from '@/pages/PaymentSuccess';
@@ -128,6 +129,10 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/settings"
         element={renderProtectedRoute(<Settings />)}
+      />
+      <Route
+        path="/settings/privacy"
+        element={renderProtectedRoute(<Privacy />)}
       />
       <Route
         path="/signin"
