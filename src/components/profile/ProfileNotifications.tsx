@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, Clock } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const instanceId = useRef(Math.random().toString(36).slice(2));
 
   // Fetch notifications from Supabase
   useEffect(() => {
@@ -60,9 +61,11 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
     
     fetchNotifications();
     
-    // Subscribe to notification changes
+    // Unique per-instance channel name: if two instances subscribe at once,
+    // supabase.channel() returns the same already-subscribed channel and
+    // calling .on() on it throws. A stable instance id prevents that.
     const channel = supabase
-      .channel(`notifications-panel-${user.id}`)
+      .channel(`notifications-panel-${user.id}-${instanceId.current}`)
       .on('postgres_changes', 
         { 
           event: '*', 
