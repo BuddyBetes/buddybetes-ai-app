@@ -21,6 +21,7 @@ import Settings from '@/pages/settings/Settings';
 import Terms from '@/pages/Terms';
 import Subscription from '@/pages/Subscription';
 import PaymentSuccess from '@/pages/PaymentSuccess';
+import DeleteAccountInfo from '@/pages/DeleteAccountInfo';
 
 // Admin imports
 import AdminAuth from '@/pages/admin/AdminAuth';
@@ -149,6 +150,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route path="/confirm" element={<EmailConfirmed />} />
+      <Route path="/delete-account" element={<DeleteAccountInfo />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/event/:eventId" element={<Event />} />
     </Routes>
