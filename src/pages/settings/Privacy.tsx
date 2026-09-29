@@ -1,14 +1,54 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../../components/Layout';
 import AppHeader from '@/components/AppHeader';
 import { ArrowLeft, Shield, Lock, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Privacy = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account', {});
+      if (error) throw error;
+      await signOut();
+      navigate('/');
+      toast({
+        title: 'Account deleted',
+        description: 'Your account and data have been permanently deleted. A confirmation email has been sent.',
+      });
+    } catch (error) {
+      console.error('Account deletion failed:', error);
+      toast({
+        title: 'Deletion failed',
+        description: 'Please try again or email support@buddybetes.com for help.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   return (
     <Layout title="Privacy">
@@ -83,12 +123,35 @@ const Privacy = () => {
           
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-4">
-              <Button 
-                variant="destructive" 
-                className="w-full"
-              >
-                Delete My Account
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete My Account'}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This permanently deletes your profile, health data, glucose logs, assistant history, and subscriptions. A confirmation email will be sent to you. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      disabled={isDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? 'Deleting...' : 'Yes, delete my account'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <p className="text-xs text-gray-500 mt-2 text-center">
                 This action permanently removes all your data and cannot be undone.
               </p>

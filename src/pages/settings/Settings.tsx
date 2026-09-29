@@ -2,7 +2,7 @@
 import React from 'react';
 import Layout from '../../components/Layout';
 import AppHeader from '@/components/AppHeader';
-import { ArrowLeft, Moon, Sun, Laptop, Globe, VolumeX, Volume2, Bell } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Laptop, Globe, VolumeX, Volume2, Bell, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
@@ -138,7 +138,25 @@ const Settings = () => {
           
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-4 border-b">
-              <h2 className="text-lg font-medium">Units & Measurements</h2>
+              <h2 className="text-lg font-medium">Account</h2>
+            </div>
+            <div className="p-4">
+              <button
+                onClick={() => navigate('/settings/privacy')}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <div className="flex items-center space-x-3">
+                  <Shield size={20} className="text-primary" />
+                  <span>Privacy &amp; Security</span>
+                </div>
+                <span className="text-gray-400">›</span>
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="p-4 border-b">
+              <h2 className="text-lg font-medium">Units &amp; Measurements</h2>
             </div>
             
             <div className="p-4 space-y-4">
