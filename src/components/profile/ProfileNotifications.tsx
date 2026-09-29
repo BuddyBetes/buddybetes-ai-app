@@ -27,6 +27,7 @@ const ProfileNotifications: React.FC<ProfileNotificationsProps> = ({ children })
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const instanceId = useRef(Math.random().toString(36).slice(2));
 
   // Fetch notifications from Supabase
   useEffect(() => {
