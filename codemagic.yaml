@@ -1,0 +1,126 @@
+# BuddyBetes — Codemagic
+#
+# Capacitor 8 uses Swift Package Manager, not CocoaPods, so there is no
+# Podfile and no .xcworkspace. Builds target App.xcodeproj directly.
+#
+# Two workflows:
+#   ios-compile-check  — no signing, no Apple account needed. Proves the
+#                        native shell compiles. Run this first.
+#   ios-testflight     — real signed .ipa, uploaded to TestFlight. Requires
+#                        the Apple Developer Program and an App Store
+#                        Connect API key added to Codemagic.
+
+definitions:
+  env_versions: &env_versions
+    node: 20.11.1
+    xcode: latest
+
+  web_build: &web_build
+    - name: Install dependencies
+      script: npm ci
+    - name: Build web assets
+      script: npm run build
+    - name: Sync to iOS
+      script: npx cap sync ios
+
+workflows:
+  # ---------------------------------------------------------------- #
+  # Free. Catches Swift/plist/SPM errors without any Apple account.   #
+  # ---------------------------------------------------------------- #
+  ios-compile-check:
+    name: iOS compile check (unsigned)
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+
+    environment:
+      <<: *env_versions
+
+    scripts:
+      - *web_build
+
+      - name: Build unsigned
+        script: |
+          xcodebuild \
+            -project "ios/App/App.xcodeproj" \
+            -scheme "App" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+    artifacts:
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - jvcmaniago@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  # ---------------------------------------------------------------- #
+  # Signed build + TestFlight. Needs the $99/yr Developer Program.    #
+  # ---------------------------------------------------------------- #
+  ios-testflight:
+    name: iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+
+    integrations:
+      # Name of the App Store Connect API key as saved in
+      # Codemagic → Teams → Integrations → Developer Portal.
+      app_store_connect: BuddyBetes ASC Key
+
+    environment:
+      <<: *env_versions
+      ios_signing:
+        distribution_type: app_store
+        # Must match appId in capacitor.config.ts AND be registered
+        # as an App ID in the Apple Developer portal.
+        bundle_identifier: com.buddybetes.app
+      vars:
+        # Numeric Apple ID of the app in App Store Connect, not the
+        # bundle id. Found in the app's URL in App Store Connect.
+        APP_STORE_APPLE_ID: 0000000000
+
+    scripts:
+      - *web_build
+
+      - name: Set up signing
+        script: |
+          keychain initialize
+          xcode-project use-profiles
+
+      - name: Set build number
+        script: |
+          cd ios/App
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          agvtool new-version -all $(($LATEST + 1))
+
+      - name: Build .ipa
+        script: |
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Leave this out on the first upload. Apple requires the first
+        # build of an app to be manually released to testers.
+        # beta_groups:
+        #   - Internal Testers
+      email:
+        recipients:
+          - jvcmaniago@gmail.com
+        notify:
+          success: true
+          failure: true
