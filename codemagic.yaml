@@ -11,8 +11,8 @@
 #                        Connect API key added to Codemagic.
 
 definitions:
-  env_versions: &env_versions
-    node: 20.11.1
+  env_versions: &env_versions # Capacitor 8 CLI requires Node >= 22.
+    node: 22
     xcode: latest
 
   # Anchored per step. A list anchor cannot be spliced into a list in YAML,
