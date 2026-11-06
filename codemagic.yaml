@@ -85,6 +85,11 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.buddybetes.app
+      # Codemagic → Teams → Global variables, group "revenuecat":
+      #   VITE_REVENUECAT_IOS_KEY = public iOS SDK key (appl_...)
+      # Vite inlines it at build time; without it the paywall cannot load.
+      groups:
+        - revenuecat
       vars:
         # Numeric Apple ID of the app in App Store Connect, not the
         # bundle id. Found in the app's URL in App Store Connect.

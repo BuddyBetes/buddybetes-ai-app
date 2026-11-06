@@ -20,6 +20,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { usesAppStoreBilling } from '@/lib/purchases';
 
 const Privacy = () => {
   const navigate = useNavigate();
@@ -138,6 +139,11 @@ const Privacy = () => {
                     <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                     <AlertDialogDescription>
                       This permanently deletes your profile, health data, glucose logs, assistant history, and subscriptions. A confirmation email will be sent to you. This cannot be undone.
+                      {usesAppStoreBilling() && (
+                        <span className="block mt-2">
+                          If you subscribed through the App Store, cancel it in your Apple ID subscription settings to stop future charges.
+                        </span>
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

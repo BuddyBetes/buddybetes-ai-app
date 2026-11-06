@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useNavigate } from 'react-router-dom';
+import { usesAppStoreBilling } from '@/lib/purchases';
 
 interface PaywallWrapperProps {
   children: React.ReactNode;
@@ -70,9 +71,12 @@ const PaywallWrapper: React.FC<PaywallWrapperProps> = ({
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg">
               <div className="flex items-center justify-center gap-2 text-purple-700 text-sm font-medium">
                 <Sparkles className="h-4 w-4" />
-                Founders Access - ₱999 only!
+                {/* App Store prices are localized by Apple, so iOS never shows a hardcoded price */}
+                {usesAppStoreBilling() ? 'BuddyBetes Premium' : 'Founders Access - ₱299/month'}
               </div>
-              <p className="text-xs text-purple-600 mt-1">Limited time offer</p>
+              {!usesAppStoreBilling() && (
+                <p className="text-xs text-purple-600 mt-1">Limited time offer</p>
+              )}
             </div>
 
             <Button 

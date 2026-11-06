@@ -10,6 +10,7 @@ import { PasswordResetProvider } from "@/context/passwordReset/PasswordResetCont
 import AppRoutes from "@/components/AppRoutes";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import NativeBackButton from "@/components/NativeBackButton";
+import PurchasesIdentity from "@/components/PurchasesIdentity";
 import { installAudioUnlockListener } from "@/utils/audioUnlock";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
+            <PurchasesIdentity />
             <PasswordResetProvider>
               <LogProvider>
                 <AnalyticsTracker>

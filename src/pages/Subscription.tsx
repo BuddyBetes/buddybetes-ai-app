@@ -9,11 +9,14 @@ import { Button } from '@/components/ui/button';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { Badge } from '@/components/ui/badge';
 import PaymentFlow from '@/components/subscription/PaymentFlow';
+import AppStorePaywall from '@/components/subscription/AppStorePaywall';
+import { usesAppStoreBilling } from '@/lib/purchases';
 
 const Subscription = () => {
   const { tiers, subscription } = useSubscription();
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [showPaymentFlow, setShowPaymentFlow] = useState(false);
+  const isAppStore = usesAppStoreBilling();
 
   const foundersFeatures = [
     'AI-powered glucose insights',
@@ -47,8 +50,6 @@ const Subscription = () => {
   // Find Buddybetes Monthly tier
   const buddybetesMonthlyTier = tiers.find(t => t.name === 'Buddybetes Monthly');
   
-  console.log('Available tiers:', tiers.map(t => ({ id: t.id, name: t.name })));
-  console.log('Selected tier:', buddybetesMonthlyTier);
 
   return (
     <Layout>
@@ -88,6 +89,10 @@ const Subscription = () => {
           )}
         </div>
 
+        {isAppStore ? (
+          <AppStorePaywall features={foundersFeatures} />
+        ) : (
+          <>
         {/* Discount Code Hint */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -185,6 +190,8 @@ const Subscription = () => {
             Stripe: Instant activation • GCash/BPI: Manual verification within 24 hours
           </p>
         </motion.div>
+          </>
+        )}
       </div>
     </Layout>
   );

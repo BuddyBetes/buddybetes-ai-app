@@ -16,3 +16,6 @@ verify_jwt = false
 verify_jwt = false
 [functions.send-email-blast]
 [functions.verify-admin]
+[functions.revenuecat-webhook]
+verify_jwt = false
+[functions.revenuecat-sync]
